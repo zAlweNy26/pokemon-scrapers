@@ -23,6 +23,23 @@ const homeUrl = 'https://www.serebii.net/pokemonhome'
 // They have a trailing space to avoid matching with the pokemon name
 const formInName = ['Gigantamax ', 'Mega ', 'Primal ']
 
+// Pokémon with Special Abilities not listed in the table
+const specialAbilities = {
+    "Darmanitan": "Darmanitan (Zen Mode Ability)",
+    "Darmanitan (Galarian Form)": "Darmanitan (Galarian Zen Mode Ability)",
+    "Greninja": "Greninja (Battle Bond Ability)",
+    "Zygarde": "Zygarde (Power Construct Ability)",
+    "Zygarde (10% Forme)": "Zygarde (10% Forme Power Construct Ability)",
+    "Rockruff": "Rockruff (Own Tempo Ability)"
+  }
+  
+// Pokémon with missing forms not listed in the table
+const missingForms = {
+    "Minior": "Minior (Red Core)",
+    "Toxtricity (Low Key Form)": "Gigantamax Toxtricity (Low Key Form)"
+  }
+  
+
 const values: Pokemon[] = []
 
 async function fetchRegions(): Promise<Region[]> {
@@ -81,6 +98,16 @@ async function fetchPokemons(region: Region, selector = 'table') {
         const hasGenderDiff = genderDiffs.some(g => [ndex, img].includes(g))
         genderDiffs = genderDiffs.filter(g => ![ndex, img].includes(g))
         if (hasGenderDiff) values.push({ ...item, subIndex: subIndex + 1, form: 'Gender' })
+        const hasSpecialAbility = specialAbilities.hasOwnProperty(name)
+        if (hasSpecialAbility) {
+            const newName = specialAbilities[name as keyof typeof specialAbilities]
+            values.push({ ...item, subIndex: subIndex + 1, name: newName, form: newName.match(/\(([^)]+)\)/)?.[1] || 'Default'})
+        }
+        const hasMissingForm = missingForms.hasOwnProperty(name)
+        if (hasMissingForm) {
+            const newName = missingForms[name as keyof typeof missingForms]
+            values.push({ ...item, subIndex: subIndex + 1, name: newName, form: newName.match(/\(([^)]+)\)/)?.[1] || 'Default', depositable: !depositable })
+        }
     })
 }
 
