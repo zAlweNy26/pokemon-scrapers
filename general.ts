@@ -31,14 +31,13 @@ const specialAbilities = {
     "Zygarde": "Zygarde (Power Construct Ability)",
     "Zygarde (10% Forme)": "Zygarde (10% Forme Power Construct Ability)",
     "Rockruff": "Rockruff (Own Tempo Ability)"
-  }
-  
+}
+
 // Pokémon with missing forms not listed in the table
 const missingForms = {
     "Minior": "Minior (Red Core)",
     "Toxtricity (Low Key Form)": "Gigantamax Toxtricity (Low Key Form)"
-  }
-  
+}
 
 const values: Pokemon[] = []
 
@@ -85,28 +84,31 @@ async function fetchPokemons(region: Region, selector = 'table') {
         const img = parse(cols.eq(1).find('img').attr('src') ?? '').name.padStart(4, '0')
         const subIndex = values.filter(p => p.ndex === ndex).length
         const name = cols.eq(2).find('a').text().trim() || cols.eq(2).text().trim()
-        const types = cols.eq(3).find('a') .map((_i, el) => 
+        const types = cols.eq(3).find('a').map((_i, el) =>
             parse($(el).attr('href') ?? '').name
         ).toArray()
         const depositable = !cols.eq(4).text().trim().includes('Not Depositable')
-        const form = name.match(/\(([^)]+)\)/)?.[1] 
-            || formInName.find(f => name.startsWith(f))?.trim() 
+        const form = name.match(/\(([^)]+)\)/)?.[1]
+            || formInName.find(f => name.startsWith(f))?.trim()
             || 'Default'
         if (form === 'Female') return
         const item: Pokemon = { index, subIndex, region: region.index, depositable, ndex, name, form, types }
         values.push(item)
+
         const hasGenderDiff = genderDiffs.some(g => [ndex, img].includes(g))
         genderDiffs = genderDiffs.filter(g => ![ndex, img].includes(g))
         if (hasGenderDiff) values.push({ ...item, subIndex: subIndex + 1, form: 'Gender' })
-        const hasSpecialAbility = specialAbilities.hasOwnProperty(name)
-        if (hasSpecialAbility) {
+
+        if (name in specialAbilities) {
             const newName = specialAbilities[name as keyof typeof specialAbilities]
-            values.push({ ...item, subIndex: subIndex + 1, name: newName, form: newName.match(/\(([^)]+)\)/)?.[1] || 'Default'})
+            const form = newName.match(/\(([^)]+)\)/)?.[1] || 'Default'
+            values.push({ ...item, subIndex: subIndex + 1, name: newName, form })
         }
-        const hasMissingForm = missingForms.hasOwnProperty(name)
-        if (hasMissingForm) {
+
+        if (name in missingForms) {
             const newName = missingForms[name as keyof typeof missingForms]
-            values.push({ ...item, subIndex: subIndex + 1, name: newName, form: newName.match(/\(([^)]+)\)/)?.[1] || 'Default', depositable: !depositable })
+            const form = newName.match(/\(([^)]+)\)/)?.[1] || 'Default'
+            values.push({ ...item, subIndex: subIndex + 1, name: newName, form, depositable: false })
         }
     })
 }
