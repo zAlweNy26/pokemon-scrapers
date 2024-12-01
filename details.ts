@@ -17,7 +17,6 @@ interface Stats {
 
 interface Pokemon {
     index: number
-    subIndex: number
     locations: Location[]
     stats: Stats
 }
@@ -30,7 +29,7 @@ const gensPrefixes = ['', '-gs', '-rs', '-dp', '-bw', '-xy', '-sm', '-swsh', '-s
 
 const getTableEntries = <T extends AnyNode>($: cheerio.CheerioAPI, table: cheerio.Cheerio<T>, title: string) => {
     return table.filter((_i, el) => 
-        $(el).find('td').length > 1 &&
+        $(el).find('td').length >= 1 &&
         $(el).text().trim().includes(title)
     ).find('tr')
 }
@@ -67,7 +66,6 @@ async function fetchPokemon(gen: number, id: string) {
 
     values.push({
         index: parseInt($('title').text().split('-')[1].trim().substring(1)),
-        subIndex: 0, // TODO: Find a way to get this value
         locations,
         stats
     })
