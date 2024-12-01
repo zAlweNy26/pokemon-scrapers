@@ -28,16 +28,81 @@ const specialAbilities = {
     "Darmanitan": "Darmanitan (Zen Mode Ability)",
     "Darmanitan (Galarian Form)": "Darmanitan (Galarian Zen Mode Ability)",
     "Greninja": "Greninja (Battle Bond Ability)",
-    "Zygarde": "Zygarde (Power Construct Ability)",
+    "Zygarde (50% Forme)": "Zygarde (50% Forme Power Construct Ability)",
     "Zygarde (10% Forme)": "Zygarde (10% Forme Power Construct Ability)",
     "Rockruff": "Rockruff (Own Tempo Ability)"
 }
 
 // Pokémon with missing forms not listed in the table
 const missingForms = {
-    "Minior": "Minior (Red Core)",
+    "Minior (Meteor)": "Minior (Red Core)",
     "Toxtricity (Low Key Form)": "Gigantamax Toxtricity (Low Key Form)"
 }
+
+// Pokémon with default forms names not listed in the table
+const defaultFormsNames = {
+    "Unown": "Unown (A)",
+    "Castform": "Castform (Normal Form)", //or "Castform (Normal)"
+    "Deoxys": "Deoxys (Normal Forme)",
+    "Burmy": "Burmy (Plant Cloak)",
+    "Wormadam": "Wormadam (Plant Cloak)",
+    "Cherrim": "Cherrim (Overcast Form)",
+    "Shellos": "Shellos (West Sea)",
+    "Gastrodon": "Gastrodon (West Sea)",
+    // kept "Rotom" instead of "Rotom (Normal Forme)"
+    // kept "Dialga" instead of "Dialga (Standard Forme)"
+    // kept "Palkia" instead of "Palkia (Standard Forme)"
+    "Giratina": "Giratina (Altered Forme)",
+    "Shaymin": "Shaymin (Land Forme)",
+    "Arceus": "Arceus (Normal-Type)",
+    "Basculin": "Basculin (Red-Striped Form)",
+    // kept "Darmanitan" instead of "Darmanitan (Standard Mode)"
+    "Deerling": "Deerling (Spring Form)",
+    "Sawsbuck": "Sawsbuck (Spring Form)",
+    "Tornadus": "Tornadus (Incarnate Forme)",
+    "Thundurus": "Thundurus (Incarnate Forme)",
+    "Landorus": "Landorus (Incarnate Forme)",
+    "Keldeo": "Keldeo (Ordinary Form)", // or "Keldeo (Usual Form)" and "Keldeo (Resolution Form)"
+    "Meloetta": "Meloetta (Aria Forme)",
+    // kept "Genesect" instead of "Genesect (No Drive)"
+    "Vivillon": "Vivillon (Meadow Pattern)",
+    "Flabébé": "Flabébé (Red Flower)",
+    "Floette": "Floette (Red Flower)",
+    "Florges": "Florges (Red Flower)",
+    // kept "Furfrou" instead of "Furfrou (Natural Form)"
+    "Aegislash": "Aegislash (Shield Forme)",
+    "Pumpkaboo": "Pumpkaboo (Average Size)",
+    "Gourgeist": "Gourgeist (Average Size)",
+    "Xerneas": "Xerneas (Neutral Mode)",
+    "Zygarde": "Zygarde (50% Forme)",
+    "Hoopa": "Hoopa (Hoopa Confined)",
+    "Oricorio": "Oricorio (Baile Style)",
+    "Lycanroc": "Lycanroc (Midday Form)",
+    "Wishiwashi": "Wishiwashi (Solo Form)",
+    "Silvally": "Silvally (Normal-type)", // TODO: change Silvally names to "Silvally (Type: Normal)"
+    "Minior": "Minior (Meteor)",
+    "Mimikyu": "Mimikyu (Disguised Form)",
+    "Toxtricity": "Toxtricity (Amped Form)",
+    "Sinistea": "Sinistea (Phony Form)",
+    "Polteageist": "Polteageist (Phony Form)",
+    "Alcremie": "Alcremie (Vanilla Cream)", // TODO: change Alcremie names to "Alcremie (Vanilla Cream - Strawberry Sweet)"
+    "Eiscue": "Eiscue (Ice Face)",
+    "Morpeko": "Morpeko (Full Belly Mode)",
+    "Zacian": "Zacian (Hero of Many Battles)",
+    "Zamazenta": "Zamazenta (Hero of Many Battles)",
+    "Urshifu": "Urshifu (Single Strike Style)", //TODO: change Gigantamax Urshifu names to "Gigantamax Urshifu (Single Strike Style)" and "Gigantamax Urshifu (Rapid Strike Style)"
+    "Enamorus": "Enamorus (Incarnate Forme)",
+    "Maushold": "Maushold (Family of Three)",
+    "Squawkabilly": "Squawkabilly (Green Plumage)",
+    "Palafin": "Palafin (Zero Form)",
+    "Tatsugiri": "Tatsugiri (Curly Form)",
+    "Dudunsparce": "Dudunsparce (Two-Segment Form)",
+    "Gimmighoul": "Gimmighoul (Chest Form)",
+    "Ogerpon": "Ogerpon (Teal Mask)",
+    "Poltchageist": "Poltchageist (Counterfeit Form)",
+    "Sinistcha": "Sinistcha (Unremarkable Form)",
+}
+
 
 const values: Pokemon[] = []
 
@@ -83,7 +148,8 @@ async function fetchPokemons(region: Region, selector = 'table') {
         if (index === null || isNaN(index)) return
         const img = parse(cols.eq(1).find('img').attr('src') ?? '').name.padStart(4, '0')
         const subIndex = values.filter(p => p.ndex === ndex).length
-        const name = cols.eq(2).find('a').text().trim() || cols.eq(2).text().trim()
+        let name = cols.eq(2).find('a').text().trim() || cols.eq(2).text().trim()
+        if (name in defaultFormsNames) name = defaultFormsNames[name as keyof typeof defaultFormsNames]
         const types = cols.eq(3).find('a').map((_i, el) =>
             parse($(el).attr('href') ?? '').name
         ).toArray()
