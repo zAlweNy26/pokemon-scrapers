@@ -63,7 +63,7 @@ const defaultFormsNames = {
     "Oricorio": "Oricorio (Baile Style)",
     "Lycanroc": "Lycanroc (Midday Form)",
     "Wishiwashi": "Wishiwashi (Solo Form)",
-    "Silvally": "Silvally (Normal-Type)", // TODO: change Silvally names to "Silvally (Type: Normal)"
+    "Silvally": "Silvally (Normal-type)", // TODO: change Silvally names to "Silvally (Type: X)"
     "Minior": "Minior (Meteor)",
     "Mimikyu": "Mimikyu (Disguised Form)",
     "Toxtricity": "Toxtricity (Amped Form)",
@@ -71,12 +71,12 @@ const defaultFormsNames = {
     "Sinistea (Authentic Form)": "Sinistea (Antique Form)",
     "Polteageist": "Polteageist (Phony Form)",
     "Polteageist (Authentic Form)": "Polteageist (Antique Form)",
-    "Alcremie": "Alcremie (Vanilla Cream)", // TODO: change Alcremie names to "Alcremie (Vanilla Cream - Strawberry Sweet)"
+    "Alcremie": "Alcremie (Vanilla Cream - Strawberry Sweet)",
     "Eiscue": "Eiscue (Ice Face)",
     "Morpeko": "Morpeko (Full Belly Mode)",
     "Zacian": "Zacian (Hero of Many Battles)",
     "Zamazenta": "Zamazenta (Hero of Many Battles)",
-    "Urshifu": "Urshifu (Single Strike Style)", //TODO: change Gigantamax Urshifu names to "Gigantamax Urshifu (Single Strike Style)" and "Gigantamax Urshifu (Rapid Strike Style)"
+    "Urshifu": "Urshifu (Single Strike Style)",
     "Enamorus": "Enamorus (Incarnate Forme)",
     "Maushold": "Maushold (Family of Three)",
     "Squawkabilly": "Squawkabilly (Green Plumage)",
@@ -87,6 +87,16 @@ const defaultFormsNames = {
     "Ogerpon": "Ogerpon (Teal Mask)",
     "Poltchageist": "Poltchageist (Counterfeit Form)",
     "Sinistcha": "Sinistcha (Unremarkable Form)",
+}
+
+const alcremieSweets: Record<string, string> = {
+    'berry': 'Berry Sweet',
+    'love': 'Love Sweet',
+    'star': 'Star Sweet',
+    'clover': 'Clover Sweet',
+    'flower': 'Flower Sweet',
+    'ribbon': 'Ribbon Sweet',
+    '': 'Strawberry Sweet',
 }
 
 const gensRanges = [[1, 151], [152, 251], [252, 386], [387, 493], [494, 649], [650, 721], [722, 809], [810, 905], [906, 1025]]
@@ -141,9 +151,25 @@ async function fetchPokemons(region: Region, selector = 'table') {
         const index = parseInt(ndex) - 1
         if (index === null || isNaN(index)) return
         const img = parse(cols.eq(1).find('img').attr('src') ?? '').name.padStart(4, '0')
-        const subIndex = values.filter(p => p.ndex === ndex).length
+        let subIndex = values.filter(p => p.ndex === ndex).length
         let name = cols.eq(2).find('a').text().trim() || cols.eq(2).text().trim()
+
         if (name in defaultFormsNames) name = defaultFormsNames[name as keyof typeof defaultFormsNames]
+
+        if (index === 868 && subIndex > 1) { // Alcremie
+            const key = Object.keys(alcremieSweets).findIndex(k => img.includes(k))
+            name = name.replace(')', ` - ${Object.values(alcremieSweets)[key]})`)
+        }
+
+        if (index === 891) { // Urshifu
+            if (subIndex === 1) name = 'Gigantamax Urshifu (Single Strike Style)'
+            else if (subIndex === 3) subIndex -= 1
+            else if (subIndex === 2) {
+                name = 'Gigantamax Urshifu (Rapid Strike Style)'
+                subIndex += 1
+            }
+        }
+
         const types = cols.eq(3).find('a').map((_i, el) =>
             parse($(el).attr('href') ?? '').name
         ).toArray()
