@@ -1,23 +1,6 @@
 import * as cheerio from 'cheerio'
 import { parse } from 'node:path'
-
-interface Region {
-    index: number
-    href: string
-    name: string
-}
-
-interface Pokemon {
-    index: number
-    subIndex: number
-    region: number
-    gen: number
-    depositable: boolean
-    ndex: string
-    form: string
-    name: string
-    types: string[]
-}
+import type { PokemonSerebii, Region } from '../types'
 
 // Base URL for the Pokémon Home section of Serebii
 const homeUrl = 'https://www.serebii.net/pokemonhome'
@@ -43,7 +26,7 @@ const missingForms = {
 // Pokémon with wrong default forms names
 const defaultFormsNames = {
     "Unown": "Unown (A)",
-    "Castform": "Castform (Normal Form)", //or "Castform (Normal)"
+    // "Castform": "Castform (Normal Form)", //or "Castform (Normal)"
     "Deoxys": "Deoxys (Normal Forme)",
     "Burmy": "Burmy (Plant Cloak)",
     "Wormadam": "Wormadam (Plant Cloak)",
@@ -85,7 +68,9 @@ const defaultFormsNames = {
     "Mimikyu": "Mimikyu (Disguised Form)",
     "Toxtricity": "Toxtricity (Amped Form)",
     "Sinistea": "Sinistea (Phony Form)",
+    "Sinistea (Authentic Form)": "Sinistea (Antique Form)",
     "Polteageist": "Polteageist (Phony Form)",
+    "Polteageist (Authentic Form)": "Polteageist (Antique Form)",
     "Alcremie": "Alcremie (Vanilla Cream)", // TODO: change Alcremie names to "Alcremie (Vanilla Cream - Strawberry Sweet)"
     "Eiscue": "Eiscue (Ice Face)",
     "Morpeko": "Morpeko (Full Belly Mode)",
@@ -113,7 +98,7 @@ const getGenFromNdex = (ndex: number) => {
     return -1
 }
 
-const values: Pokemon[] = []
+const values: PokemonSerebii[] = []
 
 async function fetchRegions(): Promise<Region[]> {
     const regionsHtml = await fetch(`${homeUrl}/pokemon.shtml`).then(res => res.text())
@@ -168,7 +153,7 @@ async function fetchPokemons(region: Region, selector = 'table') {
             || 'Default'
         if (form === 'Female') return
         const gen = getGenFromNdex(index)
-        const item: Pokemon = { index, subIndex, region: region.index, gen, depositable, ndex, name, form, types }
+        const item: PokemonSerebii = { index, subIndex, region: region.index, gen, depositable, ndex, name, form, types }
         values.push(item)
 
         const hasGenderDiff = genderDiffs.some(g => [ndex, img].includes(g))
@@ -199,4 +184,4 @@ values.sort((a, b) => a.index === b.index ? a.subIndex - b.subIndex : a.index - 
 
 console.log('\nTotal Pokémons :', values.length)
 
-Bun.write('./pokedex.json', JSON.stringify(values, null, 2))
+Bun.write('pokedex.json', JSON.stringify(values, null, 2))
