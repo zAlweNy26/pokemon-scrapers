@@ -9,48 +9,24 @@ interface Issue {
 }
 
 /**
- * Turns a TypeBox failure into problem-document issues.
- *
- * Elysia validates query and param properties one at a time and throws on the
- * first failure, so this reports one issue in practice rather than every problem
- * with the request - it is a description, not an exhaustive audit.
- *
- * The failing property name only exists inside Elysia's JSON `message`, never on
- * the error instance, so it is parsed out defensively and simply omitted if the
- * shape ever changes.
+ * Turns a validation failure into problem-document issues, each naming its own
+ * field. Elysia gives every issue a `path` ("limit", or "/limit" for TypeBox);
+ * a path naming nothing useful ("" or "root") is omitted rather than misleading.
  */
-const propertyOf = (error: unknown): string | undefined => {
-    const { message } = error as { message?: unknown }
-    if (typeof message !== 'string') return undefined
-
-    try {
-        const { property } = JSON.parse(message) as { property?: unknown }
-        if (typeof property !== 'string') return undefined
-
-        const name = property.replace(/^\//, '')
-
-        // Elysia reports 'root' when a coerced scalar (a numeric query param)
-        // fails, which names nothing useful - better to omit than mislead.
-        return name && name !== 'root' ? name : undefined
-    } catch {
-        return undefined
-    }
-}
-
 const describe = (error: unknown): Issue[] => {
     const { all } = error as { all?: unknown }
     if (!Array.isArray(all)) return []
 
-    const property = propertyOf(error)
-
     return all.flatMap((issue) => {
         if (typeof issue !== 'object' || issue === null) return []
 
-        const { summary, message } = issue as { summary?: string; message?: string }
+        const { summary, message, path } = issue as { summary?: string; message?: string; path?: unknown }
         const text = summary ?? message
         if (!text) return []
 
-        return [property ? { property, message: text } : { message: text }]
+        const property = typeof path === 'string' ? path.replace(/^\//, '') : ''
+
+        return [property && property !== 'root' ? { property, message: text } : { message: text }]
     })
 }
 

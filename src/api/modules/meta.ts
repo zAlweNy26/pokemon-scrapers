@@ -1,24 +1,8 @@
-import { count } from 'drizzle-orm'
 import { Elysia } from 'elysia'
 import { z } from 'zod'
-import type { Db } from '../../db/client'
-import { encounter, form, meta as metaTable, pokemon } from '../../db/schema'
+import { meta as metaTable } from '../../db/schema'
 import { db, env } from '../env'
 import { sharedModels } from '../models'
-
-const counts = async (database: Db) => {
-    const [pokemonCount, formCount, encounterCount] = await database.batch([
-        database.select({ n: count() }).from(pokemon),
-        database.select({ n: count() }).from(form),
-        database.select({ n: count() }).from(encounter)
-    ])
-
-    return {
-        pokemon: pokemonCount[0]?.n ?? 0,
-        forms: formCount[0]?.n ?? 0,
-        encounters: encounterCount[0]?.n ?? 0
-    }
-}
 
 /**
  * Lets a consumer detect a dataset change without diffing payloads, and answers
@@ -28,20 +12,24 @@ const counts = async (database: Db) => {
 export const meta = new Elysia({ name: 'module.meta' }).use(sharedModels).get(
     '/meta',
     async () => {
-        const database = db()
-
-        const rows = await database
+        const rows = await db()
             .select({ key: metaTable.key, value: metaTable.value })
             .from(metaTable)
 
-        const { generated_at, ...sources } = Object.fromEntries(
-            rows.map((row) => [row.key, row.value])
-        )
+        // Counts are written by the data load, not computed here: any extra query
+        // string misses the edge cache, and counting per request would scan
+        // three tables on every miss.
+        const { generated_at, count_pokemon, count_forms, count_encounters, ...sources } =
+            Object.fromEntries(rows.map((row) => [row.key, row.value]))
 
         return {
             dataVersion: env().DATA_VERSION,
             generatedAt: generated_at ?? null,
-            counts: await counts(database),
+            counts: {
+                pokemon: Number(count_pokemon ?? 0),
+                forms: Number(count_forms ?? 0),
+                encounters: Number(count_encounters ?? 0)
+            },
             sources
         }
     },

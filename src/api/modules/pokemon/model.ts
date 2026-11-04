@@ -40,7 +40,7 @@ const listItemSchema = z.object({
  * would silently lose every filter. Responses keep names, which do produce $refs.
  */
 export const listQuery = z.object({
-        gen: z.coerce.number().int().min(1).max(9).optional(),
+        gen: z.coerce.number().int().min(1).optional(),
         type: z.string().max(20).optional().meta({ examples: ['Water'] }),
         region: z.string().max(30).optional().meta({ examples: ['Kanto'] }),
         depositable: booleanString.optional().describe('Filter on Pokemon HOME compatibility'),

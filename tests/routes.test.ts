@@ -39,7 +39,7 @@ describe('GET /health', () => {
         const { response, body } = await json('/health')
 
         expect(response.status).toBe(200)
-        expect(body).toEqual({ ok: true, dataVersion: 'test-0001', pokemon: 8 })
+        expect(body).toEqual({ ok: true, dataVersion: 'test-0001' })
         expect(response.headers.get('cache-control')).toBe('no-store')
     })
 })
@@ -61,6 +61,24 @@ describe('GET /v1/pokemon', () => {
         // z.coerce.boolean() would read "false" as true; the enum transform does not.
         expect((await json('/v1/pokemon?depositable=false')).body.meta.total).toBe(0)
         expect((await json('/v1/pokemon?depositable=true')).body.meta.total).toBe(8)
+    })
+
+    test('accepts a generation the code has never heard of', async () => {
+        // A new generation is a data change; it must not need a code deploy to be filterable.
+        const { response, body } = await json('/v1/pokemon?gen=10')
+
+        expect(response.status).toBe(200)
+        expect(body.data).toEqual([])
+    })
+
+    test('labels each validation issue with its own field', async () => {
+        const { response, body } = await json('/v1/pokemon?limit=0&offset=-1')
+
+        expect(response.status).toBe(422)
+        expect(body.errors.map((issue: { property: string }) => issue.property)).toEqual([
+            'limit',
+            'offset'
+        ])
     })
 
     test('rejects a page size above the cap', async () => {
@@ -125,6 +143,22 @@ describe('caching', () => {
         const second = await call('/v1/pokemon/25', { headers: { 'if-none-match': etag } })
 
         expect(second.status).toBe(304)
+        // workerd throws on a 304 that carries a body; Bun does not, so assert it here.
+        expect(second.body).toBeNull()
+        expect(second.headers.get('etag')).toBe(etag)
+    })
+
+    test('compares weakly, as RFC 9110 requires for If-None-Match', async () => {
+        // Cloudflare turns a strong ETag weak when it compresses, so browsers send W/ back.
+        const etag = (await call('/v1/pokemon/25')).headers.get('etag')!
+
+        for (const header of [`W/${etag}`, `"stale", ${etag}`, '*']) {
+            const response = await call('/v1/pokemon/25', { headers: { 'if-none-match': header } })
+            expect(response.status).toBe(304)
+        }
+
+        const miss = await call('/v1/pokemon/25', { headers: { 'if-none-match': '"stale"' } })
+        expect(miss.status).toBe(200)
     })
 
     test('the ETag varies with the query, so pages cache independently', async () => {
@@ -209,6 +243,16 @@ describe('GET /v1/search', () => {
         }
     })
 
+    test('treats LIKE wildcards in a short query as literal text', async () => {
+        // Stripping them instead turned '%%' into the pattern '%', matching every species.
+        for (const q of ['%%', '__', '%a']) {
+            const { response, body } = await json(`/v1/search?q=${encodeURIComponent(q)}`)
+
+            expect(response.status).toBe(200)
+            expect(body.data).toEqual([])
+        }
+    })
+
     test('searches the trimmed query and echoes back what it searched', async () => {
         const { body } = await json(`/v1/search?q=${encodeURIComponent(' pika ')}`)
 
@@ -289,5 +333,6 @@ describe('GET /v1/meta', () => {
         expect(body.dataVersion).toBe('test-0001')
         expect(body.counts).toEqual({ pokemon: 8, forms: 13, encounters: 8 })
         expect(Object.keys(body.sources)).toContain('source_serebii')
+        expect(Object.keys(body.sources)).not.toContain('count_pokemon')
     })
 })

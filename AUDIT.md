@@ -1,8 +1,8 @@
 # homedex audit — 2026-11-04
 
-> **Update (same day):** 11, 12 and 17 are done (both plugin packages and `@types/node`
-> removed). Migrations moved to `src/db/migrations/`. A matching `If-None-Match` now
-> gets its 304 from `src/api/handler.ts`, so the line numbers for finding 2 have changed.
+> **Status (2026-11-04):** done — 1–6, 11, 12, 17, plus a test that the 304 has no body.
+> Still open: 7–10, 13–16. Migrations now live in `src/db/migrations/`, and the 304
+> is answered in `src/api/handler.ts`, so some line numbers below are out of date.
 
 **What this repo does:** homedex is a free, read-only Pokémon API on Cloudflare Workers:
 Elysia for routing, Drizzle over D1 for storage, Workers Cache in front, and the

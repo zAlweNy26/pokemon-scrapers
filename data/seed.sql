@@ -120,5 +120,12 @@ INSERT INTO meta (key, value) VALUES
     ('source_bulbapedia','seed'),
     ('source_serebii','seed');
 
+-- Counts are stored at load time so /v1/meta never scans a table per request.
+-- Computed here, from the rows just loaded, so they cannot drift from the data.
+INSERT INTO meta (key, value)
+    SELECT 'count_pokemon', count(*) FROM pokemon
+    UNION ALL SELECT 'count_forms', count(*) FROM form
+    UNION ALL SELECT 'count_encounters', count(*) FROM encounter;
+
 INSERT INTO pokemon_fts (rowid, slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant)
     SELECT ndex, slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant FROM pokemon;

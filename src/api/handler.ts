@@ -38,11 +38,18 @@ export const handleRequest = async (request: Request, env: Env): Promise<Respons
  * Answers a matching If-None-Match with a bodyless 304. Built here, not in the
  * cache plugin: Elysia's `status(304)` attaches a body, which workerd rejects
  * (Bun does not, so only a real Worker shows it).
+ *
+ * Weak comparison, as RFC 9110 requires for If-None-Match: the header may be a
+ * list, `*`, or carry `W/` - which Cloudflare adds when it compresses a response.
  */
 const notModified = (request: Request, response: Response): Response => {
     const etag = response.headers.get('etag')
+    const tags = request.headers
+        .get('if-none-match')
+        ?.split(',')
+        .map((tag) => tag.trim().replace(/^W\//, ''))
 
-    return response.status === 200 && etag && request.headers.get('if-none-match') === etag
+    return response.status === 200 && etag && (tags?.includes(etag) || tags?.includes('*'))
         ? new Response(null, { status: 304, headers: response.headers })
         : response
 }

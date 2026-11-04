@@ -72,7 +72,8 @@ const matchFullText = (db: Db, query: string, limit: number) =>
     `)
 
 const matchPrefix = async (db: Db, query: string, limit: number): Promise<SearchRow[]> => {
-    const pattern = `${query.replace(/[%_]/g, '')}%`
+    // Escaped, not stripped: stripping turned `%%` into the pattern `%`, which matches every row.
+    const pattern = `${query.replace(/[\\%_]/g, '\\$&')}%`
 
     return db
         .select({
@@ -85,7 +86,7 @@ const matchPrefix = async (db: Db, query: string, limit: number): Promise<Search
         })
         .from(pokemon)
         .innerJoin(form, sql`${form.ndex} = ${pokemon.ndex} AND ${form.isDefault} = 1`)
-        .where(or(...searchableColumns.map((column) => sql`${column} LIKE ${pattern} COLLATE NOCASE`)))
+        .where(or(...searchableColumns.map((column) => sql`${column} LIKE ${pattern} ESCAPE '\\' COLLATE NOCASE`)))
         .orderBy(pokemon.ndex)
         .limit(limit)
 }
