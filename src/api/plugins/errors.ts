@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia'
-import { Problem } from '../problem'
+import { Problem, internal, notFound, unprocessable } from '../problem'
 
 const PROBLEM_JSON = 'application/problem+json'
 
@@ -30,69 +30,37 @@ const describe = (error: unknown): Issue[] => {
     })
 }
 
+/**
+ * Maps a failure Elysia raises on our behalf onto the Problem a handler would
+ * have thrown. Every route is GET, so there is no request body to fail parsing.
+ */
+const toProblem = (code: string | number, error: unknown, path: string): Problem => {
+    switch (code) {
+        case 'NOT_FOUND':
+            return notFound('No route matches this path.')
+
+        case 'VALIDATION': {
+            const issues = describe(error)
+            return unprocessable(issues[0]?.message ?? 'The request failed validation.', issues)
+        }
+
+        default:
+            // Surfaces in `void project logs`; the client is told nothing internal.
+            console.error(JSON.stringify({ level: 'error', path, code, message: String(error) }))
+            return internal()
+    }
+}
+
 export const errors = new Elysia({ name: 'errors' })
     .onError(({ code, error, set, path }) => {
+        const problem = error instanceof Problem ? error : toProblem(code, error, path)
+
+        set.status = problem.status
         set.headers['content-type'] = PROBLEM_JSON
         // Failures are per-request and must never be cached at the edge.
         set.headers['cache-control'] = 'no-store'
+        for (const [header, value] of Object.entries(problem.headers)) set.headers[header] = value
 
-        if (error instanceof Problem) {
-            set.status = error.status
-            for (const [header, value] of Object.entries(error.headers))
-                set.headers[header] = value
-
-            return { ...error.toJSON(), instance: path }
-        }
-
-        switch (code) {
-            case 'NOT_FOUND':
-                set.status = 404
-                return {
-                    type: '/errors/not-found',
-                    title: 'Not Found',
-                    status: 404,
-                    detail: 'No route matches this path.',
-                    instance: path
-                }
-
-            case 'VALIDATION': {
-                set.status = 422
-
-                // Elysia's `message` is a JSON dump of the whole TypeBox failure.
-                // `all` carries the individual issues, which make a far better
-                // problem document; fall back only if the shape ever changes.
-                const issues = describe(error)
-
-                return {
-                    type: '/errors/validation-failed',
-                    title: 'Unprocessable Content',
-                    status: 422,
-                    detail: issues[0]?.message ?? 'The request failed validation.',
-                    errors: issues,
-                    instance: path
-                }
-            }
-
-            case 'PARSE':
-                set.status = 400
-                return {
-                    type: '/errors/bad-request',
-                    title: 'Bad Request',
-                    status: 400,
-                    detail: 'The request body could not be parsed.',
-                    instance: path
-                }
-
-            default:
-                // Surfaces in `void project logs`; the client is told nothing internal.
-                console.error(JSON.stringify({ level: 'error', path, code, message: String(error) }))
-                set.status = 500
-                return {
-                    type: '/errors/internal',
-                    title: 'Internal Server Error',
-                    status: 500,
-                    instance: path
-                }
-        }
+        return { ...problem.toJSON(), instance: path }
     })
     .as('global')

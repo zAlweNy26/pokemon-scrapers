@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { createTestDb, type TestDb } from './support/database'
+import { eq } from 'drizzle-orm'
+import { form } from '../src/db/schema'
 import * as pokemon from '../src/api/modules/pokemon/service'
 import * as search from '../src/api/modules/search/service'
 import * as reference from '../src/api/modules/reference/service'
@@ -57,6 +59,22 @@ describe('pokemon.list', () => {
         // Greninja qualifies through its default form even though Ash-Greninja cannot.
         expect(items.map((item) => item.slug)).toContain('greninja')
         expect(items).toHaveLength(8)
+    })
+
+    test('list items and search results report depositable the way the filter means it', async () => {
+        // A species whose default form cannot enter HOME but another form can: the
+        // filter returns it, so every result row must say depositable: true too.
+        const own = await createTestDb()
+        await own.db.update(form).set({ depositable: false }).where(eq(form.slug, 'ogerpon-teal'))
+
+        const { items } = await pokemon.list(own.db, { depositable: true, limit: 50, offset: 0 }, IMAGES)
+        const [fullText] = await search.search(own.db, 'Ogerpon', 5, IMAGES)
+        const [prefix] = await search.search(own.db, 'Og', 5, IMAGES)
+        own.close()
+
+        expect(items.find((item) => item.slug === 'ogerpon')?.depositable).toBe(true)
+        expect(fullText?.depositable).toBe(true)
+        expect(prefix?.depositable).toBe(true)
     })
 
     test('depositable=false means no form qualifies, not "has a blocked form"', async () => {

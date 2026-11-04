@@ -1,8 +1,10 @@
 # homedex audit — 2026-11-04
 
-> **Status (2026-11-04):** done — 1–6, 11, 12, 17, plus a test that the 304 has no body.
-> Still open: 7–10, 13–16. Migrations now live in `src/db/migrations/`, and the 304
-> is answered in `src/api/handler.ts`, so some line numbers below are out of date.
+> **Status (2026-11-04):** all findings are done except 15, which was skipped on purpose:
+> Workers Cache answers most revalidations before the Worker runs, so checking early
+> would add a second copy of the matching rule for little gain. Also added: a test
+> that a 304 has no body. (Commit `7ecdb70` says "1-6"; in this file's numbering
+> it closed 1, 2, 3, 4, 8 and 10.) Some line numbers below are out of date.
 
 **What this repo does:** homedex is a free, read-only Pokémon API on Cloudflare Workers:
 Elysia for routing, Drizzle over D1 for storage, Workers Cache in front, and the

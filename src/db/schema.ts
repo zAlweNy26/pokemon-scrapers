@@ -1,5 +1,5 @@
-import { relations } from 'drizzle-orm'
-import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { relations, sql } from 'drizzle-orm'
+import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 /**
  * The contract between the scraper and the API: the scraper writes it, the API
@@ -8,8 +8,8 @@ import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm
  *
  * Modelling note: species-level facts (names, category, breeding) live on
  * `pokemon`; anything that varies between forms (types, stats, size, HOME
- * depositability, sprites) lives on `form`. Every species has at least one row in
- * `form` with `isDefault` set.
+ * depositability, sprites) lives on `form`. Every species has exactly one row in
+ * `form` with `isDefault` set (enforced by `form_one_default_idx`).
  */
 
 export const generation = sqliteTable('generation', {
@@ -95,7 +95,10 @@ export const form = sqliteTable(
     },
     (table) => [
         index('form_ndex_idx').on(table.ndex),
-        index('form_depositable_idx').on(table.depositable)
+        index('form_depositable_idx').on(table.depositable),
+        // Exactly one default per species: list and search join on it, so a second
+        // default would list the species twice. Fails the load instead.
+        uniqueIndex('form_one_default_idx').on(table.ndex).where(sql`is_default = 1`)
     ]
 )
 

@@ -9,8 +9,8 @@
 -- by a LIKE prefix fallback in the search service instead.
 --
 -- This is an external-content index over `pokemon`: it is NOT kept in sync by
--- triggers. The scraper repopulates it after a bulk load, which is the only time
--- `pokemon` changes.
+-- triggers. A load ends with `INSERT INTO pokemon_fts(pokemon_fts) VALUES('rebuild')`,
+-- which is the only time `pokemon` changes.
 CREATE VIRTUAL TABLE pokemon_fts USING fts5(
     slug, name_en, name_ja, name_ja_romaji, name_de, name_fr,
     name_it, name_es, name_ko, name_zh_hans, name_zh_hant,

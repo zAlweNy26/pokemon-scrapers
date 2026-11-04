@@ -10,7 +10,9 @@ export class Problem extends Error {
         readonly title: string,
         readonly detail?: string,
         /** Extra response headers this failure requires, e.g. Retry-After on a 429. */
-        readonly headers: Record<string, string> = {}
+        readonly headers: Record<string, string> = {},
+        /** RFC 9457 extension members, e.g. per-field `errors` on a validation failure. */
+        readonly extensions: Record<string, unknown> = {}
     ) {
         super(detail ?? title)
         this.name = 'Problem'
@@ -21,7 +23,8 @@ export class Problem extends Error {
             type: this.type,
             title: this.title,
             status: this.status,
-            ...(this.detail ? { detail: this.detail } : {})
+            ...(this.detail ? { detail: this.detail } : {}),
+            ...this.extensions
         }
     }
 }
@@ -29,11 +32,10 @@ export class Problem extends Error {
 export const notFound = (detail: string) =>
     new Problem(404, '/errors/not-found', 'Not Found', detail)
 
-export const badRequest = (detail: string) =>
-    new Problem(400, '/errors/bad-request', 'Bad Request', detail)
+export const unprocessable = (detail: string, errors: unknown[]) =>
+    new Problem(422, '/errors/validation-failed', 'Unprocessable Content', detail, {}, { errors })
 
-export const unprocessable = (detail: string) =>
-    new Problem(422, '/errors/validation-failed', 'Unprocessable Content', detail)
+export const internal = () => new Problem(500, '/errors/internal', 'Internal Server Error')
 
 export const rateLimited = (retryAfterSeconds: number) =>
     new Problem(

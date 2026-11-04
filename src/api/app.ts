@@ -40,5 +40,3 @@ export const app = new Elysia({ adapter: CloudflareAdapter, aot: false })
             .use(reference)
             .use(meta)
     )
-
-export type App = typeof app

@@ -3,7 +3,6 @@
 -- across languages, and two-character CJK names that fall below the FTS5 trigram floor.
 -- Replaced wholesale by the scraper's output; never hand-edit generated data.
 
-DELETE FROM pokemon_fts;
 DELETE FROM encounter;
 DELETE FROM form_ability;
 DELETE FROM form_type;
@@ -127,5 +126,7 @@ INSERT INTO meta (key, value)
     UNION ALL SELECT 'count_forms', count(*) FROM form
     UNION ALL SELECT 'count_encounters', count(*) FROM encounter;
 
-INSERT INTO pokemon_fts (rowid, slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant)
-    SELECT ndex, slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant FROM pokemon;
+-- Rebuilt from `pokemon` rather than deleted and re-inserted: `DELETE FROM pokemon_fts`
+-- reads the *current* rows to find the words to remove, so after any change to
+-- `pokemon` it removes the wrong ones and corrupts the index.
+INSERT INTO pokemon_fts(pokemon_fts) VALUES('rebuild');

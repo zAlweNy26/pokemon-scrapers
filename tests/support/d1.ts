@@ -50,16 +50,29 @@ export interface LocalD1 {
     close(): void
 }
 
-/** Applies every migration in src/db/migrations/ in filename order, then the seed fixture. */
-export const createLocalD1 = async (): Promise<LocalD1> => {
-    const sqlite = new Sqlite(':memory:')
-    const migrations = new URL('../../src/db/migrations/', import.meta.url)
+/** The fixture, as a load would run it. Exported so a test can load it twice. */
+export const seedSql = () => Bun.file(new URL('../../data/seed.sql', import.meta.url)).text()
 
+/**
+ * A migrated, seeded in-memory database. Foreign keys are on because D1 enforces
+ * them and SQLite does not by default - a broken reference must fail here first.
+ */
+export const createSqlite = async (): Promise<Sqlite> => {
+    const sqlite = new Sqlite(':memory:')
+    sqlite.run('PRAGMA foreign_keys = ON')
+
+    const migrations = new URL('../../src/db/migrations/', import.meta.url)
     const files = Array.from(new Bun.Glob('*.sql').scanSync({ cwd: migrations.pathname })).sort()
 
     for (const file of files) sqlite.run(await Bun.file(new URL(file, migrations)).text())
 
-    sqlite.run(await Bun.file(new URL('../../data/seed.sql', import.meta.url)).text())
+    sqlite.run(await seedSql())
+
+    return sqlite
+}
+
+export const createLocalD1 = async (): Promise<LocalD1> => {
+    const sqlite = await createSqlite()
 
     const client = {
         prepare: (sql: string) => new Statement(sqlite, sql),

@@ -28,6 +28,16 @@ const listColumns = {
     ...nameProjection
 }
 
+/**
+ * HOME depositability is species-level everywhere it is published: true when at
+ * least one form can enter HOME. One expression, so the filter, list items,
+ * search results and the detail document cannot disagree.
+ */
+const anyDepositable = sql`(SELECT 1 FROM ${form} AS df
+    WHERE df.ndex = ${pokemon.ndex} AND df.depositable = 1)`
+
+export const speciesDepositable = exists(anyDepositable).mapWith(Boolean)
+
 /** Rows to a lookup of arrays, preserving the order the query returned them in. */
 const groupBy = <Row, Key, Value>(
     rows: Row[],
@@ -52,8 +62,8 @@ const filterConditions = (filters: ListFilters) => {
 
     if (filters.gen !== undefined) conditions.push(eq(pokemon.gen, filters.gen))
 
-    // COLLATE NOCASE rather than lower(): it uses the index and matches the
-    // case-insensitivity callers expect from a name filter.
+    // Case-insensitive, as callers expect from a name filter. This scans rather
+    // than using an index (the indexes are BINARY), which costs nothing at ~1,000 species.
     if (filters.region !== undefined)
         conditions.push(sql`${generation.region} = ${filters.region} COLLATE NOCASE`)
 
@@ -65,16 +75,11 @@ const filterConditions = (filters: ListFilters) => {
             )
         )
 
-    if (filters.depositable !== undefined) {
-        // Species-level and asymmetric on purpose. `true` means at least one form
-        // can enter HOME; `false` must mean *no* form can. Testing `depositable = 0`
-        // for the negative case would instead match any species that merely has a
-        // non-depositable form - which is most of them, Pikachu included.
-        const anyDepositable = sql`(SELECT 1 FROM ${form} AS df
-            WHERE df.ndex = ${pokemon.ndex} AND df.depositable = 1)`
-
+    // Asymmetric on purpose: `false` must mean *no* form can enter HOME. Testing
+    // `depositable = 0` would match any species that merely has a blocked form -
+    // which is most of them, Pikachu included.
+    if (filters.depositable !== undefined)
         conditions.push(filters.depositable ? exists(anyDepositable) : notExists(anyDepositable))
-    }
 
     return conditions.length ? and(...conditions) : undefined
 }
@@ -94,7 +99,7 @@ export const list = async (db: Db, filters: ListFilters, imageBaseUrl: string) =
                 ...listColumns,
                 formId: form.id,
                 spriteKey: form.spriteKey,
-                depositable: form.depositable
+                depositable: speciesDepositable
             })
             .from(pokemon)
             .innerJoin(form, and(eq(form.ndex, pokemon.ndex), eq(form.isDefault, true)))

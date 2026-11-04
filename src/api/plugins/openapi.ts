@@ -5,7 +5,7 @@ import { z } from 'zod'
 /**
  * Scalar UI at /docs, machine-readable spec at /openapi.json.
  *
- * The spec is generated from the same TypeBox schemas that validate requests and
+ * The spec is generated from the same zod schemas that validate requests and
  * serialise responses, so documentation cannot drift from behaviour - a wrong
  * doc would be a failing request.
  */

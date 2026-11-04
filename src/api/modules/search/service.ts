@@ -5,6 +5,7 @@ import {
     matchedLanguage, nameAliases, nameProjection, namesOf, type NameColumns
 } from '../../names'
 import { spritesFor } from '../../sprites'
+import { speciesDepositable } from '../pokemon/service'
 
 /** Every column the FTS index covers, so the prefix fallback searches the same ground. */
 const searchableColumns = [pokemon.slug, ...Object.values(nameProjection)]
@@ -19,7 +20,7 @@ const asPhrase = (query: string) => `"${query.replace(/"/g, '""')}"`
 /**
  * The trigram tokenizer cannot index anything shorter than three characters,
  * which would leave two-character Japanese, Korean and Chinese names
- * unsearchable. Those fall back to an indexed prefix scan - over ~1500 rows it
+ * unsearchable. Those fall back to a LIKE prefix scan - over ~1500 rows it
  * costs nothing, and it keeps the feature honest in every language rather than
  * only in Latin script.
  */
@@ -61,11 +62,11 @@ export const search = async (db: Db, query: string, limit: number, imageBaseUrl:
  */
 const matchFullText = (db: Db, query: string, limit: number) =>
     db.all<SearchRow>(sql`
-        SELECT p.ndex, p.slug, p.gen, f.sprite_key AS spriteKey, f.depositable,
-               ${sql.raw(nameAliases('p'))}
+        SELECT pokemon.ndex, pokemon.slug, pokemon.gen, f.sprite_key AS spriteKey,
+               ${speciesDepositable} AS depositable, ${sql.raw(nameAliases('pokemon'))}
         FROM pokemon_fts x
-        JOIN pokemon p ON p.ndex = x.rowid
-        JOIN form f ON f.ndex = p.ndex AND f.is_default = 1
+        JOIN pokemon ON pokemon.ndex = x.rowid
+        JOIN form f ON f.ndex = pokemon.ndex AND f.is_default = 1
         WHERE pokemon_fts MATCH ${asPhrase(query)}
         ORDER BY rank
         LIMIT ${limit}
@@ -81,7 +82,7 @@ const matchPrefix = async (db: Db, query: string, limit: number): Promise<Search
             slug: pokemon.slug,
             gen: pokemon.gen,
             spriteKey: form.spriteKey,
-            depositable: form.depositable,
+            depositable: speciesDepositable,
             ...nameProjection
         })
         .from(pokemon)
