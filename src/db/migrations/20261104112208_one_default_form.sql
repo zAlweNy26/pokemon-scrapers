@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX `form_one_default_idx` ON `form` (`ndex`) WHERE is_default = 1;

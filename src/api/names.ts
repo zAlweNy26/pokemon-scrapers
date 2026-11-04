@@ -1,5 +1,5 @@
 import { getTableColumns } from 'drizzle-orm'
-import { pokemon, type Pokemon } from '../db/schema'
+import { pokemon, type Pokemon } from '@/db/schema'
 
 /**
  * The single place the nine game languages are listed.

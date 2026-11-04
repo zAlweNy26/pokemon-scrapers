@@ -1,6 +1,6 @@
 import { defineHandler } from 'void'
-import { handleRequest } from '../api/handler'
-import type { Env } from '../api/platform'
+import { handleRequest } from '@/api/handler'
+import type { Env } from '@/api/platform'
 
 declare global {
     // Types `c.env` with the bindings from void.config.ts; Void only generates the ones it infers.

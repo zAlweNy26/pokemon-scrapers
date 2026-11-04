@@ -1,6 +1,6 @@
 import { Elysia } from 'elysia'
-import { db } from '../../env'
-import { sharedModels } from '../../models'
+import { db } from '@/api/env'
+import { sharedModels } from '@/api/models'
 import { referenceModels } from './model'
 import * as service from './service'
 

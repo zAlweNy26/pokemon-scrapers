@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia'
-import { Problem, internal, notFound, unprocessable } from '../problem'
+import { Problem, internal, notFound, unprocessable } from '@/api/problem'
 
 const PROBLEM_JSON = 'application/problem+json'
 

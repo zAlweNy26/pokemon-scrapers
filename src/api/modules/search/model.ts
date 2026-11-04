@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { MAX_QUERY_LENGTH, namesSchema, spritesSchema } from '../../models'
+import { MAX_QUERY_LENGTH, namesSchema, spritesSchema } from '@/api/models'
 
 const resultSchema = z.object({
     ndex: z.number(),

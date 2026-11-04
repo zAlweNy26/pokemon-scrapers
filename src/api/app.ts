@@ -1,17 +1,17 @@
 import { Elysia } from 'elysia'
 import { CloudflareAdapter } from 'elysia/adapter/cloudflare-worker'
 
-import { cacheable } from './plugins/cache'
-import { httpAccess } from './plugins/cors'
-import { errors } from './plugins/errors'
-import { documentation } from './plugins/openapi'
-import { globalRateLimit } from './plugins/rate-limit'
+import { cacheable } from '@/api/plugins/cache'
+import { httpAccess } from '@/api/plugins/cors'
+import { errors } from '@/api/plugins/errors'
+import { documentation } from '@/api/plugins/openapi'
+import { globalRateLimit } from '@/api/plugins/rate-limit'
 
-import { health } from './modules/health'
-import { meta } from './modules/meta'
-import { pokemon } from './modules/pokemon'
-import { reference } from './modules/reference'
-import { search } from './modules/search'
+import { health } from '@/api/modules/health'
+import { meta } from '@/api/modules/meta'
+import { pokemon } from '@/api/modules/pokemon'
+import { reference } from '@/api/modules/reference'
+import { search } from '@/api/modules/search'
 
 /**
  * Composition root. Every module is a self-contained Elysia plugin, so this file

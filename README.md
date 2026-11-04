@@ -81,10 +81,9 @@ bun run db:seed            # reset local D1 and load data/seed.sql
 Two things Drizzle deliberately does not cover:
 
 - **`pokemon_fts`** is an FTS5 virtual table, which Drizzle's DSL cannot express.
-  It lives in the hand-written `src/db/migrations/0001_fts5_search.sql`. Void
-  refuses migrations missing from `meta/_journal.json`, so a hand-written file
-  needs a journal entry and the snapshot renamed to its prefix (see Void's
-  "Hand-written migrations" guide).
+  It is hand-appended to the end of the initial migration
+  (`src/db/migrations/*_initial_schema.sql`), below a marked comment — keep that
+  block if the migrations are ever regenerated.
 - **Search `MATCH`/`rank`** has no query-builder equivalent, so that one query is
   raw `sql` (still fully parameterised). Everything else is the query builder.
 
@@ -94,7 +93,7 @@ Two things Drizzle deliberately does not cover:
 src/
   routes/      [...path].ts — the one Void route; hands every request to Elysia
   db/          schema.ts (the scraper↔API contract), client.ts (Drizzle over D1),
-               migrations/ (generated + the hand-written FTS5 one)
+               migrations/ (generated, plus the hand-appended FTS5 table)
   api/
     handler.ts   bindings + Drizzle client → app → access log; what the Worker runs
     app.ts       composition root

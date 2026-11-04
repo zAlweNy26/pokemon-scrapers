@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
-import { db, env } from '../../env'
-import { sharedModels } from '../../models'
-import { notFound } from '../../problem'
+import { db, env } from '@/api/env'
+import { sharedModels } from '@/api/models'
+import { notFound } from '@/api/problem'
 import { idOrNameParams, listQuery, pokemonModels } from './model'
 import * as service from './service'
 

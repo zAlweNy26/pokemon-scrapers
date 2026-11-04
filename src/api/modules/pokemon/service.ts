@@ -1,11 +1,11 @@
 import { and, count, eq, exists, inArray, notExists, sql } from 'drizzle-orm'
-import type { Db } from '../../../db/client'
+import type { Db } from '@/db/client'
 import {
     encounter, form, formAbility, formType, generation, pokemon,
     pokemonEggGroup, pokemonOrigin, type Pokemon
-} from '../../../db/schema'
-import { nameProjection, namesOf } from '../../names'
-import { spritesFor } from '../../sprites'
+} from '@/db/schema'
+import { nameProjection, namesOf } from '@/api/names'
+import { spritesFor } from '@/api/sprites'
 
 export interface ListFilters {
     gen?: number

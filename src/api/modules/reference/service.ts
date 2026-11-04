@@ -1,6 +1,6 @@
 import { count, countDistinct, eq } from 'drizzle-orm'
-import type { Db } from '../../../db/client'
-import { form, formType, generation, pokemon } from '../../../db/schema'
+import type { Db } from '@/db/client'
+import { form, formType, generation, pokemon } from '@/db/schema'
 
 export const generations = (db: Db) =>
     db

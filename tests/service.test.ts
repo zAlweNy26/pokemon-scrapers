@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { createTestDb, type TestDb } from './support/database'
 import { eq } from 'drizzle-orm'
-import { form } from '../src/db/schema'
-import * as pokemon from '../src/api/modules/pokemon/service'
-import * as search from '../src/api/modules/search/service'
-import * as reference from '../src/api/modules/reference/service'
+import { form } from '@/db/schema'
+import * as pokemon from '@/api/modules/pokemon/service'
+import * as search from '@/api/modules/search/service'
+import * as reference from '@/api/modules/reference/service'
 
 const IMAGES = 'https://images.test'
 

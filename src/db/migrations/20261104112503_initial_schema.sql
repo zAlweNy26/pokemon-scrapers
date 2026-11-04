@@ -29,6 +29,7 @@ CREATE TABLE `form` (
 CREATE UNIQUE INDEX `form_slug_unique` ON `form` (`slug`);--> statement-breakpoint
 CREATE INDEX `form_ndex_idx` ON `form` (`ndex`);--> statement-breakpoint
 CREATE INDEX `form_depositable_idx` ON `form` (`depositable`);--> statement-breakpoint
+CREATE UNIQUE INDEX `form_one_default_idx` ON `form` (`ndex`) WHERE is_default = 1;--> statement-breakpoint
 CREATE TABLE `form_ability` (
 	`form_id` integer NOT NULL,
 	`slot` integer NOT NULL,
@@ -96,4 +97,22 @@ CREATE TABLE `pokemon_origin` (
 	`note` text NOT NULL,
 	PRIMARY KEY(`ndex`, `lang`),
 	FOREIGN KEY (`ndex`) REFERENCES `pokemon`(`ndex`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+-- Hand-added below this line: drizzle-kit cannot express FTS5 virtual tables, so
+-- this table is invisible to the schema snapshot. Keep it when regenerating.
+--
+-- The trigram tokenizer supports substring matching in any script, but cannot
+-- index queries shorter than 3 characters - two-character CJK queries are served
+-- by a LIKE prefix fallback in the search service instead.
+--
+-- This is an external-content index over `pokemon`: it is NOT kept in sync by
+-- triggers. A load ends with `INSERT INTO pokemon_fts(pokemon_fts) VALUES('rebuild')`,
+-- which is the only time `pokemon` changes.
+CREATE VIRTUAL TABLE pokemon_fts USING fts5(
+    slug, name_en, name_ja, name_ja_romaji, name_de, name_fr,
+    name_it, name_es, name_ko, name_zh_hans, name_zh_hant,
+    content='pokemon',
+    content_rowid='ndex',
+    tokenize='trigram'
 );

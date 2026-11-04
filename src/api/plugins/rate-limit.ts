@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
-import { env } from '../env'
-import { rateLimited } from '../problem'
-import type { Env, RateLimiter } from '../platform'
+import { env } from '@/api/env'
+import { rateLimited } from '@/api/problem'
+import type { Env, RateLimiter } from '@/api/platform'
 
 /** Cloudflare's binding only permits a 10s or 60s window; the limits live in void.config.ts. */
 const WINDOW_SECONDS = 60

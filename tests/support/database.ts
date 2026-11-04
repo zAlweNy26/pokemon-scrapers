@@ -1,5 +1,5 @@
-import { createDb, type Db } from '../../src/db/client'
-import type { Env, RateLimiter } from '../../src/api/platform'
+import { createDb, type Db } from '@/db/client'
+import type { Env, RateLimiter } from '@/api/platform'
 import { createLocalD1 } from './d1'
 
 export interface TestDb {

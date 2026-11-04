@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "be7c2fe7-9eaf-455c-944f-bde5b6703d05",
+  "id": "504e0cc9-1ac3-47e6-a364-dce6c35107b8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "encounter": {
@@ -196,6 +196,14 @@
             "depositable"
           ],
           "isUnique": false
+        },
+        "form_one_default_idx": {
+          "name": "form_one_default_idx",
+          "columns": [
+            "ndex"
+          ],
+          "isUnique": true,
+          "where": "is_default = 1"
         }
       },
       "foreignKeys": {

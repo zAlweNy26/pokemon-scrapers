@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
-import { db, env } from '../../env'
-import { sharedModels } from '../../models'
-import { searchRateLimit } from '../../plugins/rate-limit'
+import { db, env } from '@/api/env'
+import { sharedModels } from '@/api/models'
+import { searchRateLimit } from '@/api/plugins/rate-limit'
 import { searchModels, searchQuery } from './model'
 import * as service from './service'
 

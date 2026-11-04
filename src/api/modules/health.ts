@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
 import { z } from 'zod'
-import { pokemon } from '../../db/schema'
-import { db, env } from '../env'
+import { pokemon } from '@/db/schema'
+import { db, env } from '@/api/env'
 
 /**
  * Deliberately reads from D1 rather than returning a constant: the interesting

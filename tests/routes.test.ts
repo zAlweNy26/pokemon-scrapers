@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-import { handleRequest } from '../src/api/handler'
-import { setLogSink } from '../src/api/log'
+import { handleRequest } from '@/api/handler'
+import { setLogSink } from '@/api/log'
 import { allowing, createTestEnv } from './support/database'
-import type { Env } from '../src/api/platform'
+import type { Env } from '@/api/platform'
 
 /**
  * Exercises the real request path - `handleRequest`, exactly what the Worker

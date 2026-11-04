@@ -1,8 +1,8 @@
 import { Elysia } from 'elysia'
 import { z } from 'zod'
-import { meta as metaTable } from '../../db/schema'
-import { db, env } from '../env'
-import { sharedModels } from '../models'
+import { meta as metaTable } from '@/db/schema'
+import { db, env } from '@/api/env'
+import { sharedModels } from '@/api/models'
 
 /**
  * Lets a consumer detect a dataset change without diffing payloads, and answers

@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
-import type { Db } from '../db/client'
+import type { Db } from '@/db/client'
 import type { Env } from './platform'
 
 /**

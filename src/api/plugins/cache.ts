@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia'
-import { env } from '../env'
+import { env } from '@/api/env'
 
 /**
  * Browsers recheck every 5 minutes; the edge holds for a week (604800s) and may

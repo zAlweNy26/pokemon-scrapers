@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import {
     MAX_PAGE_SIZE, booleanString, namesSchema, paginationMeta, spritesSchema
-} from '../../models'
+} from '@/api/models'
 
 const formSchema = z.object({
     slug: z.string(),

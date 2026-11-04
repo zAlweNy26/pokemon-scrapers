@@ -1,11 +1,11 @@
 import { eq, or, sql } from 'drizzle-orm'
-import type { Db } from '../../../db/client'
-import { form, pokemon } from '../../../db/schema'
+import type { Db } from '@/db/client'
+import { form, pokemon } from '@/db/schema'
 import {
     matchedLanguage, nameAliases, nameProjection, namesOf, type NameColumns
-} from '../../names'
-import { spritesFor } from '../../sprites'
-import { speciesDepositable } from '../pokemon/service'
+} from '@/api/names'
+import { spritesFor } from '@/api/sprites'
+import { speciesDepositable } from '@/api/modules/pokemon/service'
 
 /** Every column the FTS index covers, so the prefix fallback searches the same ground. */
 const searchableColumns = [pokemon.slug, ...Object.values(nameProjection)]

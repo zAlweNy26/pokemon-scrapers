@@ -1,4 +1,4 @@
-import { createDb } from '../db/client'
+import { createDb } from '@/db/client'
 import { app } from './app'
 import { runWithScope } from './env'
 import { logRequest } from './log'

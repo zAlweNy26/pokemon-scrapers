@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-import { handleRequest } from '../src/api/handler'
-import { setLogSink } from '../src/api/log'
+import { handleRequest } from '@/api/handler'
+import { setLogSink } from '@/api/log'
 import { createTestEnv } from './support/database'
 
 /**
