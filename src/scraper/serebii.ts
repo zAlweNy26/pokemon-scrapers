@@ -43,6 +43,6 @@ export const parseDepositable = (html: string): SerebiiEntry[] => {
 }
 
 export const fetchDepositable = async () => {
-    const { body, fetchedAt } = await fetchPage(`${BASE}/pokemonhome/depositablepokemon.shtml`, 'windows-1252')
+    const { body, fetchedAt } = await fetchPage(`${BASE}/pokemonhome/depositablepokemon.shtml`, { charset: 'windows-1252' })
     return { entries: parseDepositable(body), fetchedAt }
 }

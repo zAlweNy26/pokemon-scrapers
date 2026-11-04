@@ -12,7 +12,7 @@ const USER_AGENT = 'homedex-scraper/0.1 (+https://github.com/zAlweNy26/pokemon-s
 const DELAY_MS = 5_000
 const MAX_ATTEMPTS = 3
 /** Serebii sends no ETag or Last-Modified, so a conditional request cannot help: reuse a fresh copy instead. */
-const FRESH_MS = 24 * 60 * 60 * 1_000
+const DAY_MS = 24 * 60 * 60 * 1_000
 const CACHE_DIR = new URL('../../.cache/http/', import.meta.url).pathname
 
 interface Cached {
@@ -62,9 +62,13 @@ const request = async (url: string, cached: Cached | null): Promise<Response> =>
 
 /**
  * Fetches `url` politely and returns its body decoded with `charset` (Serebii is
- * windows-1252, not UTF-8). Unchanged pages come back from the cache via a 304.
+ * windows-1252, not UTF-8). A cached copy younger than `maxAgeDays` is used without
+ * any request; an older one is revalidated, coming back via a 304 when unchanged.
  */
-export const fetchPage = (url: string, charset: 'utf-8' | 'windows-1252' = 'utf-8'): Promise<{ body: string; fetchedAt: string }> => {
+export const fetchPage = (
+    url: string,
+    { charset = 'utf-8', maxAgeDays = 1 }: { charset?: 'utf-8' | 'windows-1252'; maxAgeDays?: number } = {}
+): Promise<{ body: string; fetchedAt: string }> => {
     const run = async () => {
         await mkdir(CACHE_DIR, { recursive: true })
         const key = keyOf(url)
@@ -72,7 +76,7 @@ export const fetchPage = (url: string, charset: 'utf-8' | 'windows-1252' = 'utf-
         const bodyFile = Bun.file(`${CACHE_DIR}${key}.body`)
         const cached: Cached | null = (await metaFile.exists()) ? await metaFile.json() : null
 
-        if (cached && (await bodyFile.exists()) && Date.now() - Date.parse(cached.fetchedAt) < FRESH_MS)
+        if (cached && (await bodyFile.exists()) && Date.now() - Date.parse(cached.fetchedAt) < maxAgeDays * DAY_MS)
             return { body: new TextDecoder(charset).decode(await bodyFile.arrayBuffer()), fetchedAt: cached.fetchedAt }
 
         const response = await request(url, cached)

@@ -72,7 +72,7 @@ export const fetchGameEvidence = async (): Promise<Map<string, GameEvidence>> =>
     for (const [game, { pages, ...rules }] of Object.entries(GAMES)) {
         const codes = new Set<string>()
         for (const page of pages) {
-            const { body } = await fetchPage(`https://www.serebii.net/${page}.shtml`, 'windows-1252')
+            const { body } = await fetchPage(`https://www.serebii.net/${page}.shtml`, { charset: 'windows-1252' })
             const found = parseGameCodes(body)
             if (!found.size) throw new Error(`Serebii ${page}: no Pokémon found - layout changed?`)
             for (const code of found) codes.add(code)

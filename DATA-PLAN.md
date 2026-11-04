@@ -30,7 +30,12 @@ against the source itself.
   Vivillon, Pom-Pom Oricorio. The build prints them every time.
 - **Not modelled:** origin restrictions (Let's Go only takes back Pokémon that came from
   Let's Go; BDSP's one-per-save limit for Special Pokémon).
-- **Not started:** step 3, etymology from Bulbapedia.
+- **Done:** step 3, etymology from Bulbapedia (`src/scraper/etymology.ts`). English from each
+  species page's "Name origin" section, the other languages from its `{{Other languages}}`
+  table (Mandarin's meaning serves both Chinese scripts; romaji has none). 9,225 notes:
+  every species in all nine languages. 21 requests of 50 pages, cached 30 days. The build
+  fails on a missing page or a page for another species, and lists any wiki template it
+  had to render by guess.
 
 ## Left over from the audit (`AUDIT.md`)
 

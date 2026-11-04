@@ -9,6 +9,7 @@
  */
 import { buildFromPokeApi, type Table } from './build'
 import { check, counts, diff, openDatabase } from './database'
+import { fetchEtymology } from './etymology'
 import { fetchGameEvidence, homeGames } from './games'
 import { matchEntry } from './match'
 import { POKEAPI_COMMIT, checkoutPokeApi, readTable } from './pokeapi'
@@ -74,16 +75,29 @@ for (const row of data.form.rows) row[depositableColumn] = depositable.has(row[0
 
 const formHomeGame: Table = { columns: ['form_id', 'game'], rows: gameRows }
 
+// Name etymology from Bulbapedia. Every species has a page; a missing one means a title changed.
+const nameColumn = data.pokemon.columns.indexOf('name_en')
+const etymology = await fetchEtymology(
+    data.pokemon.rows.map((row) => ({ ndex: row[0] as number, name: row[nameColumn] as string }))
+)
+if (etymology.missing.length || etymology.mismatched.length)
+    fail(
+        `Bulbapedia pages missing: ${etymology.missing.join(', ') || 'none'}\n` +
+            `  pages for a different species: ${etymology.mismatched.join(', ') || 'none'}`
+    )
+const bulbapediaHash = new Bun.CryptoHasher('sha256').update(JSON.stringify(etymology.rows)).digest('hex').slice(0, 12)
+
 const tables: [string, Table][] = [
     ['generation', data.generation],
     ['pokemon', data.pokemon],
     ['pokemon_egg_group', data.eggGroup],
+    ['pokemon_origin', { columns: ['ndex', 'lang', 'note'], rows: etymology.rows }],
     ['form', data.form],
     ['form_type', data.formType],
     ['form_ability', data.formAbility],
     ['form_home_game', formHomeGame],
     ['encounter', data.encounter],
-    ['meta', { columns: ['key', 'value'], rows: [['source_pokeapi', POKEAPI_COMMIT], ['source_serebii', serebiiHash]] }]
+    ['meta', { columns: ['key', 'value'], rows: [['source_pokeapi', POKEAPI_COMMIT], ['source_serebii', serebiiHash], ['source_bulbapedia', bulbapediaHash]] }]
 ]
 
 const body = [
@@ -135,3 +149,10 @@ for (const [game, { codes }] of evidence) {
 const placed = new Set(gameRows.map(([id]) => id))
 const nowhere = data.forms.filter((form) => depositable.has(form.id) && !placed.has(form.id))
 console.log(`    depositable but in no game: ${nowhere.length}`, nowhere.map((form) => form.slug).join(' '))
+
+const byLanguage = Object.groupBy(etymology.rows, ([, language]) => language)
+console.log(
+    `  etymology: ${Object.entries(byLanguage).map(([language, rows]) => `${language} ${rows!.length}`).join(', ')}`
+)
+if (etymology.unknownTemplates.size)
+    console.log(`  ⚠ templates rendered by guess (add them to src/scraper/wikitext.ts): ${[...etymology.unknownTemplates].join(', ')}`)

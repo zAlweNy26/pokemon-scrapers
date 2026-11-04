@@ -48,9 +48,10 @@ bun run data:load:remote   # load it into the real database, then deploy
 ```
 
 The build reads PokéAPI's CSV files from a pinned git checkout in `.cache/` (no
-requests to PokéAPI) and 19 Serebii pages — the HOME box list plus each
-HOME-connected game's availability lists — fetched one at a time, 5 s apart, and
-reused for 24 hours. It
+requests to PokéAPI), 19 Serebii pages — the HOME box list plus each
+HOME-connected game's availability lists — reused for 24 hours, and Bulbapedia's
+species pages (~21 API requests of 50 pages each) reused for 30 days. Requests go
+one at a time, at least 5 s apart. It
 stops with a non-zero exit and writes nothing if a Serebii entry cannot be matched
 to a form — add an override in `src/scraper/match.ts` — or if the dataset fails a
 check (search index, one default form per species, stored counts). `DATA_VERSION`
@@ -135,10 +136,10 @@ same driver, same SQL, FTS5 included — with no workerd, Vite or network.
 ## Status
 
 The API is complete. The dataset builds from PokéAPI (1025 species, 1579 forms,
-names and categories in all languages) with HOME depositability and per-game
-availability (`homeGames`) from Serebii; `src/scraper/games.ts` documents how the
-per-game rules fill in what Serebii's pages show. Not collected yet: name etymology
-(Bulbapedia). No Cloudflare resources have been created.
+names and categories in all languages), HOME depositability and per-game
+availability (`homeGames`) from Serebii — `src/scraper/games.ts` documents how the
+per-game rules fill in what Serebii's pages show — and name etymology in every
+language from Bulbapedia. No Cloudflare resources have been created.
 
 ## Licence and attribution
 
