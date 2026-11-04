@@ -1,4 +1,11 @@
 import { z } from 'zod'
+import { namesSchema } from '@/api/models'
+
+/** An identifier other endpoints return, with its display name per language. */
+const namedSchema = z.object({
+    slug: z.string().describe('The identifier other endpoints return'),
+    name: namesSchema
+})
 
 export const referenceModels = {
     'reference.generations': z.array(
@@ -11,9 +18,12 @@ export const referenceModels = {
     ),
 
     'reference.types': z.array(
-        z.object({
-            name: z.string(),
+        namedSchema.extend({
             count: z.number().describe('Species whose default form has this type')
         })
-    )
+    ),
+
+    'reference.abilities': z.array(namedSchema),
+
+    'reference.moves': z.array(namedSchema)
 }

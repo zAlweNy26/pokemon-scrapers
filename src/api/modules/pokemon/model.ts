@@ -12,8 +12,8 @@ const formSchema = z.object({
         .array(z.string())
         .describe('Games this form can be moved into from HOME, as version-group identifiers')
         .meta({ examples: [['sword-shield', 'scarlet-violet']] }),
-    types: z.array(z.string()),
-    abilities: z.array(z.object({ name: z.string(), hidden: z.boolean() })),
+    types: z.array(z.string()).describe('Type identifiers; /v1/types has their names'),
+    abilities: z.array(z.object({ slug: z.string(), name: namesSchema, hidden: z.boolean() })),
     height: z.number().nullable().describe('Metres'),
     weight: z.number().nullable().describe('Kilograms'),
     stats: z.object({

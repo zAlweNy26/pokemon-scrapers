@@ -9,7 +9,7 @@ acting on an old row (see *Re-checking* at the end).
 ## Status
 
 - **Done:** section 1's evolutions, EV yield, base experience, species flags and regional
-  dex numbers (see the commit that added this file).
+  dex numbers (see the commit that added this file); then names for types, abilities and moves.
 - Everything else below is open.
 
 ## 1. Free — already in PokéAPI's CSVs, not read yet
@@ -24,7 +24,8 @@ The build reads 21 of PokéAPI's 188 CSVs. No new requests are needed for any of
 | ~~Species flags~~: legendary, mythical, baby, gender differences, forms switchable, growth rate, colour, shape, habitat | `pokemon_species` | complete; habitat is null for 639 species (Gen 4+ has none) |
 | ~~Base experience~~ | `pokemon.base_experience` | null for 49 of 1351 varieties |
 | Form flags: battle-only, Mega, introducing game | `pokemon_forms` | complete; `src/scraper/index.ts` reads `is_battle_only` only to validate. 97 Megas, 34 Gigantamax |
-| Localized labels for types, abilities, natures, moves, egg groups, versions | `*_names`, `egg_group_prose` | all our languages. The API returns slugs (`water`, `overgrow`), which undercuts a nine-language API |
+| ~~Localized names for types, abilities, moves~~ | `type_names`, `ability_names`, `move_names` | done: `/v1/types`, `/v1/abilities`, `/v1/moves`, and named abilities in the detail. No romaji anywhere; Eelevate, Fire Mane and Aura Guard (Z-A) are English-only |
+| Localized labels for natures, egg groups, versions, items, growth rates | `*_names`, `*_prose` | all our languages; still returned as slugs |
 | Localized location names | `location_names` | only partial: en/ja/fr ~1,070; de/es/it/ko/zh 286; zh-Hans/ja-Hrkt 89 |
 | Ability descriptions | `ability_prose` (en effect), `ability_flavor_text` (per game, all languages) | 810 / 16,450 rows |
 | Earlier-generation stats, types, abilities | `pokemon_stats_past`, `pokemon_types_past`, `pokemon_abilities_past` | 235 / 36 / 569 rows (e.g. Clefairy was Normal before Gen 6) |

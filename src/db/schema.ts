@@ -16,6 +16,30 @@ import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from
  * locations and methods are PokéAPI identifiers (`water`, `scarlet`), not labels.
  */
 
+/** The name columns of a localised reference table, keyed like `pokemon`'s (src/api/names.ts reads them). */
+const localizedNames = () => ({
+    nameEn: text('name_en').notNull(),
+    nameJa: text('name_ja'),
+    nameJaRomaji: text('name_ja_romaji'),
+    nameDe: text('name_de'),
+    nameFr: text('name_fr'),
+    nameIt: text('name_it'),
+    nameEs: text('name_es'),
+    nameKo: text('name_ko'),
+    nameZhHans: text('name_zh_hans'),
+    nameZhHant: text('name_zh_hant')
+})
+
+/**
+ * Display names for the identifiers stored elsewhere: `form_type.type`,
+ * `form_ability.ability`, and the moves and types in evolution conditions.
+ * Not foreign keys, so existing tables keep their shape; `check()` in
+ * src/scraper/database.ts fails a build that leaves an identifier unnamed.
+ */
+export const type = sqliteTable('type', { slug: text('slug').primaryKey(), ...localizedNames() })
+export const ability = sqliteTable('ability', { slug: text('slug').primaryKey(), ...localizedNames() })
+export const move = sqliteTable('move', { slug: text('slug').primaryKey(), ...localizedNames() })
+
 export const generation = sqliteTable('generation', {
     id: integer('id').primaryKey(),
     region: text('region').notNull(),

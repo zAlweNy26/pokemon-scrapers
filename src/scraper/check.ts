@@ -65,7 +65,10 @@ none('species HOME cannot store at all', 'SELECT count(*) FROM pokemon p WHERE N
 
 console.log('\n— Text')
 const texts = [
-    ...LANGUAGES.flatMap((language) => [`pokemon.name_${language}`, `pokemon.category_${language}`, `form.name_${language}`]),
+    ...LANGUAGES.flatMap((language) => [
+        `pokemon.name_${language}`, `pokemon.category_${language}`, `form.name_${language}`,
+        `type.name_${language}`, `ability.name_${language}`, `move.name_${language}`
+    ]),
     'pokemon_origin.note'
 ].flatMap((column) => {
     const [table, name] = column.split('.')
@@ -112,7 +115,7 @@ const paths = [
     ...Array.from({ length: scalar('SELECT count(*) FROM pokemon') as number }, (_, i) => `/v1/pokemon/${i + 1}`),
     ...Array.from({ length: 11 }, (_, i) => `/v1/pokemon?limit=100&offset=${i * 100}`),
     ...['pika', 'Quaj', 'ゲンガ', '皮卡', 'Mr. M', 'farfetch', 'flabé', 'nidoran', 'ピカ', '이상'].map((q) => `/v1/search?q=${encodeURIComponent(q)}`),
-    '/v1/types', '/v1/generations', '/v1/meta', '/openapi.json'
+    '/v1/types', '/v1/abilities', '/v1/moves', '/v1/generations', '/v1/meta', '/openapi.json'
 ]
 const failed: string[] = []
 for (const path of paths) {
@@ -126,6 +129,7 @@ const missing = (column: string, table: string) =>
     Object.fromEntries(LANGUAGES.map((l) => [l, scalar(`SELECT count(*) FROM ${table} WHERE ${column}_${l} IS NULL`)]).filter(([, n]) => n))
 console.log('  categories missing:', missing('category', 'pokemon'))
 console.log('  form names missing:', missing('name', 'form'))
+for (const table of ['type', 'ability', 'move']) console.log(`  ${table} names missing:`, missing('name', table))
 console.log('  unknown EV yield:', scalar('SELECT count(*) FROM form WHERE ev_hp IS NULL'), 'forms')
 console.log('  unknown size:', all<{ slug: string }>('SELECT slug FROM form WHERE height_m IS NULL OR weight_kg IS NULL').map((r) => r.slug).join(' ') || 'none')
 console.log('  forms without abilities (none storable):', scalar('SELECT count(*) FROM form f WHERE NOT EXISTS (SELECT 1 FROM form_ability a WHERE a.form_id = f.id)'))

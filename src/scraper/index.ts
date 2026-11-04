@@ -22,7 +22,7 @@ const VERSION = new URL('../../data/version.json', import.meta.url).pathname
 /** Children first, so foreign keys hold at every step. */
 const DELETE_ORDER = [
     'evolution', 'encounter', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'pokemon_origin',
-    'pokemon_egg_group', 'pokemon', 'generation', 'meta'
+    'pokemon_egg_group', 'pokemon', 'generation', 'type', 'ability', 'move', 'meta'
 ]
 
 const fail = (message: string): never => {
@@ -89,6 +89,9 @@ const bulbapediaHash = new Bun.CryptoHasher('sha256').update(JSON.stringify(etym
 
 const tables: [string, Table][] = [
     ['generation', data.generation],
+    ['type', data.type],
+    ['ability', data.ability],
+    ['move', data.move],
     ['pokemon', data.pokemon],
     ['pokemon_egg_group', data.eggGroup],
     ['pokemon_origin', { columns: ['ndex', 'lang', 'note'], rows: etymology.rows }],

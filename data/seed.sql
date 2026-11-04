@@ -15,6 +15,9 @@ DELETE FROM pokemon_origin;
 DELETE FROM pokemon_egg_group;
 DELETE FROM pokemon;
 DELETE FROM generation;
+DELETE FROM type;
+DELETE FROM ability;
+DELETE FROM move;
 DELETE FROM meta;
 
 INSERT INTO generation (id, region, debut) VALUES
@@ -23,6 +26,38 @@ INSERT INTO generation (id, region, debut) VALUES
     (6, 'kalos',  2013),
     (8, 'galar',  2019),
     (9, 'paldea', 2022);
+
+-- Real names from PokéAPI for every type, ability and move used here. Fire is only on a
+-- non-default form, so /v1/types lists it with a count of 0.
+INSERT INTO type (slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
+    ('dark','Dark','あく',NULL,'Unlicht','Ténèbres','Buio','Siniestro','악','恶','惡'),
+    ('electric','Electric','でんき',NULL,'Elektro','Électrik','Elettro','Eléctrico','전기','电','電'),
+    ('fighting','Fighting','かくとう',NULL,'Kampf','Combat','Lotta','Lucha','격투','格斗','格鬥'),
+    ('fire','Fire','ほのお',NULL,'Feuer','Feu','Fuoco','Fuego','불꽃','火','火'),
+    ('ghost','Ghost','ゴースト',NULL,'Geist','Spectre','Spettro','Fantasma','고스트','幽灵','幽靈'),
+    ('grass','Grass','くさ',NULL,'Pflanze','Plante','Erba','Planta','풀','草','草'),
+    ('ice','Ice','こおり',NULL,'Eis','Glace','Ghiaccio','Hielo','얼음','冰','冰'),
+    ('poison','Poison','どく',NULL,'Gift','Poison','Veleno','Veneno','독','毒','毒'),
+    ('water','Water','みず',NULL,'Wasser','Eau','Acqua','Agua','물','水','水');
+
+INSERT INTO ability (slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
+    ('battle-bond','Battle Bond','きずなへんげ',NULL,'Freundschaftsakt','Synergie','Morfosintonia','Fuerte Afecto','유대변화','牵绊变身','牽絆變身'),
+    ('cursed-body','Cursed Body','のろわれボディ',NULL,'Tastfluch','Corps Maudit','Corpofunesto','Cuerpo Maldito','저주받은바디','诅咒之躯','詛咒之軀'),
+    ('defiant','Defiant','まけんき',NULL,'Siegeswille','Acharné','Agonismo','Competitivo','오기','不服输','不服輸'),
+    ('hydration','Hydration','うるおいボディ',NULL,'Hydration','Hydratation','Idratazione','Hidratación','촉촉바디','湿润之躯','濕潤之軀'),
+    ('levitate','Levitate','ふゆう',NULL,'Schwebe','Lévitation','Levitazione','Levitación','부유','飘浮','飄浮'),
+    ('lightning-rod','Lightning Rod','ひらいしん',NULL,'Blitzfänger','Paratonnerre','Parafulmine','Pararrayos','피뢰침','避雷针','避雷針'),
+    ('mold-breaker','Mold Breaker','かたやぶり',NULL,'Überbrückung','Brise Moule','Rompiforma','Rompemoldes','틀깨기','破格','破格'),
+    ('protean','Protean','へんげんじざい',NULL,'Wandlungskunst','Protéen','Mutatipo','Mutatipo','변환자재','变幻自如','變幻自如'),
+    ('shell-armor','Shell Armor','シェルアーマー',NULL,'Panzerhaut','Coque Armure','Guscioscudo','Caparazón','조가비갑옷','硬壳盔甲','硬殼盔甲'),
+    ('static','Static','せいでんき',NULL,'Statik','Statik','Statico','Electricidad Estática','정전기','静电','靜電'),
+    ('torrent','Torrent','げきりゅう',NULL,'Sturzbach','Torrent','Acquaiuto','Torrente','급류','激流','激流'),
+    ('unseen-fist','Unseen Fist','ふかしのこぶし',NULL,'Verborgene Faust','Poing Invisible','Pugni Invisibili','Puño Invisible','보이지않는주먹','无形拳','無形拳'),
+    ('water-absorb','Water Absorb','ちょすい',NULL,'H2O-Absorber','Absorbe-Eau','Assorbacqua','Absorbe Agua','저수','储水','儲水');
+
+INSERT INTO move (slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
+    ('thunderbolt','Thunderbolt','１０まんボルト',NULL,'Donnerblitz','Tonnerre','Fulmine','Rayo','10만볼트','十万伏特','十萬伏特'),
+    ('volt-tackle','Volt Tackle','ボルテッカー',NULL,'Volttackle','Électacle','Locomovolt','Placaje Eléctrico','볼트태클','伏特攻击','伏特攻擊');
 
 INSERT INTO pokemon
     (ndex, slug, gen, catch_rate, base_friendship, gender_rate, egg_cycles,

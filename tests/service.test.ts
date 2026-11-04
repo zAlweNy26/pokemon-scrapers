@@ -161,10 +161,16 @@ describe('pokemon.detail', () => {
         const species = await pokemon.findSpecies(db, 'pikachu')
         const result = await pokemon.detail(db, species!, IMAGES)
 
-        expect(result.forms[0]?.abilities).toEqual([
-            { name: 'static', hidden: false },
-            { name: 'lightning-rod', hidden: true }
+        expect(result.forms[0]?.abilities.map(({ slug, hidden }) => ({ slug, hidden }))).toEqual([
+            { slug: 'static', hidden: false },
+            { slug: 'lightning-rod', hidden: true }
         ])
+    })
+
+    test('names abilities in every language', async () => {
+        const result = await pokemon.detail(db, (await pokemon.findSpecies(db, 'pikachu'))!, IMAGES)
+
+        expect(result.forms[0]?.abilities[0]?.name).toMatchObject({ en: 'Static', it: 'Statico', ja: 'せいでんき', ja_romaji: null })
     })
 
     test('every member of a family gets the whole evolution chain, conditions parsed', async () => {
@@ -263,10 +269,25 @@ describe('reference', () => {
 
     test('counts types over default forms only', async () => {
         const types = await reference.types(db)
-        const byName = Object.fromEntries(types.map((t) => [t.name, t.count]))
+        const bySlug = Object.fromEntries(types.map((t) => [t.slug, t.count]))
 
         // Water counts Lapras and Greninja; Rapid Strike Urshifu is not a default form.
-        expect(byName.water).toBe(2)
-        expect(byName.fire).toBeUndefined()
+        expect(bySlug.water).toBe(2)
+        // Only Hearthflame Ogerpon, not a default form, is Fire: listed, at 0.
+        expect(bySlug.fire).toBe(0)
+    })
+
+    test('names every type, ability and move', async () => {
+        const types = await reference.types(db)
+        expect(types.find((t) => t.slug === 'dark')?.name).toMatchObject({ en: 'Dark', de: 'Unlicht', fr: 'Ténèbres' })
+
+        const abilities = await reference.abilities(db)
+        expect(abilities.map((a) => a.slug)).toContain('lightning-rod')
+        expect(abilities.find((a) => a.slug === 'protean')?.name.ko).toBe('변환자재')
+
+        expect(await reference.moves(db)).toEqual([
+            expect.objectContaining({ slug: 'thunderbolt', name: expect.objectContaining({ en: 'Thunderbolt', it: 'Fulmine' }) }),
+            expect.objectContaining({ slug: 'volt-tackle' })
+        ])
     })
 })

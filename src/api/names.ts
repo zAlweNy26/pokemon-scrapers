@@ -39,12 +39,14 @@ export type NameColumns = Pick<Pokemon, NameColumn>
 const fields = Object.entries(NAME_FIELDS) as [Language, NameColumn][]
 
 /**
- * Spread into a Drizzle `.select()` to pull every name column under the key the
+ * Spread into a Drizzle `.select()` to pull every name column of `table` (a
+ * species, or a localised reference table such as `type`) under the key the
  * rest of this file expects.
  */
-export const nameProjection = Object.fromEntries(
-    fields.map(([, column]) => [column, pokemon[column]])
-) as { [C in NameColumn]: (typeof pokemon)[C] }
+export const nameColumns = <T extends Record<NameColumn, unknown>>(table: T) =>
+    Object.fromEntries(fields.map(([, column]) => [column, table[column]])) as { [C in NameColumn]: T[C] }
+
+export const nameProjection = nameColumns(pokemon)
 
 /** Also reads a `form` row: its name columns carry the same keys and nullability. */
 export const namesOf = (row: NameColumns): Names =>

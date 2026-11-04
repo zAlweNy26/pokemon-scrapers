@@ -72,7 +72,7 @@ export const asD1 = (sqlite: Database): D1Database => {
 
 const TABLES = [
     'generation', 'pokemon', 'pokemon_egg_group', 'pokemon_origin', 'form', 'form_type',
-    'form_ability', 'form_home_game', 'encounter', 'evolution', 'pokemon_dex_number', 'meta'
+    'form_ability', 'form_home_game', 'encounter', 'evolution', 'pokemon_dex_number', 'type', 'ability', 'move', 'meta'
 ] as const
 
 export const counts = (sqlite: Database) =>
@@ -100,6 +100,15 @@ export const check = (sqlite: Database): string[] => {
         'SELECT count(*) FROM form_home_game g JOIN form f ON f.id = g.form_id WHERE f.depositable = 0'
     )
     if (homeless) problems.push(`${homeless} HOME game rows belong to forms HOME cannot store`)
+
+    // The name tables are not foreign keys; an identifier without a name would vanish from the API's joins.
+    const unnamed = scalar(`SELECT
+        (SELECT count(*) FROM form_type WHERE type NOT IN (SELECT slug FROM type)) +
+        (SELECT count(*) FROM form_ability WHERE ability NOT IN (SELECT slug FROM ability)) +
+        (SELECT count(*) FROM evolution, json_each(evolution.conditions) c
+            WHERE (c.key IN ('knownMove', 'usedMove') AND c.value NOT IN (SELECT slug FROM move))
+               OR (c.key IN ('knownMoveType', 'partyType') AND c.value NOT IN (SELECT slug FROM type)))`)
+    if (unnamed) problems.push(`${unnamed} type, ability or move identifiers have no name row`)
 
     if (!scalar("SELECT count(*) FROM meta WHERE key = 'count_pokemon'"))
         problems.push('meta has no stored counts; /v1/meta would report 0')

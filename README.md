@@ -77,7 +77,8 @@ known facts, or any API response its schema rejects. Gaps the sources leave
 | `GET /v1/pokemon` | `?gen &type &region &depositable &limit &offset` |
 | `GET /v1/pokemon/:idOrName` | Accepts `25`, `pikachu` or `Pikachu`; returns every form |
 | `GET /v1/search?q=` | Cross-language name search; reports which language matched |
-| `GET /v1/generations`, `GET /v1/types` | Reference data with counts |
+| `GET /v1/generations`, `GET /v1/types` | Reference data with counts; types carry their names in every language |
+| `GET /v1/abilities`, `GET /v1/moves` | Every main-series ability and move, with its name in every language |
 | `GET /v1/meta` | Dataset version, counts and provenance |
 | `GET /health` | Reads from D1; never cached |
 | `GET /docs`, `GET /openapi.json` | Scalar UI and the OpenAPI 3.0.3 document |

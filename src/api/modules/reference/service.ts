@@ -1,6 +1,13 @@
-import { count, countDistinct, eq } from 'drizzle-orm'
+import { and, count, countDistinct, eq } from 'drizzle-orm'
 import type { Db } from '@/db/client'
-import { form, formType, generation, pokemon } from '@/db/schema'
+import { ability, form, formType, generation, move, pokemon, type } from '@/db/schema'
+import { nameColumns, namesOf, type NameColumns } from '@/api/names'
+
+const named = (rows: ({ slug: string } & NameColumns)[]) => rows.map((row) => ({ slug: row.slug, name: namesOf(row) }))
+
+export const abilities = async (db: Db) => named(await db.select().from(ability).orderBy(ability.slug))
+
+export const moves = async (db: Db) => named(await db.select().from(move).orderBy(move.slug))
 
 export const generations = (db: Db) =>
     db
@@ -15,13 +22,16 @@ export const generations = (db: Db) =>
         .groupBy(generation.id, generation.region, generation.debut)
         .orderBy(generation.id)
 
-export const types = (db: Db) =>
-    // Counted over default forms only, so a species is not double-counted because
-    // one of its alternate forms changed type.
-    db
-        .select({ name: formType.type, count: countDistinct(form.ndex) })
-        .from(formType)
-        .innerJoin(form, eq(form.id, formType.formId))
-        .where(eq(form.isDefault, true))
-        .groupBy(formType.type)
-        .orderBy(formType.type)
+export const types = async (db: Db) => {
+    // Every type, unused ones (Stellar) at 0. Counted over default forms only, so a
+    // species is not double-counted because one of its alternate forms changed type.
+    const rows = await db
+        .select({ slug: type.slug, ...nameColumns(type), count: countDistinct(form.ndex) })
+        .from(type)
+        .leftJoin(formType, eq(formType.type, type.slug))
+        .leftJoin(form, and(eq(form.id, formType.formId), eq(form.isDefault, true)))
+        .groupBy(type.slug)
+        .orderBy(type.slug)
+
+    return rows.map((row) => ({ slug: row.slug, name: namesOf(row), count: row.count }))
+}

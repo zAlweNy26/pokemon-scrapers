@@ -2,10 +2,10 @@ import { and, count, eq, exists, inArray, notExists, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import type { Db } from '@/db/client'
 import {
-    encounter, evolution, form, formAbility, formHomeGame, formType, generation, pokemon,
+    ability, encounter, evolution, form, formAbility, formHomeGame, formType, generation, pokemon,
     pokemonDexNumber, pokemonEggGroup, pokemonOrigin, type Pokemon
 } from '@/db/schema'
-import { categoriesOf, nameProjection, namesOf } from '@/api/names'
+import { categoriesOf, nameColumns, nameProjection, namesOf } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
 
 export interface ListFilters {
@@ -178,11 +178,14 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
         db
             .select({
                 formId: formAbility.formId,
-                ability: formAbility.ability,
+                slug: ability.slug,
+                ...nameColumns(ability),
                 isHidden: formAbility.isHidden
             })
             .from(formAbility)
             .innerJoin(form, eq(form.id, formAbility.formId))
+            // Inner join is safe: the build fails if an ability has no name row.
+            .innerJoin(ability, eq(ability.slug, formAbility.ability))
             .where(eq(form.ndex, ndex))
             .orderBy(formAbility.formId, formAbility.slot),
         db
@@ -245,7 +248,7 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
     const abilities = groupBy(
         abilityRows,
         (row) => row.formId,
-        (row) => ({ name: row.ability, hidden: row.isHidden })
+        (row) => ({ slug: row.slug, name: namesOf(row), hidden: row.isHidden })
     )
 
     return {

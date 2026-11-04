@@ -28,8 +28,10 @@ afterAll(() => env.close())
 describe('openapi document', () => {
     test('publishes exactly the documented endpoints, without trailing slashes', () => {
         expect(Object.keys(spec.paths).sort()).toEqual([
+            '/v1/abilities',
             '/v1/generations',
             '/v1/meta',
+            '/v1/moves',
             '/v1/pokemon',
             '/v1/pokemon/{idOrName}',
             '/v1/search',

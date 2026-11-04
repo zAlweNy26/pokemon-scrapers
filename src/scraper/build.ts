@@ -35,7 +35,8 @@ const DEBUT_YEAR: Record<string, number> = {
 const STAT_COLUMNS = ['hp', 'atk', 'def', 'sp_atk', 'sp_def', 'spd'] as const
 
 const int = (value: string | undefined): number | null => (value === undefined || value === '' ? null : Number(value))
-const text = (value: string | undefined): string | null => (value ? value : null)
+// Trimmed: PokéAPI has stray spaces (" Stella", Stellar's Korean and romaji names).
+const text = (value: string | undefined): string | null => value?.trim() || null
 
 const indexBy = (rows: Row[], key: string) => new Map(rows.map((row) => [row[key]!, row]))
 
@@ -83,7 +84,7 @@ export const buildFromPokeApi = async () => {
         pokemonTypes, formTypes, types, pokemonAbilities, abilities, pokemonStats,
         speciesEggGroups, eggGroups, encounters, locationAreas, locations, encounterSlots,
         encounterMethods, versions, evolutions, evolutionTriggers, versionGroups, items, moves, genders,
-        natures, growthRates, colors, shapes, habitats, pokedexes, dexNumbers
+        natures, growthRates, colors, shapes, habitats, pokedexes, dexNumbers, typeNames, abilityNames, moveNames
     ] = await Promise.all(
         [
             'pokemon_species', 'pokemon_species_names', 'pokemon', 'pokemon_forms', 'pokemon_form_names',
@@ -91,9 +92,24 @@ export const buildFromPokeApi = async () => {
             'abilities', 'pokemon_stats', 'pokemon_egg_groups', 'egg_groups', 'encounters', 'location_areas',
             'locations', 'encounter_slots', 'encounter_methods', 'versions', 'pokemon_evolution',
             'evolution_triggers', 'version_groups', 'items', 'moves', 'genders', 'natures', 'growth_rates',
-            'pokemon_colors', 'pokemon_shapes', 'pokemon_habitats', 'pokedexes', 'pokemon_dex_numbers'
+            'pokemon_colors', 'pokemon_shapes', 'pokemon_habitats', 'pokedexes', 'pokemon_dex_numbers',
+            'type_names', 'ability_names', 'move_names'
         ].map(readTable)
     )
+
+    /** `slug` plus a name per language, for the rows of `table` that `keep` accepts. */
+    const namesTable = (rows: Row[], names: Row[], key: string, keep: (row: Row) => boolean): Table => {
+        const byId = byLanguage(names, key)
+        return {
+            columns: ['slug', ...languageColumns('name')],
+            rows: rows.filter(keep).map((row) => [row.identifier!, ...Object.values(localized(byId.get(row.id!), 'name'))])
+        }
+    }
+    // Every type, `unknown` included: Arceus's ??? form has it. Move ids from 10000
+    // are Colosseum/XD's shadow moves, which nothing here refers to.
+    const typeTable = namesTable(types!, typeNames!, 'type_id', () => true)
+    const abilityTable = namesTable(abilities!, abilityNames!, 'ability_id', (row) => row.is_main_series === '1')
+    const moveTable = namesTable(moves!, moveNames!, 'move_id', (row) => Number(row.id) < 10000)
 
     const pokemonById = indexBy(pokemonRows!, 'id')
     const regionById = indexBy(regions!, 'id')
@@ -285,7 +301,10 @@ export const buildFromPokeApi = async () => {
         ])
     }
 
-    return { generation, pokemon, eggGroup, dexNumber, form, formType, formAbility, encounter, evolution, forms }
+    return {
+        generation, pokemon, eggGroup, dexNumber, form, formType, formAbility, encounter, evolution, forms,
+        type: typeTable, ability: abilityTable, move: moveTable
+    }
 }
 
 type Lookup = (id: string | undefined) => string | null
