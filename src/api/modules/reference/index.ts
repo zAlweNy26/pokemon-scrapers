@@ -6,6 +6,20 @@ import { list, pokedex } from '@/api/modules/pokemon/service'
 import { abilityParams, pageQuery, pokedexParams, referenceModels, typeParams } from './model'
 import * as service from './service'
 
+/** One type or ability and a page of the species `/v1/pokemon?<filter>=` returns for it. */
+const speciesPage =
+    (find: typeof service.findType, filter: 'type' | 'ability') =>
+    async ({ params, query }: { params: { slug: string }; query: { limit: number; offset: number } }) => {
+        const database = db()
+        const [found, { total, items }] = await Promise.all([
+            find(database, params.slug),
+            list(database, { [filter]: params.slug, ...query }, env().IMAGE_BASE_URL)
+        ])
+        if (!found) throw notFound(`No ${filter} matches "${params.slug}".`)
+
+        return { ...found, data: items, meta: { total, limit: query.limit, offset: query.offset } }
+    }
+
 /**
  * Only the /:slug routes take input, so elsewhere 429 is the only failure a
  * client can provoke - every /v1 route inherits the global limiter.
@@ -23,16 +37,7 @@ export const reference = new Elysia({ name: 'module.reference' })
     })
     .get(
         '/types/:slug',
-        async ({ params, query }) => {
-            const database = db()
-            const [found, { total, items }] = await Promise.all([
-                service.findType(database, params.slug),
-                list(database, { type: params.slug, ...query }, env().IMAGE_BASE_URL)
-            ])
-            if (!found) throw notFound(`No type matches "${params.slug}".`)
-
-            return { ...found, data: items, meta: { total, limit: query.limit, offset: query.offset } }
-        },
+        speciesPage(service.findType, 'type'),
         {
             params: typeParams,
             query: pageQuery,
@@ -50,16 +55,7 @@ export const reference = new Elysia({ name: 'module.reference' })
     })
     .get(
         '/abilities/:slug',
-        async ({ params, query }) => {
-            const database = db()
-            const [found, { total, items }] = await Promise.all([
-                service.findAbility(database, params.slug),
-                list(database, { ability: params.slug, ...query }, env().IMAGE_BASE_URL)
-            ])
-            if (!found) throw notFound(`No ability matches "${params.slug}".`)
-
-            return { ...found, data: items, meta: { total, limit: query.limit, offset: query.offset } }
-        },
+        speciesPage(service.findAbility, 'ability'),
         {
             params: abilityParams,
             query: pageQuery,

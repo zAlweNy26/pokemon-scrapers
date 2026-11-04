@@ -105,6 +105,14 @@ describe('GET /v1/pokemon', () => {
         }
     })
 
+    test('a full ids list with other filters stays under D1’s 100 bound parameters', async () => {
+        // The test D1 throws past 100, as D1 does; binding one parameter per id would fail here.
+        const ids = Array.from({ length: 100 }, (_, i) => i + 1).join(',')
+        const { response } = await json(`/v1/pokemon?ids=${ids}&type=electric&depositable=true&limit=100`)
+
+        expect(response.status).toBe(200)
+    })
+
     test('accepts a generation the code has never heard of', async () => {
         // A new generation is a data change; it must not need a code deploy to be filterable.
         const { response, body } = await json('/v1/pokemon?gen=10')

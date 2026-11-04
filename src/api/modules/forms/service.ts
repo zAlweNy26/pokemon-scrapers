@@ -105,7 +105,8 @@ const homeGamesByForm = async (db: Db, formIds: number[]) => {
 
 /** One form as `forms[]` in /v1/pokemon/:idOrName has it, plus its species. Slugs match case-insensitively. */
 export const detail = async (db: Db, slug: string, imageBaseUrl: string) => {
-    const where = sql`${form.slug} = ${slug} COLLATE NOCASE`
+    // Slugs are stored lowercase; COLLATE NOCASE would skip the unique index and scan every form, five times.
+    const where = eq(form.slug, slug.toLowerCase())
 
     const [forms, species, typeRows, abilityRows, homeRows] = await db.batch([
         db.select().from(form).where(where),

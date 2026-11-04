@@ -101,6 +101,13 @@ const orderOf = (sort: NonNullable<ListFilters['sort']> = 'ndex') => {
     return [sql`${column} ${descending ? sql`DESC` : sql`ASC`} NULLS LAST`, pokemon.ndex]
 }
 
+/** Species where any form has a row in a per-form table matching `condition`, as `depositable` counts forms. */
+const anyForm = (table: typeof formHomeGame | typeof formAbility, formId: SQLWrapper, condition: SQL) =>
+    exists(
+        sql`(SELECT 1 FROM ${table} INNER JOIN ${form} AS af ON af.id = ${formId}
+             WHERE af.ndex = ${pokemon.ndex} AND ${condition})`
+    )
+
 const filterConditions = (filters: ListFilters) => {
     const conditions = []
 
@@ -125,29 +132,23 @@ const filterConditions = (filters: ListFilters) => {
     if (filters.depositable !== undefined)
         conditions.push(filters.depositable ? exists(anyDepositable) : notExists(anyDepositable))
 
-    // A version group (`scarlet-violet`), as HOME publishes it; any form counts.
+    // A version group (`scarlet-violet`), as HOME publishes it.
     if (filters.homeGame !== undefined)
         conditions.push(
-            exists(
-                sql`(SELECT 1 FROM ${formHomeGame} INNER JOIN ${form} AS hf ON hf.id = ${formHomeGame.formId}
-                     WHERE hf.ndex = ${pokemon.ndex} AND ${formHomeGame.game} = ${filters.homeGame} COLLATE NOCASE)`
-            )
+            anyForm(formHomeGame, formHomeGame.formId, sql`${formHomeGame.game} = ${filters.homeGame} COLLATE NOCASE`)
         )
 
     if (filters.ability !== undefined)
         conditions.push(
-            exists(
-                sql`(SELECT 1 FROM ${formAbility} INNER JOIN ${form} AS af ON af.id = ${formAbility.formId}
-                     WHERE af.ndex = ${pokemon.ndex} AND ${formAbility.ability} = ${filters.ability} COLLATE NOCASE)`
-            )
+            anyForm(formAbility, formAbility.formId, sql`${formAbility.ability} = ${filters.ability} COLLATE NOCASE`)
         )
 
     if (filters.hiddenAbility !== undefined)
         conditions.push(
-            exists(
-                sql`(SELECT 1 FROM ${formAbility} INNER JOIN ${form} AS af ON af.id = ${formAbility.formId}
-                     WHERE af.ndex = ${pokemon.ndex} AND ${formAbility.isHidden} = 1
-                     AND ${formAbility.ability} = ${filters.hiddenAbility} COLLATE NOCASE)`
+            anyForm(
+                formAbility,
+                formAbility.formId,
+                sql`${formAbility.isHidden} = 1 AND ${formAbility.ability} = ${filters.hiddenAbility} COLLATE NOCASE`
             )
         )
 

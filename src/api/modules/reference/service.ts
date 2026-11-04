@@ -1,4 +1,4 @@
-import { and, count, countDistinct, eq, sql } from 'drizzle-orm'
+import { and, count, countDistinct, eq } from 'drizzle-orm'
 import type { Db } from '@/db/client'
 import {
     ability, form, formHomeGame, formType, generation, move, pokemon, pokemonDexNumber, pokemonEggGroup, type
@@ -11,11 +11,12 @@ export const abilities = async (db: Db) => named(await db.select().from(ability)
 
 export const moves = async (db: Db) => named(await db.select().from(move).orderBy(move.slug))
 
+// Slugs are stored lowercase, so lowering the input matches any case and keeps the primary key usable.
 export const findType = async (db: Db, slug: string) =>
-    named(await db.select().from(type).where(sql`${type.slug} = ${slug} COLLATE NOCASE`).limit(1))[0]
+    named(await db.select().from(type).where(eq(type.slug, slug.toLowerCase())))[0]
 
 export const findAbility = async (db: Db, slug: string) =>
-    named(await db.select().from(ability).where(sql`${ability.slug} = ${slug} COLLATE NOCASE`).limit(1))[0]
+    named(await db.select().from(ability).where(eq(ability.slug, slug.toLowerCase())))[0]
 
 export const generations = (db: Db) =>
     db

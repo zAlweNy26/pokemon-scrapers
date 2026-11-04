@@ -12,32 +12,8 @@ export const pokemon = new Elysia({ name: 'module.pokemon', prefix: '/pokemon' }
         '',
         async ({ query }) => {
             const { IMAGE_BASE_URL } = env()
-            const { total, items } = await service.list(
-                db(),
-                {
-                    gen: query.gen,
-                    type: query.type,
-                    region: query.region,
-                    depositable: query.depositable,
-                    homeGame: query.homeGame,
-                    ability: query.ability,
-                    hiddenAbility: query.hiddenAbility,
-                    eggGroup: query.eggGroup,
-                    obtainableIn: query.obtainableIn,
-                    legendary: query.legendary,
-                    mythical: query.mythical,
-                    baby: query.baby,
-                    color: query.color,
-                    shape: query.shape,
-                    habitat: query.habitat,
-                    growthRate: query.growthRate,
-                    ids: query.ids,
-                    sort: query.sort,
-                    limit: query.limit,
-                    offset: query.offset
-                },
-                IMAGE_BASE_URL
-            )
+            // The validated query is the filter set: copying fields here would let a new filter be silently dropped.
+            const { total, items } = await service.list(db(), query, IMAGE_BASE_URL)
 
             return { data: items, meta: { total, limit: query.limit, offset: query.offset } }
         },

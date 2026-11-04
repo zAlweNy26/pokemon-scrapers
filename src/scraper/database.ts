@@ -28,6 +28,8 @@ class Statement {
     ) {}
 
     bind(...values: unknown[]) {
+        // D1's limit, which bun:sqlite does not have: without it a query that only fails in production passes here.
+        if (values.length > 100) throw new Error(`D1 allows at most 100 bound parameters; got ${values.length}`)
         return new Statement(this.sqlite, this.sql, values)
     }
 
