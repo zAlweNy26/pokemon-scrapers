@@ -29,7 +29,9 @@ describe('openapi document', () => {
     test('publishes exactly the documented endpoints, without trailing slashes', () => {
         expect(Object.keys(spec.paths).sort()).toEqual([
             '/v1/abilities',
+            '/v1/abilities/{slug}',
             '/v1/egg-groups',
+            '/v1/evolution-chains/{id}',
             '/v1/forms',
             '/v1/forms/{slug}',
             '/v1/generations',
@@ -41,8 +43,27 @@ describe('openapi document', () => {
             '/v1/pokemon',
             '/v1/pokemon/{idOrName}',
             '/v1/search',
-            '/v1/types'
+            '/v1/types',
+            '/v1/types/{slug}'
         ])
+    })
+
+    test('documents the evolution chain, type and ability pages', () => {
+        const cases = [
+            ['/v1/evolution-chains/{id}', ['path:id'], 'evolution.chain'],
+            ['/v1/types/{slug}', ['path:slug', 'query:limit', 'query:offset'], 'reference.type'],
+            ['/v1/abilities/{slug}', ['path:slug', 'query:limit', 'query:offset'], 'reference.ability']
+        ] as const
+
+        for (const [path, parameters, model] of cases) {
+            const operation = spec.paths[path].get
+
+            expect(operation.parameters.map((p: any) => `${p.in}:${p.name}`).sort()).toEqual([...parameters])
+            expect(Object.keys(operation.responses).sort()).toEqual(['200', '404', '422', '429'])
+            expect(operation.responses['200'].content['application/json'].schema.$ref).toBe(
+                `#/components/schemas/${model}`
+            )
+        }
     })
 
     test('documents the Pokédex page parameters', () => {
@@ -80,8 +101,17 @@ describe('openapi document', () => {
 
         expect(names.sort()).toEqual([
             'ability', 'baby', 'color', 'depositable', 'eggGroup', 'gen', 'growthRate', 'habitat', 'hiddenAbility',
-            'homeGame', 'ids', 'legendary', 'limit', 'mythical', 'obtainableIn', 'offset', 'region', 'shape', 'type'
+            'homeGame', 'ids', 'legendary', 'limit', 'mythical', 'obtainableIn', 'offset', 'region', 'shape', 'sort',
+            'type'
         ])
+    })
+
+    test('enumerates every sort, each with its descending form', () => {
+        const sort = spec.paths['/v1/pokemon'].get.parameters.find((p: any) => p.name === 'sort')
+
+        expect(sort.schema).toMatchObject({ type: 'string', default: 'ndex' })
+        expect(sort.schema.enum).toHaveLength(22)
+        expect(sort.schema.enum).toContain('-bst')
     })
 
     test('describes the boolean filter as the strings a client actually sends', () => {

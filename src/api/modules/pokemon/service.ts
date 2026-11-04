@@ -1,4 +1,4 @@
-import { and, count, eq, exists, inArray, notExists, sql, type SQL } from 'drizzle-orm'
+import { and, count, eq, exists, inArray, notExists, sql, type SQL, type SQLWrapper } from 'drizzle-orm'
 import type { SelectResultFields } from 'drizzle-orm/query-builders/select.types'
 import { alias } from 'drizzle-orm/sqlite-core'
 import type { Db } from '@/db/client'
@@ -8,6 +8,7 @@ import {
 } from '@/db/schema'
 import { categoriesOf, nameColumns, nameProjection, namesOf, type NameColumns } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
+import type { SortKey } from './model'
 
 export interface ListFilters {
     gen?: number
@@ -27,6 +28,7 @@ export interface ListFilters {
     habitat?: string
     growthRate?: string
     ids?: number[]
+    sort?: SortKey | `-${SortKey}`
     limit: number
     offset: number
 }
@@ -46,7 +48,7 @@ export const speciesDepositable = exists(anyDepositable).mapWith(Boolean)
  * share this: it is handed a whole `pokemon` row by `findSpecies`, so listing
  * columns here for its benefit would only over-select on the hot list query.
  */
-const listColumns = {
+export const listColumns = {
     ndex: pokemon.ndex,
     slug: pokemon.slug,
     gen: pokemon.gen,
@@ -73,6 +75,30 @@ export const groupBy = <Row, Key, Value>(
     }
 
     return grouped
+}
+
+/** Columns of the species and its default form, as the list query joins them. */
+const sortColumns: Record<SortKey, SQLWrapper> = {
+    ndex: pokemon.ndex,
+    name: pokemon.nameEn,
+    // Null when any stat is, so the species sorts with the other unknowns.
+    bst: sql`${form.hp} + ${form.atk} + ${form.def} + ${form.spAtk} + ${form.spDef} + ${form.spd}`,
+    hp: form.hp,
+    atk: form.atk,
+    def: form.def,
+    spAtk: form.spAtk,
+    spDef: form.spDef,
+    spd: form.spd,
+    height: form.heightM,
+    weight: form.weightKg
+}
+
+/** Nulls last either way, then dex number, so every page boundary is stable. */
+const orderOf = (sort: NonNullable<ListFilters['sort']> = 'ndex') => {
+    const descending = sort.startsWith('-')
+    const column = sortColumns[(descending ? sort.slice(1) : sort) as SortKey]
+
+    return [sql`${column} ${descending ? sql`DESC` : sql`ASC`} NULLS LAST`, pokemon.ndex]
 }
 
 const filterConditions = (filters: ListFilters) => {
@@ -175,7 +201,7 @@ export const list = async (db: Db, filters: ListFilters, imageBaseUrl: string) =
             .innerJoin(form, and(eq(form.ndex, pokemon.ndex), eq(form.isDefault, true)))
             .innerJoin(generation, eq(generation.id, pokemon.gen))
             .where(where)
-            .orderBy(pokemon.ndex)
+            .orderBy(...orderOf(filters.sort))
             .limit(filters.limit)
             .offset(filters.offset)
     ])
@@ -209,7 +235,7 @@ export const pokedex = async (db: Db, slug: string, page: { limit: number; offse
 }
 
 /** Rows selected with `listColumns`, as the list items every listing returns. */
-const listItems = async (db: Db, rows: SelectResultFields<typeof listColumns>[], imageBaseUrl: string) => {
+export const listItems = async (db: Db, rows: SelectResultFields<typeof listColumns>[], imageBaseUrl: string) => {
     const types = await typesByForm(db, rows.map((row) => row.formId))
 
     return rows.map((row) => ({
@@ -344,6 +370,32 @@ const fromForm = alias(form, 'from_form')
 const intoForm = alias(form, 'into_form')
 
 /**
+ * Every evolution method in a chain, to put in a batch. The one definition of
+ * `evolutionChain.steps`, so /v1/pokemon/:idOrName and /v1/evolution-chains/:id
+ * cannot drift apart. The slugs are renamed because D1 batches return rows keyed
+ * by column name: four columns all called `slug` would collapse into one.
+ */
+export const evolutionSteps = (db: Db, chain: number) =>
+    db
+        .select({
+            from: sql<string>`${evolvesFrom.slug}`.as('from_slug'),
+            into: sql<string>`${evolvesInto.slug}`.as('into_slug'),
+            fromForm: sql<string | null>`${fromForm.slug}`.as('from_form_slug'),
+            intoForm: sql<string | null>`${intoForm.slug}`.as('into_form_slug'),
+            trigger: evolution.trigger,
+            game: evolution.game,
+            isDefault: evolution.isDefault,
+            conditions: evolution.conditions
+        })
+        .from(evolution)
+        .innerJoin(evolvesFrom, eq(evolvesFrom.ndex, evolution.fromNdex))
+        .innerJoin(evolvesInto, eq(evolvesInto.ndex, evolution.ndex))
+        .leftJoin(fromForm, eq(fromForm.id, evolution.fromFormId))
+        .leftJoin(intoForm, eq(intoForm.id, evolution.intoFormId))
+        .where(eq(evolvesInto.evolutionChain, chain))
+        .orderBy(evolution.id)
+
+/**
  * The full document in one round trip. Eleven statements are cheaper batched than
  * awaited in sequence, and this is the endpoint most likely to miss the cache.
  */
@@ -379,27 +431,8 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
             .from(pokemonDexNumber)
             .where(eq(pokemonDexNumber.ndex, ndex))
             .orderBy(pokemonDexNumber.pokedex),
-        // The whole family, so a client can draw the tree from any member. The slugs
-        // are renamed because D1 batches return rows keyed by column name: four
-        // columns all called `slug` would collapse into one.
-        db
-            .select({
-                from: sql<string>`${evolvesFrom.slug}`.as('from_slug'),
-                into: sql<string>`${evolvesInto.slug}`.as('into_slug'),
-                fromForm: sql<string | null>`${fromForm.slug}`.as('from_form_slug'),
-                intoForm: sql<string | null>`${intoForm.slug}`.as('into_form_slug'),
-                trigger: evolution.trigger,
-                game: evolution.game,
-                isDefault: evolution.isDefault,
-                conditions: evolution.conditions
-            })
-            .from(evolution)
-            .innerJoin(evolvesFrom, eq(evolvesFrom.ndex, evolution.fromNdex))
-            .innerJoin(evolvesInto, eq(evolvesInto.ndex, evolution.ndex))
-            .leftJoin(fromForm, eq(fromForm.id, evolution.fromFormId))
-            .leftJoin(intoForm, eq(intoForm.id, evolution.intoFormId))
-            .where(eq(evolvesInto.evolutionChain, species.evolutionChain))
-            .orderBy(evolution.id),
+        // The whole family, so a client can draw the tree from any member.
+        evolutionSteps(db, species.evolutionChain),
         // rowid is Bulbapedia's order: oldest game first, each form after the species.
         db
             .select({ game: pokedexEntry.game, form: pokedexEntry.form, text: pokedexEntry.text })

@@ -66,7 +66,7 @@ const evolutionConditionsSchema = z
     .describe('What the method needs beyond its trigger; absent keys do not apply. Values are PokéAPI identifiers')
     .meta({ examples: [{ item: 'thunder-stone' }, { minLevel: 35, timeOfDay: 'night' }] })
 
-const evolutionStepSchema = z.object({
+export const evolutionStepSchema = z.object({
     from: z.string().describe('Species slug'),
     into: z.string().describe('Species slug'),
     fromForm: z.string().nullable().describe('Set when only this form evolves'),
@@ -86,6 +86,10 @@ export const listItemSchema = z.object({
     depositable: z.boolean(),
     sprites: spritesSchema
 })
+
+const sortKeys = ['ndex', 'name', 'bst', 'hp', 'atk', 'def', 'spAtk', 'spDef', 'spd', 'height', 'weight'] as const
+
+export type SortKey = (typeof sortKeys)[number]
 
 /**
  * Input schemas are exported as values, not registered as named models.
@@ -148,6 +152,14 @@ export const listQuery = z.object({
             .optional()
             .describe(`Comma-separated National Dex numbers, at most ${MAX_PAGE_SIZE}`)
             .meta({ examples: ['1,4,7'] }),
+        sort: z
+            .enum([...sortKeys, ...sortKeys.map((key) => `-${key}` as const)])
+            .default('ndex')
+            .describe(
+                'Order by dex number, English name, base stat total, one base stat, height or weight of the default ' +
+                    'form; prefix `-` for descending. Unknown values sort last, ties by dex number'
+            )
+            .meta({ examples: ['-bst'] }),
         limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(20),
         offset: z.coerce.number().int().min(0).default(0)
 })

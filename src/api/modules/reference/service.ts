@@ -1,4 +1,4 @@
-import { and, count, countDistinct, eq } from 'drizzle-orm'
+import { and, count, countDistinct, eq, sql } from 'drizzle-orm'
 import type { Db } from '@/db/client'
 import {
     ability, form, formHomeGame, formType, generation, move, pokemon, pokemonDexNumber, pokemonEggGroup, type
@@ -10,6 +10,12 @@ const named = (rows: ({ slug: string } & NameColumns)[]) => rows.map((row) => ({
 export const abilities = async (db: Db) => named(await db.select().from(ability).orderBy(ability.slug))
 
 export const moves = async (db: Db) => named(await db.select().from(move).orderBy(move.slug))
+
+export const findType = async (db: Db, slug: string) =>
+    named(await db.select().from(type).where(sql`${type.slug} = ${slug} COLLATE NOCASE`).limit(1))[0]
+
+export const findAbility = async (db: Db, slug: string) =>
+    named(await db.select().from(ability).where(sql`${ability.slug} = ${slug} COLLATE NOCASE`).limit(1))[0]
 
 export const generations = (db: Db) =>
     db

@@ -16,7 +16,19 @@ export const pokedexParams = z.object({
     slug: z.string().min(1).max(40).describe('PokéAPI pokedex identifier').meta({ examples: ['paldea'] })
 })
 
+export const typeParams = z.object({
+    slug: z.string().min(1).max(20).describe('Type identifier').meta({ examples: ['water'] })
+})
+
+export const abilityParams = z.object({
+    slug: z.string().min(1).max(40).describe('Ability identifier').meta({ examples: ['levitate'] })
+})
+
 export const pageQuery = listQuery.pick({ limit: true, offset: true })
+
+/** A type or ability, with a page of the species /v1/pokemon returns for it. */
+const speciesPage = (description: string) =>
+    namedSchema.extend({ data: z.array(listItemSchema).describe(description), meta: paginationMeta })
 
 export const referenceModels = {
     'reference.generations': z.array(
@@ -34,7 +46,11 @@ export const referenceModels = {
         })
     ),
 
+    'reference.type': speciesPage('Species whose default form has this type, by dex number'),
+
     'reference.abilities': z.array(namedSchema),
+
+    'reference.ability': speciesPage('Species with a form that has this ability, hidden or not, by dex number'),
 
     'reference.moves': z.array(namedSchema),
 

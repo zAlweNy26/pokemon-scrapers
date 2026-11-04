@@ -77,6 +77,23 @@ describe('GET /v1/pokemon', () => {
         expect(await slugs('ids=658,25,658')).toEqual(['pikachu', 'greninja'])
     })
 
+    test('sorts through the query string, ascending or with - descending', async () => {
+        const slugs = async (query: string) => (await json(`/v1/pokemon?${query}`)).body.data.map((p: any) => p.slug)
+
+        expect(await slugs('sort=name&limit=3')).toEqual(['gengar', 'greninja', 'lapras'])
+        expect(await slugs('sort=-bst&limit=3')).toEqual(['urshifu', 'ogerpon', 'lapras'])
+        expect(await slugs('sort=spAtk&type=water')).toEqual(['lapras', 'greninja'])
+    })
+
+    test('rejects a sort it does not know', async () => {
+        for (const sort of ['bogus', 'BST', '--bst', '-']) {
+            const { response, body } = await json(`/v1/pokemon?sort=${sort}`)
+
+            expect(response.status).toBe(422)
+            expect(body.errors[0].property).toBe('sort')
+        }
+    })
+
     test('rejects malformed or oversized dex number lists', async () => {
         const tooMany = Array.from({ length: 101 }, (_, i) => i + 1).join(',')
 
@@ -489,6 +506,79 @@ describe('GET /v1/forms/:slug', () => {
         expect(response.status).toBe(404)
         expect(response.headers.get('content-type')).toBe('application/problem+json')
         expect(body).toMatchObject({ status: 404, instance: '/v1/forms/pikachu-cosplay' })
+    })
+})
+
+describe('GET /v1/evolution-chains/:id', () => {
+    test("lists the chain's species, and the steps a member's detail has", async () => {
+        const { response, body } = await json('/v1/evolution-chains/10')
+        const { body: raichu } = await json('/v1/pokemon/raichu')
+
+        expect(response.status).toBe(200)
+        expect(body.id).toBe(10)
+        expect(body.members).toEqual((await json('/v1/pokemon?ids=25,26')).body.data)
+        expect(body.steps).toEqual(raichu.evolutionChain.steps)
+    })
+
+    test('answers 404 as a problem for a chain no species is in, and 422 for a non-id', async () => {
+        const { response, body } = await json('/v1/evolution-chains/9999')
+
+        expect(response.status).toBe(404)
+        expect(response.headers.get('content-type')).toBe('application/problem+json')
+        expect(body).toMatchObject({ status: 404, instance: '/v1/evolution-chains/9999' })
+        for (const id of ['0', 'pikachu', '1.5']) expect((await json(`/v1/evolution-chains/${id}`)).response.status).toBe(422)
+    })
+})
+
+describe('GET /v1/types/:slug and /v1/abilities/:slug', () => {
+    test('a type with its names and a page of its species, ignoring case', async () => {
+        const { response, body } = await json('/v1/types/WATER')
+
+        expect(response.status).toBe(200)
+        expect(body.slug).toBe('water')
+        expect(body.name).toMatchObject({ en: 'Water', de: 'Wasser' })
+        expect(body.meta).toEqual({ total: 2, limit: 20, offset: 0 })
+        expect(body.data).toEqual((await json('/v1/pokemon?type=water')).body.data)
+    })
+
+    test("each type's total is the count /v1/types reports, unused types included", async () => {
+        const { body } = await json('/v1/types')
+
+        for (const { slug, count } of body) {
+            const page = await json(`/v1/types/${slug}`)
+
+            expect(page.response.status, slug).toBe(200)
+            expect(page.body.meta.total, slug).toBe(count)
+        }
+    })
+
+    test('an ability with its names and the species with it on any form, hidden or not', async () => {
+        const { response, body } = await json('/v1/abilities/Lightning-Rod')
+
+        expect(response.status).toBe(200)
+        expect(body.slug).toBe('lightning-rod')
+        expect(body.name.en).toBe('Lightning Rod')
+        expect(body.data.map((p: any) => p.slug)).toEqual(['pikachu', 'raichu'])
+        expect((await json('/v1/abilities/battle-bond')).body.data.map((p: any) => p.slug)).toEqual(['greninja'])
+    })
+
+    test('paginates like /v1/pokemon', async () => {
+        const { body } = await json('/v1/abilities/lightning-rod?limit=1&offset=1')
+
+        expect(body.meta).toEqual({ total: 2, limit: 1, offset: 1 })
+        expect(body.data.map((p: any) => p.slug)).toEqual(['raichu'])
+        expect((await json('/v1/types/water?limit=500')).response.status).toBe(422)
+        expect((await json('/v1/abilities/static?offset=-1')).response.status).toBe(422)
+    })
+
+    test('answers 404 as a problem for a type or ability that does not exist', async () => {
+        for (const path of ['/v1/types/sound', '/v1/abilities/wonder-guard']) {
+            const { response, body } = await json(path)
+
+            expect(response.status).toBe(404)
+            expect(response.headers.get('content-type')).toBe('application/problem+json')
+            expect(body).toMatchObject({ status: 404, instance: path })
+        }
     })
 })
 

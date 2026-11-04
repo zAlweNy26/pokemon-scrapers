@@ -6,6 +6,7 @@ import * as pokemon from '@/api/modules/pokemon/service'
 import * as search from '@/api/modules/search/service'
 import * as reference from '@/api/modules/reference/service'
 import * as forms from '@/api/modules/forms/service'
+import * as evolution from '@/api/modules/evolution/service'
 
 const IMAGES = 'https://images.test'
 
@@ -141,6 +142,39 @@ describe('pokemon.list', () => {
 
         expect(total).toBe(2)
         expect(items.map((i) => i.slug)).toEqual(['pikachu', 'gengar'])
+    })
+
+    test('sorts ascending by English name, stat total, or a single stat of the default form', async () => {
+        expect(await slugs({ sort: 'name' })).toEqual([
+            'gengar', 'greninja', 'lapras', 'ogerpon', 'pikachu', 'raichu', 'rotom', 'urshifu'
+        ])
+        // Urshifu and Ogerpon both total 550: dex number breaks the tie.
+        expect(await slugs({ sort: 'bst' })).toEqual([
+            'pikachu', 'rotom', 'raichu', 'gengar', 'greninja', 'lapras', 'urshifu', 'ogerpon'
+        ])
+        expect(await slugs({ sort: 'hp', limit: 2 })).toEqual(['pikachu', 'rotom'])
+    })
+
+    test('a leading - sorts descending, still breaking ties by ascending dex number', async () => {
+        expect(await slugs({ sort: '-bst' })).toEqual([
+            'urshifu', 'ogerpon', 'lapras', 'greninja', 'gengar', 'raichu', 'rotom', 'pikachu'
+        ])
+        expect(await slugs({ sort: '-weight', limit: 3 })).toEqual(['lapras', 'urshifu', 'gengar'])
+        expect((await list({ sort: '-bst', limit: 2, offset: 1 })).items.map((i) => i.slug)).toEqual(['ogerpon', 'lapras'])
+    })
+
+    test('sorts unknown values last in both directions', async () => {
+        const own = await createTestDb()
+        await own.db.update(form).set({ spd: null, weightKg: null }).where(eq(form.slug, 'raichu'))
+
+        const ownSlugs = async (sort: pokemon.ListFilters['sort']) =>
+            (await pokemon.list(own.db, { sort, limit: 50, offset: 0 }, IMAGES)).items.map((i) => i.slug)
+
+        expect((await ownSlugs('bst')).at(-1)).toBe('raichu')
+        expect((await ownSlugs('-bst')).at(-1)).toBe('raichu')
+        expect((await ownSlugs('weight')).at(-1)).toBe('raichu')
+        expect((await ownSlugs('-weight')).at(-1)).toBe('raichu')
+        own.close()
     })
 
     test('builds sprite URLs from the image base, and null when artwork is absent', async () => {
@@ -293,6 +327,29 @@ describe('pokemon.detail', () => {
     })
 })
 
+describe('evolution.chain', () => {
+    test("lists the chain's species as list items, with the steps every member's detail has", async () => {
+        const result = await evolution.chain(db, 10, IMAGES)
+        const raichu = await pokemon.detail(db, (await pokemon.findSpecies(db, 'raichu'))!, IMAGES)
+
+        expect(result?.id).toBe(10)
+        expect(result?.members).toEqual((await list({ ids: [25, 26] })).items)
+        expect(result?.steps).toEqual(raichu.evolutionChain.steps)
+        expect(result?.steps).toHaveLength(2)
+    })
+
+    test('a chain of one species has no steps', async () => {
+        const result = await evolution.chain(db, 65, IMAGES)
+
+        expect(result?.members.map((member) => member.slug)).toEqual(['lapras'])
+        expect(result?.steps).toEqual([])
+    })
+
+    test('returns undefined for a chain no species is in', async () => {
+        expect(await evolution.chain(db, 9999, IMAGES)).toBeUndefined()
+    })
+})
+
 describe('search', () => {
     test('finds a species by a name in a language other than English', async () => {
         const [result] = await search.search(db, 'Quaj', 10, IMAGES)
@@ -393,6 +450,17 @@ describe('reference', () => {
             expect((await list({ homeGame: slug })).total, slug).toBe(count)
         for (const { slug, count } of await reference.pokedexes(db))
             expect((await pokemon.pokedex(db, slug, { limit: 50, offset: 0 }, IMAGES)).total, slug).toBe(count)
+        for (const { slug, count } of await reference.types(db))
+            expect((await list({ type: slug })).total, slug).toBe(count)
+    })
+
+    test('finds a type or ability by slug, ignoring case', async () => {
+        expect(await reference.findType(db, 'WATER')).toEqual({
+            slug: 'water', name: expect.objectContaining({ en: 'Water', de: 'Wasser' })
+        })
+        expect((await reference.findAbility(db, 'Levitate'))?.slug).toBe('levitate')
+        expect(await reference.findType(db, 'sound')).toBeUndefined()
+        expect(await reference.findAbility(db, 'wonder-guard')).toBeUndefined()
     })
 })
 

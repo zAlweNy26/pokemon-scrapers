@@ -2,12 +2,12 @@ import { Elysia } from 'elysia'
 import { db, env } from '@/api/env'
 import { sharedModels } from '@/api/models'
 import { notFound } from '@/api/problem'
-import { pokedex } from '@/api/modules/pokemon/service'
-import { pageQuery, pokedexParams, referenceModels } from './model'
+import { list, pokedex } from '@/api/modules/pokemon/service'
+import { abilityParams, pageQuery, pokedexParams, referenceModels, typeParams } from './model'
 import * as service from './service'
 
 /**
- * Only /pokedexes/:slug takes input, so elsewhere 429 is the only failure a
+ * Only the /:slug routes take input, so elsewhere 429 is the only failure a
  * client can provoke - every /v1 route inherits the global limiter.
  */
 export const reference = new Elysia({ name: 'module.reference' })
@@ -21,10 +21,56 @@ export const reference = new Elysia({ name: 'module.reference' })
         response: { 200: 'reference.types', 429: 'problem' },
         detail: { summary: 'List types with their names and species counts', tags: ['Reference'] }
     })
+    .get(
+        '/types/:slug',
+        async ({ params, query }) => {
+            const database = db()
+            const [found, { total, items }] = await Promise.all([
+                service.findType(database, params.slug),
+                list(database, { type: params.slug, ...query }, env().IMAGE_BASE_URL)
+            ])
+            if (!found) throw notFound(`No type matches "${params.slug}".`)
+
+            return { ...found, data: items, meta: { total, limit: query.limit, offset: query.offset } }
+        },
+        {
+            params: typeParams,
+            query: pageQuery,
+            response: { 200: 'reference.type', 404: 'problem', 422: 'problem', 429: 'problem' },
+            detail: {
+                summary: 'Get one type with its species',
+                description: 'The species are what /v1/pokemon?type= returns, so `meta.total` is the count /v1/types reports.',
+                tags: ['Reference']
+            }
+        }
+    )
     .get('/abilities', () => service.abilities(db()), {
         response: { 200: 'reference.abilities', 429: 'problem' },
         detail: { summary: 'List abilities with their names', tags: ['Reference'] }
     })
+    .get(
+        '/abilities/:slug',
+        async ({ params, query }) => {
+            const database = db()
+            const [found, { total, items }] = await Promise.all([
+                service.findAbility(database, params.slug),
+                list(database, { ability: params.slug, ...query }, env().IMAGE_BASE_URL)
+            ])
+            if (!found) throw notFound(`No ability matches "${params.slug}".`)
+
+            return { ...found, data: items, meta: { total, limit: query.limit, offset: query.offset } }
+        },
+        {
+            params: abilityParams,
+            query: pageQuery,
+            response: { 200: 'reference.ability', 404: 'problem', 422: 'problem', 429: 'problem' },
+            detail: {
+                summary: 'Get one ability with its species',
+                description: 'The species are what /v1/pokemon?ability= returns: any form, hidden or not.',
+                tags: ['Reference']
+            }
+        }
+    )
     .get('/moves', () => service.moves(db()), {
         response: { 200: 'reference.moves', 429: 'problem' },
         detail: { summary: 'List moves with their names', tags: ['Reference'] }

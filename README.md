@@ -74,13 +74,15 @@ known facts, or any API response its schema rejects. Gaps the sources leave
 
 | Endpoint | Notes |
 |---|---|
-| `GET /v1/pokemon` | `?gen &type &region &depositable &homeGame &ability &hiddenAbility &eggGroup &obtainableIn &legendary &mythical &baby &color &shape &habitat &growthRate &ids &limit &offset`. `homeGame` takes a version group (`scarlet-violet`), `obtainableIn` a version (`scarlet`); `ids` is up to 100 comma-separated dex numbers |
+| `GET /v1/pokemon` | `?gen &type &region &depositable &homeGame &ability &hiddenAbility &eggGroup &obtainableIn &legendary &mythical &baby &color &shape &habitat &growthRate &ids &sort &limit &offset`. `homeGame` takes a version group (`scarlet-violet`), `obtainableIn` a version (`scarlet`); `ids` is up to 100 comma-separated dex numbers. `sort` is `ndex` (default), `name`, `bst`, `hp`, `atk`, `def`, `spAtk`, `spDef`, `spd`, `height` or `weight` of the default form, `-` prefixed for descending (`-bst`); unknown values last, ties by dex number |
 | `GET /v1/pokemon/:idOrName` | Accepts `25`, `pikachu` or `Pikachu`; returns every form |
+| `GET /v1/evolution-chains/:id` | A PokéAPI chain id: its species as list items in `members`, and `steps` exactly as `/v1/pokemon/:idOrName` has them in `evolutionChain` |
 | `GET /v1/forms` | `?gen &type &depositable &homeGame &isDefault &limit &offset`. Every form, where HOME depositability lives: `depositable` is the form's own, so it tells Pikachu apart from Partner Pikachu |
 | `GET /v1/forms/:slug` | One form as `/v1/pokemon/:idOrName` lists it in `forms`, plus its `species` |
 | `GET /v1/search?q=` | Cross-language name search; reports which language matched |
 | `GET /v1/generations`, `GET /v1/types` | Reference data with counts; types carry their names in every language |
 | `GET /v1/abilities`, `GET /v1/moves` | Every main-series ability and move, with its name in every language |
+| `GET /v1/types/:slug`, `GET /v1/abilities/:slug` | `?limit &offset`. One type or ability with its names, and a page of what `/v1/pokemon?type=` or `?ability=` returns for it |
 | `GET /v1/egg-groups`, `GET /v1/home-games`, `GET /v1/pokedexes` | The values `eggGroup`, `homeGame` and `/v1/pokedexes/:slug` accept, each with its species count |
 | `GET /v1/pokedexes/:slug` | `?limit &offset`. Species in a regional Pokédex, in its order: list items plus their regional `number` |
 | `GET /v1/meta` | Dataset version, counts and provenance |
