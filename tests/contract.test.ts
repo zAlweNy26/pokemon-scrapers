@@ -46,7 +46,10 @@ describe('openapi document', () => {
     test('documents every list filter as a query parameter', () => {
         const names = spec.paths['/v1/pokemon'].get.parameters.map((p: any) => p.name)
 
-        expect(names.sort()).toEqual(['depositable', 'gen', 'limit', 'offset', 'region', 'type'])
+        expect(names.sort()).toEqual([
+            'ability', 'baby', 'color', 'depositable', 'eggGroup', 'gen', 'growthRate', 'habitat', 'hiddenAbility',
+            'homeGame', 'ids', 'legendary', 'limit', 'mythical', 'obtainableIn', 'offset', 'region', 'shape', 'type'
+        ])
     })
 
     test('describes the boolean filter as the strings a client actually sends', () => {

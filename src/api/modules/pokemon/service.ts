@@ -13,6 +13,19 @@ export interface ListFilters {
     type?: string
     region?: string
     depositable?: boolean
+    homeGame?: string
+    ability?: string
+    hiddenAbility?: string
+    eggGroup?: string
+    obtainableIn?: string
+    legendary?: boolean
+    mythical?: boolean
+    baby?: boolean
+    color?: string
+    shape?: string
+    habitat?: string
+    growthRate?: string
+    ids?: number[]
     limit: number
     offset: number
 }
@@ -81,6 +94,63 @@ const filterConditions = (filters: ListFilters) => {
     // which is most of them, Pikachu included.
     if (filters.depositable !== undefined)
         conditions.push(filters.depositable ? exists(anyDepositable) : notExists(anyDepositable))
+
+    // A version group (`scarlet-violet`), as HOME publishes it; any form counts.
+    if (filters.homeGame !== undefined)
+        conditions.push(
+            exists(
+                sql`(SELECT 1 FROM ${formHomeGame} INNER JOIN ${form} AS hf ON hf.id = ${formHomeGame.formId}
+                     WHERE hf.ndex = ${pokemon.ndex} AND ${formHomeGame.game} = ${filters.homeGame} COLLATE NOCASE)`
+            )
+        )
+
+    if (filters.ability !== undefined)
+        conditions.push(
+            exists(
+                sql`(SELECT 1 FROM ${formAbility} INNER JOIN ${form} AS af ON af.id = ${formAbility.formId}
+                     WHERE af.ndex = ${pokemon.ndex} AND ${formAbility.ability} = ${filters.ability} COLLATE NOCASE)`
+            )
+        )
+
+    if (filters.hiddenAbility !== undefined)
+        conditions.push(
+            exists(
+                sql`(SELECT 1 FROM ${formAbility} INNER JOIN ${form} AS af ON af.id = ${formAbility.formId}
+                     WHERE af.ndex = ${pokemon.ndex} AND ${formAbility.isHidden} = 1
+                     AND ${formAbility.ability} = ${filters.hiddenAbility} COLLATE NOCASE)`
+            )
+        )
+
+    if (filters.eggGroup !== undefined)
+        conditions.push(
+            exists(
+                sql`(SELECT 1 FROM ${pokemonEggGroup} WHERE ${pokemonEggGroup.ndex} = ${pokemon.ndex}
+                     AND ${pokemonEggGroup.eggGroup} = ${filters.eggGroup} COLLATE NOCASE)`
+            )
+        )
+
+    // A version (`scarlet`), not a version group: availability is recorded per game.
+    if (filters.obtainableIn !== undefined)
+        conditions.push(
+            exists(
+                sql`(SELECT 1 FROM ${availability} WHERE ${availability.ndex} = ${pokemon.ndex}
+                     AND ${availability.game} = ${filters.obtainableIn} COLLATE NOCASE AND ${availability.obtainable} = 1)`
+            )
+        )
+
+    if (filters.legendary !== undefined) conditions.push(eq(pokemon.isLegendary, filters.legendary))
+    if (filters.mythical !== undefined) conditions.push(eq(pokemon.isMythical, filters.mythical))
+    if (filters.baby !== undefined) conditions.push(eq(pokemon.isBaby, filters.baby))
+
+    if (filters.color !== undefined) conditions.push(sql`${pokemon.color} = ${filters.color} COLLATE NOCASE`)
+    if (filters.shape !== undefined) conditions.push(sql`${pokemon.shape} = ${filters.shape} COLLATE NOCASE`)
+    if (filters.habitat !== undefined) conditions.push(sql`${pokemon.habitat} = ${filters.habitat} COLLATE NOCASE`)
+    if (filters.growthRate !== undefined)
+        conditions.push(sql`${pokemon.growthRate} = ${filters.growthRate} COLLATE NOCASE`)
+
+    // One bound parameter, not one per id: D1 refuses a statement with more than 100.
+    if (filters.ids !== undefined)
+        conditions.push(sql`${pokemon.ndex} IN (SELECT value FROM json_each(${JSON.stringify(filters.ids)}))`)
 
     return conditions.length ? and(...conditions) : undefined
 }

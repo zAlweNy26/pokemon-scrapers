@@ -19,6 +19,19 @@ export const pokemon = new Elysia({ name: 'module.pokemon', prefix: '/pokemon' }
                     type: query.type,
                     region: query.region,
                     depositable: query.depositable,
+                    homeGame: query.homeGame,
+                    ability: query.ability,
+                    hiddenAbility: query.hiddenAbility,
+                    eggGroup: query.eggGroup,
+                    obtainableIn: query.obtainableIn,
+                    legendary: query.legendary,
+                    mythical: query.mythical,
+                    baby: query.baby,
+                    color: query.color,
+                    shape: query.shape,
+                    habitat: query.habitat,
+                    growthRate: query.growthRate,
+                    ids: query.ids,
                     limit: query.limit,
                     offset: query.offset
                 },
@@ -32,7 +45,9 @@ export const pokemon = new Elysia({ name: 'module.pokemon', prefix: '/pokemon' }
             response: { 200: 'pokemon.list', 422: 'problem', 429: 'problem' },
             detail: {
                 summary: 'List species',
-                description: 'Slim records for browsing. Filterable by generation, type, region and HOME depositability.',
+                description:
+                    'Slim records for browsing. Filterable by generation, type, region, HOME depositability and HOME game, ' +
+                    'ability, egg group, game availability, species flags, color, shape, habitat, growth rate and dex numbers.',
                 tags: ['Pokemon']
             }
         }

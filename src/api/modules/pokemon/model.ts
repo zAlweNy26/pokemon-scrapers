@@ -98,6 +98,56 @@ export const listQuery = z.object({
         type: z.string().max(20).optional().meta({ examples: ['Water'] }),
         region: z.string().max(30).optional().meta({ examples: ['Kanto'] }),
         depositable: booleanString.optional().describe('Filter on Pokemon HOME compatibility'),
+        homeGame: z
+            .string()
+            .max(40)
+            .optional()
+            .describe('Species with a form that can move into this game from HOME, as a PokéAPI version-group identifier')
+            .meta({ examples: ['scarlet-violet'] }),
+        ability: z
+            .string()
+            .max(40)
+            .optional()
+            .describe('Species with a form that has this ability, hidden or not, as an ability identifier')
+            .meta({ examples: ['levitate'] }),
+        hiddenAbility: z
+            .string()
+            .max(40)
+            .optional()
+            .describe('Species with a form that has this as its hidden ability, as an ability identifier')
+            .meta({ examples: ['lightning-rod'] }),
+        eggGroup: z
+            .string()
+            .max(40)
+            .optional()
+            .describe('PokéAPI egg-group identifier')
+            .meta({ examples: ['dragon'] }),
+        obtainableIn: z
+            .string()
+            .max(40)
+            .optional()
+            .describe('Species the game can get on its own, any DLC included, as a PokéAPI version identifier (not a version group)')
+            .meta({ examples: ['scarlet'] }),
+        legendary: booleanString.optional().describe('Filter on the legendary species flag'),
+        mythical: booleanString.optional().describe('Filter on the mythical species flag'),
+        baby: booleanString.optional().describe('Filter on the baby species flag'),
+        color: z.string().max(40).optional().describe('PokéAPI color identifier').meta({ examples: ['yellow'] }),
+        shape: z.string().max(40).optional().describe('PokéAPI shape identifier').meta({ examples: ['quadruped'] }),
+        habitat: z.string().max(40).optional().describe('PokéAPI habitat identifier').meta({ examples: ['forest'] }),
+        growthRate: z
+            .string()
+            .max(40)
+            .optional()
+            .describe('PokéAPI growth-rate identifier')
+            .meta({ examples: ['medium-slow'] }),
+        ids: z
+            .string()
+            .regex(/^\d+(,\d+)*$/, 'Expected comma-separated National Dex numbers')
+            .transform((value) => [...new Set(value.split(',').map(Number))])
+            .pipe(z.array(z.number().int().min(1)).max(MAX_PAGE_SIZE))
+            .optional()
+            .describe(`Comma-separated National Dex numbers, at most ${MAX_PAGE_SIZE}`)
+            .meta({ examples: ['1,4,7'] }),
         limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(20),
         offset: z.coerce.number().int().min(0).default(0)
 })

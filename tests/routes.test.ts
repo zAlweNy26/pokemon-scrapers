@@ -63,6 +63,31 @@ describe('GET /v1/pokemon', () => {
         expect((await json('/v1/pokemon?depositable=true')).body.meta.total).toBe(8)
     })
 
+    test('passes the new filters through the query string', async () => {
+        const slugs = async (query: string) => (await json(`/v1/pokemon?${query}`)).body.data.map((p: any) => p.slug)
+
+        expect(await slugs('homeGame=legends-arceus')).toEqual(['rotom'])
+        expect(await slugs('ability=levitate')).toEqual(['rotom'])
+        expect(await slugs('hiddenAbility=protean')).toEqual(['greninja'])
+        expect(await slugs('eggGroup=indeterminate')).toEqual(['gengar', 'rotom'])
+        expect(await slugs('obtainableIn=scarlet')).toEqual(['pikachu'])
+        expect(await slugs('legendary=true&color=green')).toEqual(['ogerpon'])
+        expect(await slugs('mythical=false&baby=false&shape=ball')).toEqual(['rotom'])
+        expect(await slugs('habitat=sea&growthRate=slow')).toEqual(['lapras'])
+        expect(await slugs('ids=658,25,658')).toEqual(['pikachu', 'greninja'])
+    })
+
+    test('rejects malformed or oversized dex number lists', async () => {
+        const tooMany = Array.from({ length: 101 }, (_, i) => i + 1).join(',')
+
+        for (const ids of ['', 'abc', '0', '1,,2', '1.5', '-1', tooMany]) {
+            const { response, body } = await json(`/v1/pokemon?ids=${ids}`)
+
+            expect(response.status).toBe(422)
+            expect(body.errors[0].property).toStartWith('ids')
+        }
+    })
+
     test('accepts a generation the code has never heard of', async () => {
         // A new generation is a data change; it must not need a code deploy to be filterable.
         const { response, body } = await json('/v1/pokemon?gen=10')

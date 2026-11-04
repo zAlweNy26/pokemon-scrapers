@@ -74,7 +74,7 @@ known facts, or any API response its schema rejects. Gaps the sources leave
 
 | Endpoint | Notes |
 |---|---|
-| `GET /v1/pokemon` | `?gen &type &region &depositable &limit &offset` |
+| `GET /v1/pokemon` | `?gen &type &region &depositable &homeGame &ability &hiddenAbility &eggGroup &obtainableIn &legendary &mythical &baby &color &shape &habitat &growthRate &ids &limit &offset`. `homeGame` takes a version group (`scarlet-violet`), `obtainableIn` a version (`scarlet`); `ids` is up to 100 comma-separated dex numbers |
 | `GET /v1/pokemon/:idOrName` | Accepts `25`, `pikachu` or `Pikachu`; returns every form |
 | `GET /v1/search?q=` | Cross-language name search; reports which language matched |
 | `GET /v1/generations`, `GET /v1/types` | Reference data with counts; types carry their names in every language |
