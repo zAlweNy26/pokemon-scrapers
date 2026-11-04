@@ -9,8 +9,8 @@ import { openDatabase } from '@/scraper/database'
  * same generated SQL - with no workerd, no wrangler and no network. Bun's SQLite
  * ships FTS5, so even the trigram search is genuine rather than stubbed.
  *
- * Only the four members Drizzle's D1 driver actually calls are implemented:
- * `prepare().bind().all()/run()/raw()` and `batch()`.
+ * Only what our code actually calls is implemented: `withSession()` (src/db/client.ts)
+ * and what Drizzle's D1 driver uses, `prepare().bind().all()/run()/raw()` and `batch()`.
  */
 const meta = () => ({ duration: 0, changes: 0, last_row_id: 0, rows_read: 0, rows_written: 0 })
 
@@ -43,9 +43,8 @@ class Statement {
 
 export interface LocalD1 {
     /**
-     * Cast at the boundary: D1Database declares members (dump, exec, withSession)
-     * that Drizzle never touches, and stubbing them would be noise pretending to
-     * be coverage.
+     * Cast at the boundary: D1Database declares members (dump, exec) that nothing
+     * here touches, and stubbing them would be noise pretending to be coverage.
      */
     binding: D1Database
     close(): void
@@ -61,6 +60,8 @@ export const createLocalD1 = async (): Promise<LocalD1> => {
     const sqlite = await createSqlite()
 
     const client = {
+        // Sessions only matter for replicas; locally the database is the session.
+        withSession: () => client,
         prepare: (sql: string) => new Statement(sqlite, sql),
         batch: async (statements: Statement[]) => {
             const results = []

@@ -13,7 +13,7 @@ export const httpAccess = new Elysia({ name: 'cors' }).use(
     cors({
         origin: '*',
         credentials: false,
-        methods: ['GET', 'OPTIONS'],
+        methods: ['GET', 'HEAD', 'OPTIONS'],
         allowedHeaders: ['content-type', 'if-none-match'],
         exposeHeaders: ['etag', 'cache-control', 'retry-after'],
         maxAge: 86_400

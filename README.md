@@ -44,8 +44,14 @@ uploads the Worker. Data is loaded separately, **before** deploying — see belo
 ```bash
 bun run data:build         # → data/dataset.sql + data/version.json, validated and diffed
 bun run data:load:local    # reset local D1 and load it; run `bun test` and try the API
-bun run data:load:remote   # load it into the real database, then deploy
+bun run data:load:remote   # load it into the real database
+# wait a minute, then: bun run deploy
 ```
+
+Reads are served by D1 read replicas near the caller. Wait a minute between
+loading and deploying: the deploy announces the new `DATA_VERSION`, and a replica
+still holding old rows at that moment would have them cached at the edge, under
+the new version, for a week.
 
 The build reads PokéAPI's CSV files from a pinned git checkout in `.cache/` (no
 requests to PokéAPI), 19 Serebii pages — the HOME box list plus each
@@ -69,7 +75,7 @@ is a hash of the dataset, so ETags change exactly when the data does.
 | `GET /health` | Reads from D1; never cached |
 | `GET /docs`, `GET /openapi.json` | Scalar UI and the OpenAPI 3.0.3 document |
 
-Single resources are returned bare; collections are wrapped in `{ data, meta }`.
+Every `GET` also answers `HEAD`. Single resources are returned bare; collections are wrapped in `{ data, meta }`.
 Every failure is [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) `application/problem+json`
 — note that the generated spec documents those bodies as `application/json`, because
 `@elysiajs/openapi` hard-codes that media type and exposes no document transform.

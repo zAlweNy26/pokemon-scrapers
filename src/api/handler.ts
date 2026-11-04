@@ -20,15 +20,20 @@ export const handleRequest = async (request: Request, env: Env): Promise<Respons
     // it truthful about what the caller received.
     let status = 500
 
+    // Elysia has no HEAD routes: answer HEAD as the GET it mirrors, minus the body (RFC 9110 §9.3.2).
+    const isHead = request.method === 'HEAD'
+
     try {
         const response = notModified(
             request,
-            await runWithScope({ bindings: env, db: createDb(env.DB) }, () => app.fetch(request))
+            await runWithScope({ bindings: env, db: createDb(env.DB) }, () =>
+                app.fetch(isHead ? new Request(request, { method: 'GET' }) : request)
+            )
         )
 
         status = response.status
 
-        return harden(response)
+        return harden(isHead ? new Response(null, response) : response)
     } finally {
         logRequest(request, status, Date.now() - startedAt)
     }

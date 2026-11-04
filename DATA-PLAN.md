@@ -45,9 +45,10 @@ purpose: Workers Cache answers most revalidations first. Follow-ups found on the
 1. **The real data load must end like `data/seed.sql`:** write the three `count_*`
    rows to `meta` and run the FTS5 `rebuild`. Without the counts `/v1/meta` reports 0;
    without the rebuild, search is wrong.
-2. **`HEAD` returns 404** (it did before Void too). About 3 lines in `src/routes/[...path].ts`.
-3. **D1 read replicas are unused.** Our Drizzle client reads from the primary; a
-   `withSession()` client could read nearby. Unverified that Drizzle's D1 driver accepts a session.
+2. ~~`HEAD` returns 404~~ — done: `src/api/handler.ts` answers HEAD as the GET it mirrors, without a body.
+3. ~~D1 read replicas are unused~~ — done: `src/db/client.ts` reads through a `'first-unconstrained'`
+   D1 session (Drizzle only calls `prepare()` and `batch()`, which a session has). Load data a
+   minute before deploying, so no replica serves old rows under the new `DATA_VERSION`.
 4. **Not deployed yet:** `bun run deploy`, commit `void.lock.json`, attach the domain with `void domain`.
 
 ## Replace veekun with PokéAPI's CSV files

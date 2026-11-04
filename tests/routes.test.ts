@@ -268,6 +268,46 @@ describe('GET /v1/search', () => {
     })
 })
 
+describe('HEAD', () => {
+    test('answers like the GET it mirrors, without a body', async () => {
+        // Elysia has no HEAD routes; before this, every HEAD was a 404.
+        const get = await call('/v1/pokemon/25')
+        const head = await call('/v1/pokemon/25', { method: 'HEAD' })
+
+        expect(head.status).toBe(200)
+        expect(head.body).toBeNull()
+        expect(head.headers.get('etag')).toBe(get.headers.get('etag'))
+        expect(head.headers.get('content-type')).toBe(get.headers.get('content-type'))
+    })
+
+    test('keeps the status of a failure and of a conditional match', async () => {
+        const missing = await call('/v1/pokemon/no-such-thing', { method: 'HEAD' })
+        expect(missing.status).toBe(404)
+        expect(missing.body).toBeNull()
+
+        const etag = (await call('/v1/pokemon/25')).headers.get('etag')!
+        const conditional = await call('/v1/pokemon/25', { method: 'HEAD', headers: { 'if-none-match': etag } })
+        expect(conditional.status).toBe(304)
+    })
+})
+
+describe('read replicas', () => {
+    test('queries go through a D1 session, so a nearby replica can answer', async () => {
+        // A bare binding always reads from the primary.
+        const constraints: unknown[] = []
+        const binding = env.DB as D1Database & { withSession: (c: unknown) => D1Database }
+        const DB = Object.assign(Object.create(binding), {
+            withSession: (constraint: unknown) => {
+                constraints.push(constraint)
+                return binding.withSession(constraint)
+            }
+        })
+
+        expect((await call('/v1/pokemon/25', undefined, { DB })).status).toBe(200)
+        expect(constraints).toEqual(['first-unconstrained'])
+    })
+})
+
 describe('response hardening', () => {
     test('every response forbids content-type sniffing', async () => {
         // Set at the entry point rather than in an onAfterHandle hook, which
