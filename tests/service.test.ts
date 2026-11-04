@@ -278,7 +278,7 @@ describe('pokemon.detail', () => {
     test('reports regional dex numbers, species flags, EV yield and base experience', async () => {
         const result = await pokemon.detail(db, (await pokemon.findSpecies(db, 'pikachu'))!, IMAGES)
 
-        expect(result.dexNumbers).toEqual({ kanto: 25, kitakami: 21, paldea: 74 })
+        expect(result.dexNumbers).toEqual({ 'kalos-central': 36, kanto: 25, kitakami: 21, paldea: 74 })
         expect(result).toMatchObject({
             isLegendary: false, isMythical: false, isBaby: false, hasGenderDifferences: true,
             growthRate: 'medium', color: 'yellow', shape: 'quadruped', habitat: 'forest'
@@ -365,5 +365,56 @@ describe('reference', () => {
             expect.objectContaining({ slug: 'thunderbolt', name: expect.objectContaining({ en: 'Thunderbolt', it: 'Fulmine' }) }),
             expect.objectContaining({ slug: 'volt-tackle' })
         ])
+    })
+
+    test('counts species per egg group, HOME game and regional Pokédex, ordered by slug', async () => {
+        expect(await reference.eggGroups(db)).toEqual([
+            { slug: 'fairy', count: 2 }, { slug: 'ground', count: 2 }, { slug: 'humanshape', count: 1 },
+            { slug: 'indeterminate', count: 2 }, { slug: 'monster', count: 1 }, { slug: 'no-eggs', count: 1 },
+            { slug: 'water1', count: 2 }
+        ])
+        // Urshifu's two forms both move into Scarlet/Violet and Sword/Shield, but it is one species.
+        expect(await reference.homeGames(db)).toEqual([
+            { slug: 'legends-arceus', count: 1 }, { slug: 'legends-za', count: 2 },
+            { slug: 'lets-go-pikachu-lets-go-eevee', count: 1 }, { slug: 'scarlet-violet', count: 6 },
+            { slug: 'sword-shield', count: 6 }
+        ])
+        expect(await reference.pokedexes(db)).toEqual([
+            { slug: 'kalos-central', count: 2 }, { slug: 'kanto', count: 2 }, { slug: 'kitakami', count: 2 },
+            { slug: 'paldea', count: 2 }
+        ])
+    })
+
+    test('every count is the total the matching filter returns', async () => {
+        for (const { slug, count } of await reference.eggGroups(db))
+            expect((await list({ eggGroup: slug })).total, slug).toBe(count)
+        for (const { slug, count } of await reference.homeGames(db))
+            expect((await list({ homeGame: slug })).total, slug).toBe(count)
+        for (const { slug, count } of await reference.pokedexes(db))
+            expect((await pokemon.pokedex(db, slug, { limit: 50, offset: 0 }, IMAGES)).total, slug).toBe(count)
+    })
+})
+
+describe('pokemon.pokedex', () => {
+    const dex = (slug: string, limit = 50, offset = 0) => pokemon.pokedex(db, slug, { limit, offset }, IMAGES)
+
+    test('lists species in regional order with their regional number, ignoring case', async () => {
+        const { total, items } = await dex('Kalos-Central')
+
+        // Greninja is #9 in Central Kalos, Pikachu #36: not National Dex order.
+        expect(total).toBe(2)
+        expect(items.map((item) => [item.slug, item.number])).toEqual([['greninja', 9], ['pikachu', 36]])
+        expect(items[0]).toMatchObject({ ndex: 658, generation: 6, types: ['water', 'dark'], depositable: true })
+    })
+
+    test('pages without changing the total', async () => {
+        const { total, items } = await dex('kalos-central', 1, 1)
+
+        expect(total).toBe(2)
+        expect(items.map((item) => item.slug)).toEqual(['pikachu'])
+    })
+
+    test('reports nothing for a Pokédex no species is in', async () => {
+        expect(await dex('johto')).toEqual({ total: 0, items: [] })
     })
 })

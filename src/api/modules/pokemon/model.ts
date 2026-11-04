@@ -77,7 +77,7 @@ const evolutionStepSchema = z.object({
     conditions: evolutionConditionsSchema
 })
 
-const listItemSchema = z.object({
+export const listItemSchema = z.object({
     ndex: z.number(),
     slug: z.string(),
     generation: z.number(),

@@ -1,6 +1,8 @@
 import { and, count, countDistinct, eq } from 'drizzle-orm'
 import type { Db } from '@/db/client'
-import { ability, form, formType, generation, move, pokemon, type } from '@/db/schema'
+import {
+    ability, form, formHomeGame, formType, generation, move, pokemon, pokemonDexNumber, pokemonEggGroup, type
+} from '@/db/schema'
 import { nameColumns, namesOf, type NameColumns } from '@/api/names'
 
 const named = (rows: ({ slug: string } & NameColumns)[]) => rows.map((row) => ({ slug: row.slug, name: namesOf(row) }))
@@ -35,3 +37,26 @@ export const types = async (db: Db) => {
 
     return rows.map((row) => ({ slug: row.slug, name: namesOf(row), count: row.count }))
 }
+
+export const eggGroups = (db: Db) =>
+    db
+        .select({ slug: pokemonEggGroup.eggGroup, count: count() })
+        .from(pokemonEggGroup)
+        .groupBy(pokemonEggGroup.eggGroup)
+        .orderBy(pokemonEggGroup.eggGroup)
+
+// A species counts once however many of its forms move into the game, as the homeGame filter means it.
+export const homeGames = (db: Db) =>
+    db
+        .select({ slug: formHomeGame.game, count: countDistinct(form.ndex) })
+        .from(formHomeGame)
+        .innerJoin(form, eq(form.id, formHomeGame.formId))
+        .groupBy(formHomeGame.game)
+        .orderBy(formHomeGame.game)
+
+export const pokedexes = (db: Db) =>
+    db
+        .select({ slug: pokemonDexNumber.pokedex, count: count() })
+        .from(pokemonDexNumber)
+        .groupBy(pokemonDexNumber.pokedex)
+        .orderBy(pokemonDexNumber.pokedex)

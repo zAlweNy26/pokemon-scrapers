@@ -1,4 +1,5 @@
 import { and, count, eq, exists, inArray, notExists, sql } from 'drizzle-orm'
+import type { SelectResultFields } from 'drizzle-orm/query-builders/select.types'
 import { alias } from 'drizzle-orm/sqlite-core'
 import type { Db } from '@/db/client'
 import {
@@ -31,18 +32,6 @@ export interface ListFilters {
 }
 
 /**
- * Exactly what the list projection returns. `detail()` deliberately does not
- * share this: it is handed a whole `pokemon` row by `findSpecies`, so listing
- * columns here for its benefit would only over-select on the hot list query.
- */
-const listColumns = {
-    ndex: pokemon.ndex,
-    slug: pokemon.slug,
-    gen: pokemon.gen,
-    ...nameProjection
-}
-
-/**
  * HOME depositability is species-level everywhere it is published: true when at
  * least one form can enter HOME. One expression, so the filter, list items,
  * search results and the detail document cannot disagree.
@@ -51,6 +40,21 @@ const anyDepositable = sql`(SELECT 1 FROM ${form} AS df
     WHERE df.ndex = ${pokemon.ndex} AND df.depositable = 1)`
 
 export const speciesDepositable = exists(anyDepositable).mapWith(Boolean)
+
+/**
+ * Exactly what the list projection returns. `detail()` deliberately does not
+ * share this: it is handed a whole `pokemon` row by `findSpecies`, so listing
+ * columns here for its benefit would only over-select on the hot list query.
+ */
+const listColumns = {
+    ndex: pokemon.ndex,
+    slug: pokemon.slug,
+    gen: pokemon.gen,
+    ...nameProjection,
+    formId: form.id,
+    spriteKey: form.spriteKey,
+    depositable: speciesDepositable
+}
 
 /** Rows to a lookup of arrays, preserving the order the query returned them in. */
 const groupBy = <Row, Key, Value>(
@@ -166,12 +170,7 @@ export const list = async (db: Db, filters: ListFilters, imageBaseUrl: string) =
             .innerJoin(generation, eq(generation.id, pokemon.gen))
             .where(where),
         db
-            .select({
-                ...listColumns,
-                formId: form.id,
-                spriteKey: form.spriteKey,
-                depositable: speciesDepositable
-            })
+            .select(listColumns)
             .from(pokemon)
             .innerJoin(form, and(eq(form.ndex, pokemon.ndex), eq(form.isDefault, true)))
             .innerJoin(generation, eq(generation.id, pokemon.gen))
@@ -181,20 +180,47 @@ export const list = async (db: Db, filters: ListFilters, imageBaseUrl: string) =
             .offset(filters.offset)
     ])
 
-    const types = await typesByForm(db, page.map((row) => row.formId))
+    return { total: counted[0]?.total ?? 0, items: await listItems(db, page, imageBaseUrl) }
+}
+
+/** The species in one regional Pokédex, in its order, each a list item plus its regional number. */
+export const pokedex = async (db: Db, slug: string, page: { limit: number; offset: number }, imageBaseUrl: string) => {
+    const where = sql`${pokemonDexNumber.pokedex} = ${slug} COLLATE NOCASE`
+
+    const [counted, rows] = await db.batch([
+        db.select({ total: count() }).from(pokemonDexNumber).where(where),
+        db
+            .select({ ...listColumns, number: pokemonDexNumber.number })
+            .from(pokemonDexNumber)
+            .innerJoin(pokemon, eq(pokemon.ndex, pokemonDexNumber.ndex))
+            .innerJoin(form, and(eq(form.ndex, pokemon.ndex), eq(form.isDefault, true)))
+            .where(where)
+            .orderBy(pokemonDexNumber.number)
+            .limit(page.limit)
+            .offset(page.offset)
+    ])
+
+    const items = await listItems(db, rows, imageBaseUrl)
 
     return {
         total: counted[0]?.total ?? 0,
-        items: page.map((row) => ({
-            ndex: row.ndex,
-            slug: row.slug,
-            generation: row.gen,
-            name: namesOf(row),
-            types: types.get(row.formId) ?? [],
-            depositable: row.depositable,
-            sprites: spritesFor(imageBaseUrl, row.spriteKey)
-        }))
+        items: items.map((item, index) => ({ ...item, number: rows[index]!.number }))
     }
+}
+
+/** Rows selected with `listColumns`, as the list items every listing returns. */
+const listItems = async (db: Db, rows: SelectResultFields<typeof listColumns>[], imageBaseUrl: string) => {
+    const types = await typesByForm(db, rows.map((row) => row.formId))
+
+    return rows.map((row) => ({
+        ndex: row.ndex,
+        slug: row.slug,
+        generation: row.gen,
+        name: namesOf(row),
+        types: types.get(row.formId) ?? [],
+        depositable: row.depositable,
+        sprites: spritesFor(imageBaseUrl, row.spriteKey)
+    }))
 }
 
 /** Types for a set of forms, grouped by form id and ordered by slot. */

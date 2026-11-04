@@ -29,14 +29,30 @@ describe('openapi document', () => {
     test('publishes exactly the documented endpoints, without trailing slashes', () => {
         expect(Object.keys(spec.paths).sort()).toEqual([
             '/v1/abilities',
+            '/v1/egg-groups',
             '/v1/generations',
+            '/v1/home-games',
             '/v1/meta',
             '/v1/moves',
+            '/v1/pokedexes',
+            '/v1/pokedexes/{slug}',
             '/v1/pokemon',
             '/v1/pokemon/{idOrName}',
             '/v1/search',
             '/v1/types'
         ])
+    })
+
+    test('documents the Pokédex page parameters', () => {
+        const operation = spec.paths['/v1/pokedexes/{slug}'].get
+
+        expect(operation.parameters.map((p: any) => `${p.in}:${p.name}`).sort()).toEqual([
+            'path:slug', 'query:limit', 'query:offset'
+        ])
+        expect(Object.keys(operation.responses).sort()).toEqual(['200', '404', '422', '429'])
+        expect(operation.responses['200'].content['application/json'].schema.$ref).toBe(
+            '#/components/schemas/reference.pokedex'
+        )
     })
 
     test('keeps /health out of the public contract', () => {

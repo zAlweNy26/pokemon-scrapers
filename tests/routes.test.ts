@@ -391,6 +391,54 @@ describe('access logging', () => {
     })
 })
 
+describe('reference values for the list filters', () => {
+    test('each count is the total its /v1/pokemon filter or Pokédex page reports', async () => {
+        const cases = [
+            ['/v1/egg-groups', (slug: string) => `/v1/pokemon?eggGroup=${slug}`],
+            ['/v1/home-games', (slug: string) => `/v1/pokemon?homeGame=${slug}`],
+            ['/v1/pokedexes', (slug: string) => `/v1/pokedexes/${slug}`]
+        ] as const
+
+        for (const [path, filtered] of cases) {
+            const { response, body } = await json(path)
+
+            expect(response.status).toBe(200)
+            expect(body.length).toBeGreaterThan(0)
+            for (const { slug, count } of body)
+                expect((await json(filtered(slug))).body.meta.total, `${path} ${slug}`).toBe(count)
+        }
+    })
+})
+
+describe('GET /v1/pokedexes/:slug', () => {
+    test('lists species in regional order as list items with their regional number', async () => {
+        const { response, body } = await json('/v1/pokedexes/KALOS-CENTRAL')
+
+        expect(response.status).toBe(200)
+        expect(body.meta).toEqual({ total: 2, limit: 20, offset: 0 })
+        expect(body.data.map((p: any) => [p.slug, p.number])).toEqual([['greninja', 9], ['pikachu', 36]])
+        expect(Object.keys(body.data[0]).sort()).toEqual(
+            ['depositable', 'generation', 'name', 'ndex', 'number', 'slug', 'sprites', 'types']
+        )
+    })
+
+    test('paginates like /v1/pokemon', async () => {
+        const { body } = await json('/v1/pokedexes/kalos-central?limit=1&offset=1')
+
+        expect(body.meta).toEqual({ total: 2, limit: 1, offset: 1 })
+        expect(body.data.map((p: any) => p.slug)).toEqual(['pikachu'])
+        expect((await json('/v1/pokedexes/kalos-central?limit=500')).response.status).toBe(422)
+    })
+
+    test('answers 404 as a problem for a Pokédex no species is in', async () => {
+        const { response, body } = await json('/v1/pokedexes/johto')
+
+        expect(response.status).toBe(404)
+        expect(response.headers.get('content-type')).toBe('application/problem+json')
+        expect(body).toMatchObject({ status: 404, instance: '/v1/pokedexes/johto' })
+    })
+})
+
 describe('GET /v1/meta', () => {
     test('exposes dataset version, counts and provenance', async () => {
         const { body } = await json('/v1/meta')

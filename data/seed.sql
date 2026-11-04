@@ -198,8 +198,9 @@ INSERT INTO availability (ndex, game, dlc, area, obtainable) VALUES
     (25,'legends-za','mega-dimension','Hyperspace Lumiose (2★ & 4★ Electric-type wild zones)',1);
 
 INSERT INTO pokemon_dex_number (ndex, pokedex, number) VALUES
-    (25,'kanto',25),(25,'paldea',74),(25,'kitakami',21),
+    (25,'kanto',25),(25,'paldea',74),(25,'kitakami',21),(25,'kalos-central',36),
     (26,'kanto',26),(26,'paldea',75),
+    (658,'kalos-central',9),
     (1017,'kitakami',200);
 
 -- Raichu has two methods in PokéAPI: the Thunder Stone, and the same stone in Alola
