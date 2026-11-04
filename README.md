@@ -43,6 +43,7 @@ uploads the Worker. Data is loaded separately, **before** deploying — see belo
 
 ```bash
 bun run data:build         # → data/dataset.sql + data/version.json, validated and diffed
+bun run data:check         # quality checks + every species through the API; writes .cache/homedex.sqlite
 bun run data:load:local    # reset local D1 and load it; run `bun test` and try the API
 bun run data:load:remote   # load it into the real database
 # wait a minute, then: bun run deploy
@@ -62,6 +63,12 @@ stops with a non-zero exit and writes nothing if a Serebii entry cannot be match
 to a form — add an override in `src/scraper/match.ts` — or if the dataset fails a
 check (search index, one default form per species, stored counts). `DATA_VERSION`
 is a hash of the dataset, so ETags change exactly when the data does.
+
+`data:check` exits non-zero on malformed data: broken references, values out of
+range, mojibake or leftover wiki markup in any of ~42,000 texts, a handful of
+known facts, or any API response its schema rejects. Gaps the sources leave
+(names PokéAPI lacks in some languages) are listed, not failed. Open
+`.cache/homedex.sqlite` in any SQLite viewer to browse the result.
 
 ## Endpoints
 

@@ -18,6 +18,58 @@ export const openDatabase = async (sql: string): Promise<Database> => {
     return sqlite
 }
 
+const meta = () => ({ duration: 0, changes: 0, last_row_id: 0, rows_read: 0, rows_written: 0 })
+
+class Statement {
+    constructor(
+        private readonly sqlite: Database,
+        private readonly sql: string,
+        private readonly values: unknown[] = []
+    ) {}
+
+    bind(...values: unknown[]) {
+        return new Statement(this.sqlite, this.sql, values)
+    }
+
+    async all() {
+        return { results: this.sqlite.query(this.sql).all(...(this.values as never[])), success: true, meta: meta() }
+    }
+
+    /** D1 returns positional rows here; Drizzle uses it for array-mode selects. */
+    async raw() {
+        return this.sqlite.query(this.sql).values(...(this.values as never[]))
+    }
+
+    async run() {
+        this.sqlite.query(this.sql).run(...(this.values as never[]))
+        return { results: [], success: true, meta: meta() }
+    }
+}
+
+/**
+ * A D1 binding backed by `sqlite`, so the real `drizzle-orm/d1` driver - same
+ * query builder, same generated SQL, FTS5 included - runs without workerd. Used by
+ * the tests and by `bun run data:check` to drive the API over a built dataset.
+ *
+ * Only what our code calls is implemented: `withSession()` (src/db/client.ts) and
+ * what Drizzle's driver uses, `prepare().bind().all()/run()/raw()` and `batch()`.
+ * The cast is at this boundary: D1Database's other members (dump, exec) are never
+ * touched, and stubbing them would be noise pretending to be coverage.
+ */
+export const asD1 = (sqlite: Database): D1Database => {
+    const client = {
+        // Sessions only matter for replicas; locally the database is the session.
+        withSession: () => client,
+        prepare: (sql: string) => new Statement(sqlite, sql),
+        batch: async (statements: Statement[]) => {
+            const results = []
+            for (const statement of statements) results.push(await statement.all())
+            return results
+        }
+    }
+    return client as unknown as D1Database
+}
+
 const TABLES = [
     'generation', 'pokemon', 'pokemon_egg_group', 'pokemon_origin', 'form', 'form_type',
     'form_ability', 'form_home_game', 'encounter', 'meta'

@@ -144,22 +144,37 @@ export const buildFromPokeApi = async () => {
         const speciesNames = localized(speciesNamesById.get(variety.species_id!), 'name')
         const names = formNamesById.get(row.id!)
         const fullNames = localized(names, 'pokemon_name')
-        const hasFormName = Object.values(localized(names, 'form_name')).some(Boolean)
+        const shortNames = localized(names, 'form_name')
+        const hasFormName = Object.values(shortNames).some(Boolean)
         const isDefault = row.is_default === '1' && variety.is_default === '1'
         const id = Number(row.id)
 
-        // A form without its own name is the species itself (Pikachu); a named form
-        // missing one language stays null there rather than borrowing the species name.
-        const formNames = Object.fromEntries(
-            LANGUAGES.map((language) => [language, fullNames[language] ?? (hasFormName ? null : speciesNames[language])])
-        ) as Record<Language, string | null>
+        // PokéAPI's full name ("Galarian Meowth"), else: the default form or an unnamed
+        // form is the species itself (Pikachu, Rotom); else "Species (form name)" when
+        // the form is named in that language ("メテノ (あかいろのコア)"); else null - never just the species name,
+        // which would pass Mega Venusaur off as Venusaur.
+        const nameIn = (language: Language) => {
+            const species = speciesNames[language]
+            if (fullNames[language]) return fullNames[language]
+            if (isDefault || !hasFormName) return species
+            const short = shortNames[language]
+            if (!species || !short) return null
+            // A Mega's form name is already its full name ("MegaVenusaur"); don't wrap it again.
+            return short.includes(species) ? short : `${species} (${short})`
+        }
+        const formNames = Object.fromEntries(LANGUAGES.map((language) => [language, nameIn(language)])) as Record<
+            Language,
+            string | null
+        >
         formNames.en ??= speciesNames.en
 
         const stats = new Map(statsByPokemon.get(row.pokemon_id!)?.map((stat) => [stat.stat_id, int(stat.base_stat)]))
 
         form.rows.push([
             id, ndex, row.identifier!, ...Object.values(formNames), isDefault, false,
-            int(variety.height)! / 10, int(variety.weight)! / 10,
+            // 0 is PokéAPI's "unknown" (Eternamax Eternatus weighs "???"), not a weight.
+            int(variety.height) ? int(variety.height)! / 10 : null,
+            int(variety.weight) ? int(variety.weight)! / 10 : null,
             ...STAT_COLUMNS.map((_, index) => stats.get(String(index + 1)) ?? null),
             null
         ])

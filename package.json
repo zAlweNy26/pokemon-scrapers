@@ -14,6 +14,7 @@
     "db:migrate:remote": "void db migrate --remote",
     "db:seed": "void db seed --file data/seed.sql",
     "data:build": "bun src/scraper/index.ts",
+    "data:check": "bun src/scraper/check.ts",
     "data:load:local": "void db seed --file data/dataset.sql",
     "data:load:remote": "void db execute --remote --file data/dataset.sql"
   },
