@@ -1,6 +1,6 @@
 import { Elysia } from 'elysia'
 import { z } from 'zod'
-import type { Names } from './names'
+import type { Categories, Names } from './names'
 import type { Sprites } from './sprites'
 
 /**
@@ -49,6 +49,22 @@ export const namesSchema = z
         zh_hant: z.string().nullable()
     })
     .describe('The name in each of the nine languages the core games ship in') satisfies z.ZodType<Names>
+
+/** Like `namesSchema`, but every language may be missing. */
+export const categorySchema = z
+    .object({
+        en: z.string().nullable(),
+        ja: z.string().nullable(),
+        ja_romaji: z.string().nullable(),
+        de: z.string().nullable(),
+        fr: z.string().nullable(),
+        it: z.string().nullable(),
+        es: z.string().nullable(),
+        ko: z.string().nullable(),
+        zh_hans: z.string().nullable(),
+        zh_hant: z.string().nullable()
+    })
+    .describe('The species category ("Mouse Pokémon") in each language') satisfies z.ZodType<Categories>
 
 export const spritesSchema = z
     .record(z.string(), z.string())

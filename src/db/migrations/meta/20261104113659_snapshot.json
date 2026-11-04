@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "504e0cc9-1ac3-47e6-a364-dce6c35107b8",
+  "id": "4a6841d0-0790-435b-8cc1-ee9c5eefc239",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "encounter": {
@@ -32,19 +32,11 @@
           "name": "method",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         }
       },
-      "indexes": {
-        "encounter_ndex_idx": {
-          "name": "encounter_ndex_idx",
-          "columns": [
-            "ndex"
-          ],
-          "isUnique": false
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "encounter_ndex_pokemon_ndex_fk": {
           "name": "encounter_ndex_pokemon_ndex_fk",
@@ -60,7 +52,17 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "encounter_ndex_game_location_method_pk": {
+          "columns": [
+            "ndex",
+            "game",
+            "location",
+            "method"
+          ],
+          "name": "encounter_ndex_game_location_method_pk"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
@@ -72,7 +74,7 @@
           "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "ndex": {
           "name": "ndex",
@@ -93,6 +95,69 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "name_ja": {
+          "name": "name_ja",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name_ja_romaji": {
+          "name": "name_ja_romaji",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name_de": {
+          "name": "name_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name_fr": {
+          "name": "name_fr",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name_it": {
+          "name": "name_it",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name_es": {
+          "name": "name_es",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name_ko": {
+          "name": "name_ko",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name_zh_hans": {
+          "name": "name_zh_hans",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name_zh_hant": {
+          "name": "name_zh_hant",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "is_default": {
@@ -286,6 +351,52 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "form_home_game": {
+      "name": "form_home_game",
+      "columns": {
+        "form_id": {
+          "name": "form_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "game": {
+          "name": "game",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "form_home_game_form_id_form_id_fk": {
+          "name": "form_home_game_form_id_form_id_fk",
+          "tableFrom": "form_home_game",
+          "tableTo": "form",
+          "columnsFrom": [
+            "form_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "form_home_game_form_id_game_pk": {
+          "columns": [
+            "form_id",
+            "game"
+          ],
+          "name": "form_home_game_form_id_game_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "form_type": {
       "name": "form_type",
       "columns": {
@@ -426,13 +537,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "category": {
-          "name": "category",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "catch_rate": {
           "name": "catch_rate",
           "type": "integer",
@@ -526,6 +630,76 @@
         },
         "name_zh_hant": {
           "name": "name_zh_hant",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "category_en": {
+          "name": "category_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "category_ja": {
+          "name": "category_ja",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "category_ja_romaji": {
+          "name": "category_ja_romaji",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "category_de": {
+          "name": "category_de",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "category_fr": {
+          "name": "category_fr",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "category_it": {
+          "name": "category_it",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "category_es": {
+          "name": "category_es",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "category_ko": {
+          "name": "category_ko",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "category_zh_hans": {
+          "name": "category_zh_hans",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "category_zh_hant": {
+          "name": "category_zh_hant",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

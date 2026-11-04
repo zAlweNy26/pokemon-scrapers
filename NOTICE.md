@@ -1,6 +1,6 @@
 # Sources and attribution
 
-homedex combines permissively licensed datasets with a narrowly scoped scrape.
+homedex combines a permissively licensed dataset with a narrowly scoped scrape.
 The scrape is kept as small as possible on purpose: everything already available
 under a permissive licence is taken from there instead.
 
@@ -8,8 +8,7 @@ under a permissive licence is taken from there instead.
 
 | Source | Licence | Used for |
 |---|---|---|
-| [veekun/pokedex](https://github.com/veekun/pokedex) | MIT | Base dataset: species, localised names, stats, types, breeding data |
-| [PokéAPI](https://github.com/PokeAPI/pokeapi) | BSD-3-Clause | Cross-checking and gap-filling on the base dataset |
+| [PokéAPI](https://github.com/PokeAPI/pokeapi) | BSD-3-Clause | Base dataset: species, forms, localised names and categories, stats, types, abilities, breeding data, encounters. Read from the repository's CSV files at a pinned commit — no requests to PokéAPI's servers |
 | [Bulbapedia](https://bulbapedia.bulbagarden.net/) | CC BY-NC-SA 2.5 | Recent generations, forms, name etymology |
 | [Serebii](https://www.serebii.net/) | Used with permission — see below | Pokémon HOME depositability |
 
@@ -21,10 +20,12 @@ permission for this project, on two conditions:
 1. **Do not spam the scraping routine.**
 2. **Do not make money from it.**
 
-Both are honoured. The scraper is single-flight with a fixed delay between
-requests, issues conditional (`ETag` / `If-Modified-Since`) requests, keeps an
-on-disk HTTP cache so re-runs do not refetch, backs off on `429`/`5xx`, and sends
-an identifying User-Agent with contact details.
+Both are honoured. A full build makes one request to Serebii. The scraper is
+single-flight with at least 5 seconds between requests, keeps an on-disk cache it
+reuses for 24 hours (Serebii sends no `ETag`/`Last-Modified`, so conditional
+requests cannot help), sends conditional requests where a site supports them,
+backs off on `429`/`5xx` honouring `Retry-After`, stops after three failures, and
+sends an identifying User-Agent with the project's URL.
 
 If you fork this project, that permission **does not transfer to you**. Ask them
 yourself, or drop Serebii as a source.

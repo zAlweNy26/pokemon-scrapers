@@ -331,7 +331,7 @@ describe('GET /v1/meta', () => {
         const { body } = await json('/v1/meta')
 
         expect(body.dataVersion).toBe('test-0001')
-        expect(body.counts).toEqual({ pokemon: 8, forms: 13, encounters: 8 })
+        expect(body.counts).toEqual({ pokemon: 8, forms: 13, encounters: 6 })
         expect(Object.keys(body.sources)).toContain('source_serebii')
         expect(Object.keys(body.sources)).not.toContain('count_pokemon')
     })

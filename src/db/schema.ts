@@ -10,6 +10,10 @@ import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from
  * `pokemon`; anything that varies between forms (types, stats, size, HOME
  * depositability, sprites) lives on `form`. Every species has exactly one row in
  * `form` with `isDefault` set (enforced by `form_one_default_idx`).
+ *
+ * Localised text is one column per language (`nameEn` ... `nameZhHant`), in the
+ * order src/api/names.ts lists the languages. Types, abilities, egg groups, games,
+ * locations and methods are PokéAPI identifiers (`water`, `scarlet`), not labels.
  */
 
 export const generation = sqliteTable('generation', {
@@ -26,7 +30,6 @@ export const pokemon = sqliteTable(
         gen: integer('gen')
             .notNull()
             .references(() => generation.id),
-        category: text('category'),
         catchRate: integer('catch_rate'),
         baseFriendship: integer('base_friendship'),
         /** -1 = genderless, otherwise eighths female (0 always male, 8 always female). */
@@ -41,7 +44,18 @@ export const pokemon = sqliteTable(
         nameEs: text('name_es'),
         nameKo: text('name_ko'),
         nameZhHans: text('name_zh_hans'),
-        nameZhHant: text('name_zh_hant')
+        nameZhHant: text('name_zh_hant'),
+        /** The species category ("Mouse Pokémon"), per language. */
+        categoryEn: text('category_en'),
+        categoryJa: text('category_ja'),
+        categoryJaRomaji: text('category_ja_romaji'),
+        categoryDe: text('category_de'),
+        categoryFr: text('category_fr'),
+        categoryIt: text('category_it'),
+        categoryEs: text('category_es'),
+        categoryKo: text('category_ko'),
+        categoryZhHans: text('category_zh_hans'),
+        categoryZhHant: text('category_zh_hant')
     },
     (table) => [index('pokemon_gen_idx').on(table.gen), index('pokemon_name_idx').on(table.nameEn)]
 )
@@ -73,14 +87,24 @@ export const pokemonOrigin = sqliteTable(
 export const form = sqliteTable(
     'form',
     {
-        id: integer('id').primaryKey({ autoIncrement: true }),
+        /** PokéAPI's form id, so ids stay stable across rebuilds. */
+        id: integer('id').primaryKey(),
         ndex: integer('ndex')
             .notNull()
             .references(() => pokemon.ndex),
         slug: text('slug').notNull().unique(),
         nameEn: text('name_en').notNull(),
+        nameJa: text('name_ja'),
+        nameJaRomaji: text('name_ja_romaji'),
+        nameDe: text('name_de'),
+        nameFr: text('name_fr'),
+        nameIt: text('name_it'),
+        nameEs: text('name_es'),
+        nameKo: text('name_ko'),
+        nameZhHans: text('name_zh_hans'),
+        nameZhHant: text('name_zh_hant'),
         isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
-        /** Can this form be moved into Pokemon HOME? */
+        /** Can this form be stored in Pokémon HOME? Which games it can then move to is `formHomeGame`. */
         depositable: integer('depositable', { mode: 'boolean' }).notNull().default(false),
         heightM: real('height_m'),
         weightKg: real('weight_kg'),
@@ -130,6 +154,22 @@ export const formAbility = sqliteTable(
     (table) => [primaryKey({ columns: [table.formId, table.slot] })]
 )
 
+/**
+ * The HOME-connected games a form can be moved into from HOME, as PokéAPI
+ * version-group identifiers (`scarlet-violet`, `legends-za`).
+ */
+export const formHomeGame = sqliteTable(
+    'form_home_game',
+    {
+        formId: integer('form_id')
+            .notNull()
+            .references(() => form.id),
+        game: text('game').notNull()
+    },
+    (table) => [primaryKey({ columns: [table.formId, table.game] })]
+)
+
+/** Where a species is found: one row per (game, location, method), level ranges and slots collapsed. */
 export const encounter = sqliteTable(
     'encounter',
     {
@@ -138,9 +178,9 @@ export const encounter = sqliteTable(
             .references(() => pokemon.ndex),
         game: text('game').notNull(),
         location: text('location').notNull(),
-        method: text('method')
+        method: text('method').notNull()
     },
-    (table) => [index('encounter_ndex_idx').on(table.ndex)]
+    (table) => [primaryKey({ columns: [table.ndex, table.game, table.location, table.method] })]
 )
 
 /** Free-form provenance written by the scraper and surfaced at /v1/meta. */
@@ -164,7 +204,12 @@ export const pokemonRelations = relations(pokemon, ({ one, many }) => ({
 export const formRelations = relations(form, ({ one, many }) => ({
     pokemon: one(pokemon, { fields: [form.ndex], references: [pokemon.ndex] }),
     types: many(formType),
-    abilities: many(formAbility)
+    abilities: many(formAbility),
+    homeGames: many(formHomeGame)
+}))
+
+export const formHomeGameRelations = relations(formHomeGame, ({ one }) => ({
+    form: one(form, { fields: [formHomeGame.formId], references: [form.id] })
 }))
 
 export const formTypeRelations = relations(formType, ({ one }) => ({

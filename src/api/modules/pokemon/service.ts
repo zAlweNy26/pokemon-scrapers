@@ -1,10 +1,10 @@
 import { and, count, eq, exists, inArray, notExists, sql } from 'drizzle-orm'
 import type { Db } from '@/db/client'
 import {
-    encounter, form, formAbility, formType, generation, pokemon,
+    encounter, form, formAbility, formHomeGame, formType, generation, pokemon,
     pokemonEggGroup, pokemonOrigin, type Pokemon
 } from '@/db/schema'
-import { nameProjection, namesOf } from '@/api/names'
+import { categoriesOf, nameProjection, namesOf } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
 
 export interface ListFilters {
@@ -161,7 +161,7 @@ export const findSpecies = async (db: Db, idOrName: string): Promise<Pokemon | u
 export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => {
     const { ndex } = species
 
-    const [forms, typeRows, abilityRows, eggGroups, origins, encounters] = await db.batch([
+    const [forms, typeRows, abilityRows, homeRows, eggGroups, origins, encounters] = await db.batch([
         db.select().from(form).where(eq(form.ndex, ndex)).orderBy(sql`${form.isDefault} DESC`, form.id),
         db
             .select({ formId: formType.formId, slot: formType.slot, type: formType.type })
@@ -179,6 +179,12 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
             .innerJoin(form, eq(form.id, formAbility.formId))
             .where(eq(form.ndex, ndex))
             .orderBy(formAbility.formId, formAbility.slot),
+        db
+            .select({ formId: formHomeGame.formId, game: formHomeGame.game })
+            .from(formHomeGame)
+            .innerJoin(form, eq(form.id, formHomeGame.formId))
+            .where(eq(form.ndex, ndex))
+            .orderBy(formHomeGame.formId, formHomeGame.game),
         db
             .select({ eggGroup: pokemonEggGroup.eggGroup })
             .from(pokemonEggGroup)
@@ -202,6 +208,8 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
 
     const types = groupBy(typeRows, (row) => row.formId, (row) => row.type)
 
+    const homeGames = groupBy(homeRows, (row) => row.formId, (row) => row.game)
+
     const abilities = groupBy(
         abilityRows,
         (row) => row.formId,
@@ -212,7 +220,7 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
         ndex: species.ndex,
         slug: species.slug,
         generation: species.gen,
-        category: species.category,
+        category: categoriesOf(species),
         name: namesOf(species),
         catchRate: species.catchRate,
         baseFriendship: species.baseFriendship,
@@ -223,9 +231,10 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
         depositable: forms.some((entry) => entry.depositable),
         forms: forms.map((entry) => ({
             slug: entry.slug,
-            name: entry.nameEn,
+            name: namesOf(entry),
             isDefault: entry.isDefault,
             depositable: entry.depositable,
+            homeGames: homeGames.get(entry.id) ?? [],
             types: types.get(entry.id) ?? [],
             abilities: abilities.get(entry.id) ?? [],
             height: entry.heightM,

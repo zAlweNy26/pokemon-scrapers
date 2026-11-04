@@ -1,13 +1,17 @@
 import { z } from 'zod'
 import {
-    MAX_PAGE_SIZE, booleanString, namesSchema, paginationMeta, spritesSchema
+    MAX_PAGE_SIZE, booleanString, categorySchema, namesSchema, paginationMeta, spritesSchema
 } from '@/api/models'
 
 const formSchema = z.object({
     slug: z.string(),
-    name: z.string(),
+    name: namesSchema,
     isDefault: z.boolean(),
-    depositable: z.boolean().describe('Can this form be moved into Pokemon HOME?'),
+    depositable: z.boolean().describe('Can this form be stored in Pokémon HOME?'),
+    homeGames: z
+        .array(z.string())
+        .describe('Games this form can be moved into from HOME, as version-group identifiers')
+        .meta({ examples: [['sword-shield', 'scarlet-violet']] }),
     types: z.array(z.string()),
     abilities: z.array(z.object({ name: z.string(), hidden: z.boolean() })),
     height: z.number().nullable().describe('Metres'),
@@ -69,7 +73,7 @@ export const pokemonModels = {
         ndex: z.number(),
         slug: z.string(),
         generation: z.number(),
-        category: z.string().nullable(),
+        category: categorySchema,
         name: namesSchema,
         catchRate: z.number().nullable(),
         baseFriendship: z.number().nullable(),

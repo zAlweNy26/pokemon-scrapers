@@ -37,7 +37,7 @@ describe('loading data', () => {
         const sqlite = await createSqlite()
 
         expect(() =>
-            sqlite.run("INSERT INTO encounter (ndex, game, location) VALUES (9999, 'Red', 'Nowhere')")
+            sqlite.run("INSERT INTO encounter (ndex, game, location, method) VALUES (9999, 'red', 'nowhere', 'walk')")
         ).toThrow(/FOREIGN KEY/)
     })
 })

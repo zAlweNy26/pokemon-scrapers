@@ -17,9 +17,8 @@ You may use, copy, adapt and redistribute the data, provided you:
 - **ShareAlike** — distribute any derived dataset under these same terms.
 
 If you need data for commercial use, build on
-[veekun/pokedex](https://github.com/veekun/pokedex) (MIT) or
-[PokéAPI](https://github.com/PokeAPI/pokeapi) (BSD-3-Clause) directly. Those
-cover most of what is here, minus HOME depositability and the newest generations.
+[PokéAPI](https://github.com/PokeAPI/pokeapi) (BSD-3-Clause) directly. It covers
+most of what is here, minus HOME depositability and name etymology.
 
 This is a plain-language summary, not legal advice, and not a substitute for the
 licence text.

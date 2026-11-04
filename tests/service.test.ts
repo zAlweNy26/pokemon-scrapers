@@ -27,8 +27,8 @@ describe('pokemon.list', () => {
 
         expect(total).toBe(8)
         expect(items.map((item) => item.ndex)).toEqual([25, 26, 94, 131, 479, 658, 892, 1017])
-        expect(items[0]?.types).toEqual(['Electric'])
-        expect(items[2]?.types).toEqual(['Ghost', 'Poison'])
+        expect(items[0]?.types).toEqual(['electric'])
+        expect(items[2]?.types).toEqual(['ghost', 'poison'])
     })
 
     test('reports the unpaginated total alongside a page', async () => {
@@ -112,7 +112,7 @@ describe('pokemon.detail', () => {
         const result = await pokemon.detail(db, species!, IMAGES)
 
         expect(result.name.ja).toBe('ピカチュウ')
-        expect(result.eggGroups).toEqual(['Fairy', 'Field'])
+        expect(result.eggGroups).toEqual(['fairy', 'ground'])
         expect(Object.keys(result.origins)).toEqual(['en', 'ja'])
         expect(result.encounters).toHaveLength(2)
     })
@@ -122,8 +122,28 @@ describe('pokemon.detail', () => {
         const result = await pokemon.detail(db, species!, IMAGES)
 
         expect(result.forms[0]?.isDefault).toBe(true)
-        expect(result.forms[0]?.types).toEqual(['Fighting', 'Dark'])
-        expect(result.forms[1]?.types).toEqual(['Fighting', 'Water'])
+        expect(result.forms[0]?.types).toEqual(['fighting', 'dark'])
+        expect(result.forms[1]?.types).toEqual(['fighting', 'water'])
+        expect(result.forms[1]?.homeGames).toEqual(['scarlet-violet', 'sword-shield'])
+    })
+
+    test('localises the category and every form name, keeping missing languages as null', async () => {
+        const species = await pokemon.findSpecies(db, 'rotom')
+        const result = await pokemon.detail(db, species!, IMAGES)
+
+        expect(result.category.en).toBe('Plasma Pokémon')
+        expect(result.category.ja).toBe('プラズマポケモン')
+        expect(result.category.de).toBeNull()
+        expect(result.forms[1]?.name).toMatchObject({ en: 'Wash Rotom', ja: 'ウォッシュロトム', fr: null })
+    })
+
+    test('a form that cannot be stored in HOME can move into no game', async () => {
+        const species = await pokemon.findSpecies(db, 'pikachu')
+        const result = await pokemon.detail(db, species!, IMAGES)
+        const partner = result.forms.find((form) => form.slug === 'pikachu-partner')
+
+        expect(partner?.depositable).toBe(false)
+        expect(partner?.homeGames).toEqual([])
     })
 
     test('marks a form that cannot enter HOME while the species still can', async () => {
@@ -142,8 +162,8 @@ describe('pokemon.detail', () => {
         const result = await pokemon.detail(db, species!, IMAGES)
 
         expect(result.forms[0]?.abilities).toEqual([
-            { name: 'Static', hidden: false },
-            { name: 'Lightning Rod', hidden: true }
+            { name: 'static', hidden: false },
+            { name: 'lightning-rod', hidden: true }
         ])
     })
 })
@@ -204,7 +224,7 @@ describe('reference', () => {
         const byName = Object.fromEntries(types.map((t) => [t.name, t.count]))
 
         // Water counts Lapras and Greninja; Rapid Strike Urshifu is not a default form.
-        expect(byName.Water).toBe(2)
-        expect(byName.Fire).toBeUndefined()
+        expect(byName.water).toBe(2)
+        expect(byName.fire).toBeUndefined()
     })
 })

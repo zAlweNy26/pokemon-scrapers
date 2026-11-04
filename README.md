@@ -37,7 +37,22 @@ bun run deploy       # void deploy
 
 The first run signs in to Cloudflare in the browser, creates the D1 database and
 records its id in `void.lock.json` (commit it), applies pending migrations, and
-uploads the Worker. Data is loaded separately — see `void db execute --remote --file`.
+uploads the Worker. Data is loaded separately, **before** deploying — see below.
+
+## Data
+
+```bash
+bun run data:build         # → data/dataset.sql + data/version.json, validated and diffed
+bun run data:load:local    # reset local D1 and load it; run `bun test` and try the API
+bun run data:load:remote   # load it into the real database, then deploy
+```
+
+The build reads PokéAPI's CSV files from a pinned git checkout in `.cache/` (no
+requests to PokéAPI) and Serebii's HOME list (one request, reused for 24 hours). It
+stops with a non-zero exit and writes nothing if a Serebii entry cannot be matched
+to a form — add an override in `src/scraper/match.ts` — or if the dataset fails a
+check (search index, one default form per species, stored counts). `DATA_VERSION`
+is a hash of the dataset, so ETags change exactly when the data does.
 
 ## Endpoints
 
@@ -63,8 +78,8 @@ Enforced per Cloudflare location, so they are abuse control rather than a quota.
 
 **Caching.** Responses carry a strong `ETag` derived from the dataset version.
 Send `If-None-Match` and you get a `304`. A dataset change always ships as a
-deploy, and Workers Cache keys on the Worker version, so a release invalidates
-the edge on its own.
+deploy (`DATA_VERSION` comes from `data/version.json`), and Workers Cache keys on
+the Worker version, so a release invalidates the edge on its own.
 
 ## Database
 
@@ -103,9 +118,11 @@ src/
     plugins/     cors, openapi, cache, rate-limit, errors
     modules/     one file per resource, or a folder splitting index (routes) /
                  model (zod) / service (Drizzle) once it earns one
-  scraper/     not built yet
-data/          seed.sql fixture; the generated dataset lands here
-tests/         service · routes (full request path) · contract (OpenAPI)
+  scraper/     `bun run data:build`: PokéAPI CSVs + Serebii → data/dataset.sql
+    http.ts      the only network access: one request at a time, 5 s apart, cached
+    build.ts     PokéAPI tables → our rows; match.ts maps Serebii's HOME list to forms
+data/          seed.sql (hand-written fixture), version.json; dataset.sql is built, not committed
+tests/         service · routes (full request path) · contract (OpenAPI) · data · scraper
   support/     bun:sqlite stand-in for a D1 binding
 ```
 
@@ -115,9 +132,10 @@ same driver, same SQL, FTS5 included — with no workerd, Vite or network.
 
 ## Status
 
-The API is complete and tested against a development fixture. The scraper that
-produces the real dataset is not written yet, and no Cloudflare resources have
-been created.
+The API is complete. The dataset builds from PokéAPI (1025 species, 1579 forms,
+names and categories in all languages) with HOME depositability from Serebii.
+Not collected yet: per-game HOME availability (`homeGames` is empty) and name
+etymology (Bulbapedia). No Cloudflare resources have been created.
 
 ## Licence and attribution
 

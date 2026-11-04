@@ -12,7 +12,10 @@
     "db:generate": "void db generate",
     "db:migrate": "void db migrate",
     "db:migrate:remote": "void db migrate --remote",
-    "db:seed": "void db seed --file data/seed.sql"
+    "db:seed": "void db seed --file data/seed.sql",
+    "data:build": "bun src/scraper/index.ts",
+    "data:load:local": "void db seed --file data/dataset.sql",
+    "data:load:remote": "void db execute --remote --file data/dataset.sql"
   },
   "dependencies": {
     "@elysiajs/cors": "1.4.2",

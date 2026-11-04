@@ -46,8 +46,30 @@ export const nameProjection = Object.fromEntries(
     fields.map(([, column]) => [column, pokemon[column]])
 ) as { [C in NameColumn]: (typeof pokemon)[C] }
 
+/** Also reads a `form` row: its name columns carry the same keys and nullability. */
 export const namesOf = (row: NameColumns): Names =>
     Object.fromEntries(fields.map(([language, column]) => [language, row[column]])) as Names
+
+/** The species category per language, keyed like `Names`. Every language may be missing. */
+export const CATEGORY_FIELDS = {
+    en: 'categoryEn',
+    ja: 'categoryJa',
+    ja_romaji: 'categoryJaRomaji',
+    de: 'categoryDe',
+    fr: 'categoryFr',
+    it: 'categoryIt',
+    es: 'categoryEs',
+    ko: 'categoryKo',
+    zh_hans: 'categoryZhHans',
+    zh_hant: 'categoryZhHant'
+} as const satisfies Record<Language, keyof Pokemon>
+
+export type Categories = { [L in Language]: string | null }
+
+export const categoriesOf = (row: Pokemon): Categories =>
+    Object.fromEntries(
+        Object.entries(CATEGORY_FIELDS).map(([language, column]) => [language, row[column]])
+    ) as Categories
 
 /**
  * `p.name_ja AS nameJa, ...` for the one query that cannot use the builder.

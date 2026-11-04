@@ -2,16 +2,25 @@ CREATE TABLE `encounter` (
 	`ndex` integer NOT NULL,
 	`game` text NOT NULL,
 	`location` text NOT NULL,
-	`method` text,
+	`method` text NOT NULL,
+	PRIMARY KEY(`ndex`, `game`, `location`, `method`),
 	FOREIGN KEY (`ndex`) REFERENCES `pokemon`(`ndex`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE INDEX `encounter_ndex_idx` ON `encounter` (`ndex`);--> statement-breakpoint
 CREATE TABLE `form` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`id` integer PRIMARY KEY NOT NULL,
 	`ndex` integer NOT NULL,
 	`slug` text NOT NULL,
 	`name_en` text NOT NULL,
+	`name_ja` text,
+	`name_ja_romaji` text,
+	`name_de` text,
+	`name_fr` text,
+	`name_it` text,
+	`name_es` text,
+	`name_ko` text,
+	`name_zh_hans` text,
+	`name_zh_hant` text,
 	`is_default` integer DEFAULT false NOT NULL,
 	`depositable` integer DEFAULT false NOT NULL,
 	`height_m` real,
@@ -39,6 +48,13 @@ CREATE TABLE `form_ability` (
 	FOREIGN KEY (`form_id`) REFERENCES `form`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `form_home_game` (
+	`form_id` integer NOT NULL,
+	`game` text NOT NULL,
+	PRIMARY KEY(`form_id`, `game`),
+	FOREIGN KEY (`form_id`) REFERENCES `form`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
 CREATE TABLE `form_type` (
 	`form_id` integer NOT NULL,
 	`slot` integer NOT NULL,
@@ -63,7 +79,6 @@ CREATE TABLE `pokemon` (
 	`ndex` integer PRIMARY KEY NOT NULL,
 	`slug` text NOT NULL,
 	`gen` integer NOT NULL,
-	`category` text,
 	`catch_rate` integer,
 	`base_friendship` integer,
 	`gender_rate` integer,
@@ -78,6 +93,16 @@ CREATE TABLE `pokemon` (
 	`name_ko` text,
 	`name_zh_hans` text,
 	`name_zh_hant` text,
+	`category_en` text,
+	`category_ja` text,
+	`category_ja_romaji` text,
+	`category_de` text,
+	`category_fr` text,
+	`category_it` text,
+	`category_es` text,
+	`category_ko` text,
+	`category_zh_hans` text,
+	`category_zh_hant` text,
 	FOREIGN KEY (`gen`) REFERENCES `generation`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint

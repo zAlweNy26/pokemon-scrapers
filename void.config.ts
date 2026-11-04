@@ -1,4 +1,5 @@
 import { defineConfig } from 'void/config'
+import dataset from './data/version.json'
 
 export default defineConfig({
     // Void's conventions live under src/: routes in src/routes, the Drizzle schema
@@ -10,10 +11,10 @@ export default defineConfig({
         // into handler context, so bindings are carried per-request via ALS.
         compatibility_flags: ['nodejs_als'],
         vars: {
-            // The dataset build id. Set on every deploy that ships new data, since it
-            // seeds every ETag and is reported by /v1/meta - leaving it unchanged
-            // across a data change would serve stale bodies against valid ETags.
-            DATA_VERSION: 'dev',
+            // A hash of data/dataset.sql, written by `bun run data:build`. It seeds every
+            // ETag, so it changes exactly when the data does. Load the data before
+            // deploying, or the new version would vouch for the old rows.
+            DATA_VERSION: dataset.version,
             // Public base URL of the R2 image bucket. Point at its custom domain when you create it.
             IMAGE_BASE_URL: 'https://images.homedex.danyalwe.me'
         }

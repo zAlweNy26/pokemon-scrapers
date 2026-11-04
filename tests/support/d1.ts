@@ -1,4 +1,5 @@
-import { Database as Sqlite } from 'bun:sqlite'
+import type { Database as Sqlite } from 'bun:sqlite'
+import { openDatabase } from '@/scraper/database'
 
 /**
  * A `bun:sqlite`-backed stand-in for a D1 binding.
@@ -53,23 +54,8 @@ export interface LocalD1 {
 /** The fixture, as a load would run it. Exported so a test can load it twice. */
 export const seedSql = () => Bun.file(new URL('../../data/seed.sql', import.meta.url)).text()
 
-/**
- * A migrated, seeded in-memory database. Foreign keys are on because D1 enforces
- * them and SQLite does not by default - a broken reference must fail here first.
- */
-export const createSqlite = async (): Promise<Sqlite> => {
-    const sqlite = new Sqlite(':memory:')
-    sqlite.run('PRAGMA foreign_keys = ON')
-
-    const migrations = new URL('../../src/db/migrations/', import.meta.url)
-    const files = Array.from(new Bun.Glob('*.sql').scanSync({ cwd: migrations.pathname })).sort()
-
-    for (const file of files) sqlite.run(await Bun.file(new URL(file, migrations)).text())
-
-    sqlite.run(await seedSql())
-
-    return sqlite
-}
+/** A migrated, seeded in-memory database - the same loader the data build validates with. */
+export const createSqlite = async (): Promise<Sqlite> => openDatabase(await seedSql())
 
 export const createLocalD1 = async (): Promise<LocalD1> => {
     const sqlite = await createSqlite()
