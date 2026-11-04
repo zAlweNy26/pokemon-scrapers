@@ -61,6 +61,11 @@ none('evolution forms of another species', 'SELECT count(*) FROM evolution e LEF
 // 0 is real: Victini opens the Unova dex as #000.
 none('negative regional dex numbers', 'SELECT count(*) FROM pokemon_dex_number WHERE number < 0')
 none('species shown twice in one regional dex', 'SELECT count(*) FROM (SELECT pokedex, number FROM pokemon_dex_number GROUP BY pokedex, number HAVING count(*) > 1)')
+// Bulbapedia has a row for every species in every game since Scarlet and Violet;
+// a missing one means a version label stopped mapping (src/scraper/pokedex.ts).
+none('species without Scarlet, Violet or Legends Z-A locations', "SELECT count(*) FROM pokemon p WHERE (SELECT count(*) FROM availability a WHERE a.ndex = p.ndex AND a.dlc = '' AND a.game IN ('scarlet', 'violet', 'legends-za')) != 3")
+none('species without a Pokédex entry', 'SELECT count(*) FROM pokemon p WHERE NOT EXISTS (SELECT 1 FROM pokedex_entry e WHERE e.ndex = p.ndex)')
+none('Pokédex entries or locations for a game before the species existed', 'SELECT count(*) FROM (SELECT ndex, game FROM pokedex_entry UNION SELECT ndex, game FROM availability) x JOIN pokemon p USING (ndex) WHERE x.game IN (\'red\', \'blue\', \'yellow\') AND p.gen > 1')
 none('species HOME cannot store at all', 'SELECT count(*) FROM pokemon p WHERE NOT EXISTS (SELECT 1 FROM form f WHERE f.ndex = p.ndex AND f.depositable = 1)')
 
 console.log('\n— Text')
@@ -69,7 +74,7 @@ const texts = [
         `pokemon.name_${language}`, `pokemon.category_${language}`, `form.name_${language}`,
         `type.name_${language}`, `ability.name_${language}`, `move.name_${language}`
     ]),
-    'pokemon_origin.note'
+    'pokemon_origin.note', 'pokedex_entry.text', 'pokedex_entry.form', 'availability.area'
 ].flatMap((column) => {
     const [table, name] = column.split('.')
     return all<{ value: string }>(`SELECT ${name} AS value FROM ${table} WHERE ${name} IS NOT NULL`).map(({ value }) => ({ column, value }))
@@ -106,6 +111,10 @@ fact('Pikachu is #74 in Paldea', "SELECT number FROM pokemon_dex_number WHERE nd
 fact('Mewtwo legendary, Mew mythical, Pichu a baby', 'SELECT (SELECT is_legendary FROM pokemon WHERE ndex = 150) l, (SELECT is_mythical FROM pokemon WHERE ndex = 151) m, (SELECT is_baby FROM pokemon WHERE ndex = 172) b', { l: 1, m: 1, b: 1 })
 fact('Gengar yields 3 Sp. Atk EVs', "SELECT ev_sp_atk, base_experience FROM form WHERE slug = 'gengar'", { ev_sp_atk: 3, base_experience: 225 })
 fact('a Mega keeps its own name', "SELECT name_en, name_ja FROM form WHERE slug = 'venusaur-mega'", { name_en: 'Mega Venusaur', name_ja: 'メガフシギバナ' })
+fact("Pikachu's Red entry", "SELECT text FROM pokedex_entry WHERE ndex = 25 AND form = '' AND game = 'red'", { text: 'When several of these Pokémon gather, their electricity could build and cause lightning storms.' })
+fact('Alolan Meowth has its own Sun entry', "SELECT count(*) n FROM pokedex_entry WHERE ndex = 52 AND form = 'Alolan Form' AND game = 'sun'", { n: 1 })
+fact('Pikachu lives in Viridian Forest (Red)', "SELECT area, obtainable FROM availability WHERE ndex = 25 AND game = 'red'", { area: 'Viridian Forest, Power Plant', obtainable: 1 })
+fact('Pikachu is in Mega Dimension', "SELECT count(*) n FROM availability WHERE ndex = 25 AND game = 'legends-za' AND dlc = 'mega-dimension'", { n: 1 })
 
 console.log('\n— Through the API, response schemas included')
 setLogSink(() => {})
@@ -129,6 +138,7 @@ const missing = (column: string, table: string) =>
     Object.fromEntries(LANGUAGES.map((l) => [l, scalar(`SELECT count(*) FROM ${table} WHERE ${column}_${l} IS NULL`)]).filter(([, n]) => n))
 console.log('  categories missing:', missing('category', 'pokemon'))
 console.log('  form names missing:', missing('name', 'form'))
+console.log('  Pokédex entries per game:', Object.fromEntries(all<{ game: string; n: number }>("SELECT game, count(*) n FROM pokedex_entry WHERE form = '' GROUP BY game ORDER BY min(rowid)").map((r) => [r.game, r.n])))
 for (const table of ['type', 'ability', 'move']) console.log(`  ${table} names missing:`, missing('name', table))
 console.log('  unknown EV yield:', scalar('SELECT count(*) FROM form WHERE ev_hp IS NULL'), 'forms')
 console.log('  unknown size:', all<{ slug: string }>('SELECT slug FROM form WHERE height_m IS NULL OR weight_kg IS NULL').map((r) => r.slug).join(' ') || 'none')

@@ -100,6 +100,44 @@ export const pokemon = sqliteTable(
     ]
 )
 
+/**
+ * Pokédex entries in English, from Bulbapedia. `form` is Bulbapedia's form label
+ * ("Alolan Form", "Gigantamax"), '' for the species itself; `game` a PokéAPI
+ * version identifier. Rows are stored in Bulbapedia's order, oldest game first.
+ */
+export const pokedexEntry = sqliteTable(
+    'pokedex_entry',
+    {
+        ndex: integer('ndex')
+            .notNull()
+            .references(() => pokemon.ndex),
+        form: text('form').notNull().default(''),
+        game: text('game').notNull(),
+        text: text('text').notNull()
+    },
+    (table) => [primaryKey({ columns: [table.ndex, table.form, table.game] })]
+)
+
+/**
+ * Where the species can be obtained in each main-series game, from Bulbapedia's
+ * "Game locations", as text a reader sees (form notes included). `dlc` is ''
+ * for the base game. `obtainable` is false where the game cannot get it on its
+ * own; `area` then says how it gets in ("Trade, Event"), when anything.
+ */
+export const availability = sqliteTable(
+    'availability',
+    {
+        ndex: integer('ndex')
+            .notNull()
+            .references(() => pokemon.ndex),
+        game: text('game').notNull(),
+        dlc: text('dlc').notNull().default(''),
+        area: text('area'),
+        obtainable: integer('obtainable', { mode: 'boolean' }).notNull()
+    },
+    (table) => [primaryKey({ columns: [table.ndex, table.game, table.dlc] })]
+)
+
 /** Regional Pokédex numbers, keyed by PokéAPI pokedex identifier (`paldea`, `kitakami`). National is `ndex`. */
 export const pokemonDexNumber = sqliteTable(
     'pokemon_dex_number',

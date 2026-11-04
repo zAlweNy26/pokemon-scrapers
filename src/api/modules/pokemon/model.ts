@@ -153,6 +153,25 @@ export const pokemonModels = {
         origins: z.record(z.string(), z.string()).describe('Name etymology, keyed by language'),
         depositable: z.boolean().describe('True when any form can enter Pokemon HOME'),
         forms: z.array(formSchema),
+        pokedexEntries: z
+            .array(
+                z.object({
+                    game: z.string().describe('PokéAPI version identifier'),
+                    form: z.string().nullable().describe("Bulbapedia's form label ('Alolan Form'); null for the species"),
+                    text: z.string()
+                })
+            )
+            .describe('Pokédex entries in English, from Bulbapedia, oldest game first'),
+        availability: z
+            .array(
+                z.object({
+                    game: z.string().describe('PokéAPI version identifier'),
+                    dlc: z.string().nullable().meta({ examples: ['expansion-pass', 'mega-dimension'] }),
+                    area: z.string().nullable().describe('Where and how, as Bulbapedia words it, form notes included'),
+                    obtainable: z.boolean().describe('False when the game cannot get it on its own; `area` then says how it gets in')
+                })
+            )
+            .describe('Game locations for every main-series game and DLC, from Bulbapedia, oldest first'),
         encounters: z.array(
             z.object({
                 game: z.string(),

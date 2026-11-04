@@ -72,7 +72,7 @@ export const asD1 = (sqlite: Database): D1Database => {
 
 const TABLES = [
     'generation', 'pokemon', 'pokemon_egg_group', 'pokemon_origin', 'form', 'form_type',
-    'form_ability', 'form_home_game', 'encounter', 'evolution', 'pokemon_dex_number', 'type', 'ability', 'move', 'meta'
+    'form_ability', 'form_home_game', 'encounter', 'evolution', 'pokemon_dex_number', 'pokedex_entry', 'availability', 'type', 'ability', 'move', 'meta'
 ] as const
 
 export const counts = (sqlite: Database) =>

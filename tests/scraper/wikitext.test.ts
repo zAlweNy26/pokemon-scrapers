@@ -67,7 +67,7 @@ describe('plain', () => {
 
     test('reports templates it can only guess at', () => {
         const unknown = new Set<string>()
-        expect(plain('a {{shiny|word}} b {{specify}}', unknown)).toBe('a word b')
-        expect([...unknown]).toEqual(['shiny'])
+        expect(plain('a {{mystery|word}} b {{specify}}', unknown)).toBe('a word b')
+        expect([...unknown]).toEqual(['mystery'])
     })
 })

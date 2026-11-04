@@ -9,7 +9,12 @@ acting on an old row (see *Re-checking* at the end).
 ## Status
 
 - **Done:** section 1's evolutions, EV yield, base experience, species flags and regional
-  dex numbers (see the commit that added this file); then names for types, abilities and moves.
+  dex numbers (see the commit that added this file); then names for types, abilities and moves;
+  then section 2: Bulbapedia's Pokédex entries (17,909) and game locations (26,791), every
+  main-series game and DLC. Left as they are: entries are English only; form labels
+  ("Alolan Form") are Bulbapedia's text, not linked to form slugs; locations are a readable
+  sentence per game, not structured (location, method) rows; side games (Stadium, Pal Park,
+  Pokéwalker, Dream World, Pokopia) are left out.
 - Everything else below is open.
 
 ## 1. Free — already in PokéAPI's CSVs, not read yet

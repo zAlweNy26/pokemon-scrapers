@@ -22,6 +22,13 @@
       "when": 1793804056974,
       "tag": "20261104145416_localized_reference_names",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1793804669341,
+      "tag": "20261104150429_pokedex_entries_availability",
+      "breakpoints": true
     }
   ]
 }

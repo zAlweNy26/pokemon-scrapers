@@ -167,6 +167,23 @@ describe('pokemon.detail', () => {
         ])
     })
 
+    test('lists Pokédex entries and game locations in Bulbapedia order, "none" as null', async () => {
+        const result = await pokemon.detail(db, (await pokemon.findSpecies(db, 'pikachu'))!, IMAGES)
+
+        expect(result.pokedexEntries.map((entry) => [entry.game, entry.form])).toEqual([
+            ['red', null], ['sword', null], ['sword', 'Gigantamax'], ['scarlet', null], ['legends-za', null]
+        ])
+        expect(result.availability.map((place) => [place.game, place.dlc, place.obtainable])).toEqual([
+            ['red', null, true], ['xd', null, false], ['black', null, false], ['scarlet', null, true],
+            ['scarlet', 'the-hidden-treasure-of-area-zero', true], ['legends-za', 'mega-dimension', true]
+        ])
+        expect(result.availability[1]?.area).toBeNull()
+
+        const lapras = await pokemon.detail(db, (await pokemon.findSpecies(db, 'lapras'))!, IMAGES)
+        expect(lapras.pokedexEntries).toEqual([])
+        expect(lapras.availability).toEqual([])
+    })
+
     test('names abilities in every language', async () => {
         const result = await pokemon.detail(db, (await pokemon.findSpecies(db, 'pikachu'))!, IMAGES)
 

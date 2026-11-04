@@ -11,6 +11,8 @@ DELETE FROM form_ability;
 DELETE FROM form_type;
 DELETE FROM form;
 DELETE FROM pokemon_dex_number;
+DELETE FROM availability;
+DELETE FROM pokedex_entry;
 DELETE FROM pokemon_origin;
 DELETE FROM pokemon_egg_group;
 DELETE FROM pokemon;
@@ -178,6 +180,22 @@ INSERT INTO encounter (ndex, game, location, method) VALUES
     (131,'red','silph-co','gift'),
     (892,'sword','tower-of-darkness','gift'),
     (1017,'scarlet','oni-mountain','only-one');
+
+-- From Pikachu's Bulbapedia page, in its order: oldest game first, forms after the species.
+INSERT INTO pokedex_entry (ndex, form, game, text) VALUES
+    (25,'','red','When several of these Pokémon gather, their electricity could build and cause lightning storms.'),
+    (25,'','sword','Pikachu that can generate powerful electricity have cheek sacs that are extra soft and super stretchy.'),
+    (25,'Gigantamax','sword','Its Gigantamax power expanded, forming its supersized body and towering tail.'),
+    (25,'','scarlet','When it is angered, it immediately discharges the energy stored in the pouches in its cheeks.'),
+    (25,'','legends-za','It has small electric sacs on both its cheeks. When in a tough spot, this Pokémon discharges electricity.');
+
+INSERT INTO availability (ndex, game, dlc, area, obtainable) VALUES
+    (25,'red','','Viridian Forest, Power Plant',1),
+    (25,'xd','',NULL,0),
+    (25,'black','','Poké Transfer, Event',0),
+    (25,'scarlet','','South Province: Area Two, Area Four, Artazon; East Province: Area One; West Province: Area Three; Tera Raid Battles (2★, 3★)',1),
+    (25,'scarlet','the-hidden-treasure-of-area-zero','Kitakami Road, Apple Hills, Oni Mountain, Wistful Fields, Paradise Barrens, Kitakami Wilds, Timeless Woods',1),
+    (25,'legends-za','mega-dimension','Hyperspace Lumiose (2★ & 4★ Electric-type wild zones)',1);
 
 INSERT INTO pokemon_dex_number (ndex, pokedex, number) VALUES
     (25,'kanto',25),(25,'paldea',74),(25,'kitakami',21),

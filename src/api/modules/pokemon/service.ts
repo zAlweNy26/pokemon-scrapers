@@ -2,8 +2,8 @@ import { and, count, eq, exists, inArray, notExists, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import type { Db } from '@/db/client'
 import {
-    ability, encounter, evolution, form, formAbility, formHomeGame, formType, generation, pokemon,
-    pokemonDexNumber, pokemonEggGroup, pokemonOrigin, type Pokemon
+    ability, availability, encounter, evolution, form, formAbility, formHomeGame, formType, generation, pokedexEntry,
+    pokemon, pokemonDexNumber, pokemonEggGroup, pokemonOrigin, type Pokemon
 } from '@/db/schema'
 import { categoriesOf, nameColumns, nameProjection, namesOf } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
@@ -161,13 +161,15 @@ const fromForm = alias(form, 'from_form')
 const intoForm = alias(form, 'into_form')
 
 /**
- * The full document in one round trip. Nine statements are cheaper batched than
+ * The full document in one round trip. Eleven statements are cheaper batched than
  * awaited in sequence, and this is the endpoint most likely to miss the cache.
  */
 export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => {
     const { ndex } = species
 
-    const [forms, typeRows, abilityRows, homeRows, eggGroups, origins, encounters, dexNumbers, evolutions] = await db.batch([
+    const [
+        forms, typeRows, abilityRows, homeRows, eggGroups, origins, encounters, dexNumbers, evolutions, entries, places
+    ] = await db.batch([
         db.select().from(form).where(eq(form.ndex, ndex)).orderBy(sql`${form.isDefault} DESC`, form.id),
         db
             .select({ formId: formType.formId, slot: formType.slot, type: formType.type })
@@ -238,7 +240,23 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
             .leftJoin(fromForm, eq(fromForm.id, evolution.fromFormId))
             .leftJoin(intoForm, eq(intoForm.id, evolution.intoFormId))
             .where(eq(evolvesInto.evolutionChain, species.evolutionChain))
-            .orderBy(evolution.id)
+            .orderBy(evolution.id),
+        // rowid is Bulbapedia's order: oldest game first, each form after the species.
+        db
+            .select({ game: pokedexEntry.game, form: pokedexEntry.form, text: pokedexEntry.text })
+            .from(pokedexEntry)
+            .where(eq(pokedexEntry.ndex, ndex))
+            .orderBy(sql`rowid`),
+        db
+            .select({
+                game: availability.game,
+                dlc: availability.dlc,
+                area: availability.area,
+                obtainable: availability.obtainable
+            })
+            .from(availability)
+            .where(eq(availability.ndex, ndex))
+            .orderBy(sql`rowid`)
     ])
 
     const types = groupBy(typeRows, (row) => row.formId, (row) => row.type)
@@ -307,6 +325,14 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
                       },
             baseExperience: entry.baseExperience,
             sprites: spritesFor(imageBaseUrl, entry.spriteKey)
+        })),
+        // '' is the stored "none" for these key columns; the API says null.
+        pokedexEntries: entries.map((row) => ({ game: row.game, form: row.form || null, text: row.text })),
+        availability: places.map((row) => ({
+            game: row.game,
+            dlc: row.dlc || null,
+            area: row.area,
+            obtainable: row.obtainable
         })),
         encounters: encounters.map((row) => ({
             game: row.game,

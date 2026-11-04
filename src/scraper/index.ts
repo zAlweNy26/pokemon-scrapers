@@ -9,7 +9,9 @@
  */
 import { buildFromPokeApi, type Table } from './build'
 import { check, counts, diff, openDatabase } from './database'
-import { fetchEtymology } from './etymology'
+import { fetchSpeciesPages } from './bulbapedia'
+import { originsOf } from './etymology'
+import { availabilityOf, dexEntriesOf } from './pokedex'
 import { fetchGameEvidence, homeGames } from './games'
 import { matchEntry } from './match'
 import { POKEAPI_COMMIT, checkoutPokeApi, readTable } from './pokeapi'
@@ -21,7 +23,7 @@ const VERSION = new URL('../../data/version.json', import.meta.url).pathname
 
 /** Children first, so foreign keys hold at every step. */
 const DELETE_ORDER = [
-    'evolution', 'encounter', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'pokemon_origin',
+    'evolution', 'encounter', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'availability', 'pokedex_entry', 'pokemon_origin',
     'pokemon_egg_group', 'pokemon', 'generation', 'type', 'ability', 'move', 'meta'
 ]
 
@@ -75,17 +77,38 @@ for (const row of data.form.rows) row[depositableColumn] = depositable.has(row[0
 
 const formHomeGame: Table = { columns: ['form_id', 'game'], rows: gameRows }
 
-// Name etymology from Bulbapedia. Every species has a page; a missing one means a title changed.
+// Name etymology, Pokédex entries and game locations from Bulbapedia's species
+// pages. Every species has one; a missing page means a title changed.
 const nameColumn = data.pokemon.columns.indexOf('name_en')
-const etymology = await fetchEtymology(
+const bulbapedia = await fetchSpeciesPages(
     data.pokemon.rows.map((row) => ({ ndex: row[0] as number, name: row[nameColumn] as string }))
 )
-if (etymology.missing.length || etymology.mismatched.length)
+if (bulbapedia.missing.length || bulbapedia.mismatched.length)
     fail(
-        `Bulbapedia pages missing: ${etymology.missing.join(', ') || 'none'}\n` +
-            `  pages for a different species: ${etymology.mismatched.join(', ') || 'none'}`
+        `Bulbapedia pages missing: ${bulbapedia.missing.join(', ') || 'none'}\n` +
+            `  pages for a different species: ${bulbapedia.mismatched.join(', ') || 'none'}`
     )
-const bulbapediaHash = new Bun.CryptoHasher('sha256').update(JSON.stringify(etymology.rows)).digest('hex').slice(0, 12)
+
+const versions = new Set((await readTable('versions')).map((row) => row.identifier!))
+const unknownTemplates = new Set<string>()
+const skippedGames = new Set<string>()
+const origins: Table = { columns: ['ndex', 'lang', 'note'], rows: [] }
+const pokedexEntry: Table = { columns: ['ndex', 'form', 'game', 'text'], rows: [] }
+const availability: Table = { columns: ['ndex', 'game', 'dlc', 'area', 'obtainable'], rows: [] }
+for (const [ndex, wikitext] of bulbapedia.pages) {
+    for (const row of originsOf(wikitext, unknownTemplates)) origins.rows.push([ndex, ...row])
+    for (const [table, { rows, skipped }] of [
+        [pokedexEntry, dexEntriesOf(wikitext, versions, unknownTemplates)],
+        [availability, availabilityOf(wikitext, versions, unknownTemplates)]
+    ] as const) {
+        for (const row of rows) table.rows.push([ndex, ...row])
+        for (const label of skipped) skippedGames.add(label)
+    }
+}
+const bulbapediaHash = new Bun.CryptoHasher('sha256')
+    .update(JSON.stringify([origins.rows, pokedexEntry.rows, availability.rows]))
+    .digest('hex')
+    .slice(0, 12)
 
 const tables: [string, Table][] = [
     ['generation', data.generation],
@@ -94,7 +117,9 @@ const tables: [string, Table][] = [
     ['move', data.move],
     ['pokemon', data.pokemon],
     ['pokemon_egg_group', data.eggGroup],
-    ['pokemon_origin', { columns: ['ndex', 'lang', 'note'], rows: etymology.rows }],
+    ['pokemon_origin', origins],
+    ['pokedex_entry', pokedexEntry],
+    ['availability', availability],
     ['pokemon_dex_number', data.dexNumber],
     ['form', data.form],
     ['form_type', data.formType],
@@ -155,9 +180,11 @@ const placed = new Set(gameRows.map(([id]) => id))
 const nowhere = data.forms.filter((form) => depositable.has(form.id) && !placed.has(form.id))
 console.log(`    depositable but in no game: ${nowhere.length}`, nowhere.map((form) => form.slug).join(' '))
 
-const byLanguage = Object.groupBy(etymology.rows, ([, language]) => language)
+const byLanguage = Object.groupBy(origins.rows, ([, language]) => language as string)
 console.log(
     `  etymology: ${Object.entries(byLanguage).map(([language, rows]) => `${language} ${rows!.length}`).join(', ')}`
 )
-if (etymology.unknownTemplates.size)
-    console.log(`  ⚠ templates rendered by guess (add them to src/scraper/wikitext.ts): ${[...etymology.unknownTemplates].join(', ')}`)
+console.log(`  Pokédex entries: ${pokedexEntry.rows.length}, game locations: ${availability.rows.length}`)
+console.log(`    labels that are not a main-series game, left out: ${[...skippedGames].join(', ')}`)
+if (unknownTemplates.size)
+    console.log(`  ⚠ templates rendered by guess (add them to src/scraper/wikitext.ts): ${[...unknownTemplates].join(', ')}`)
