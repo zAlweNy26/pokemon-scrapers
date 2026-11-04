@@ -37,6 +37,9 @@ against the source itself.
   fails on a missing page or a page for another species, and lists any wiki template it
   had to render by guess.
 
+- **Done:** evolutions, regional dex numbers, EV yield, base experience and species flags
+  from PokéAPI. What else a full view would need, and where it is: `DATA-GAPS.md`.
+
 ## Left over from the audit (`AUDIT.md`)
 
 Everything is closed except **15** (answer 304 before the database runs), skipped on

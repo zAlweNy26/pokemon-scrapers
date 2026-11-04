@@ -1,8 +1,9 @@
 import { and, count, eq, exists, inArray, notExists, sql } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/sqlite-core'
 import type { Db } from '@/db/client'
 import {
-    encounter, form, formAbility, formHomeGame, formType, generation, pokemon,
-    pokemonEggGroup, pokemonOrigin, type Pokemon
+    encounter, evolution, form, formAbility, formHomeGame, formType, generation, pokemon,
+    pokemonDexNumber, pokemonEggGroup, pokemonOrigin, type Pokemon
 } from '@/db/schema'
 import { categoriesOf, nameProjection, namesOf } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
@@ -154,14 +155,19 @@ export const findSpecies = async (db: Db, idOrName: string): Promise<Pokemon | u
     return row
 }
 
+const evolvesFrom = alias(pokemon, 'evolves_from')
+const evolvesInto = alias(pokemon, 'evolves_into')
+const fromForm = alias(form, 'from_form')
+const intoForm = alias(form, 'into_form')
+
 /**
- * The full document in one round trip. Six statements are cheaper batched than
+ * The full document in one round trip. Nine statements are cheaper batched than
  * awaited in sequence, and this is the endpoint most likely to miss the cache.
  */
 export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => {
     const { ndex } = species
 
-    const [forms, typeRows, abilityRows, homeRows, eggGroups, origins, encounters] = await db.batch([
+    const [forms, typeRows, abilityRows, homeRows, eggGroups, origins, encounters, dexNumbers, evolutions] = await db.batch([
         db.select().from(form).where(eq(form.ndex, ndex)).orderBy(sql`${form.isDefault} DESC`, form.id),
         db
             .select({ formId: formType.formId, slot: formType.slot, type: formType.type })
@@ -203,7 +209,33 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
             })
             .from(encounter)
             .where(eq(encounter.ndex, ndex))
-            .orderBy(encounter.game, encounter.location)
+            .orderBy(encounter.game, encounter.location),
+        db
+            .select({ pokedex: pokemonDexNumber.pokedex, number: pokemonDexNumber.number })
+            .from(pokemonDexNumber)
+            .where(eq(pokemonDexNumber.ndex, ndex))
+            .orderBy(pokemonDexNumber.pokedex),
+        // The whole family, so a client can draw the tree from any member. The slugs
+        // are renamed because D1 batches return rows keyed by column name: four
+        // columns all called `slug` would collapse into one.
+        db
+            .select({
+                from: sql<string>`${evolvesFrom.slug}`.as('from_slug'),
+                into: sql<string>`${evolvesInto.slug}`.as('into_slug'),
+                fromForm: sql<string | null>`${fromForm.slug}`.as('from_form_slug'),
+                intoForm: sql<string | null>`${intoForm.slug}`.as('into_form_slug'),
+                trigger: evolution.trigger,
+                game: evolution.game,
+                isDefault: evolution.isDefault,
+                conditions: evolution.conditions
+            })
+            .from(evolution)
+            .innerJoin(evolvesFrom, eq(evolvesFrom.ndex, evolution.fromNdex))
+            .innerJoin(evolvesInto, eq(evolvesInto.ndex, evolution.ndex))
+            .leftJoin(fromForm, eq(fromForm.id, evolution.fromFormId))
+            .leftJoin(intoForm, eq(intoForm.id, evolution.intoFormId))
+            .where(eq(evolvesInto.evolutionChain, species.evolutionChain))
+            .orderBy(evolution.id)
     ])
 
     const types = groupBy(typeRows, (row) => row.formId, (row) => row.type)
@@ -226,6 +258,17 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
         baseFriendship: species.baseFriendship,
         genderRate: species.genderRate,
         eggCycles: species.eggCycles,
+        isLegendary: species.isLegendary,
+        isMythical: species.isMythical,
+        isBaby: species.isBaby,
+        hasGenderDifferences: species.hasGenderDifferences,
+        formsSwitchable: species.formsSwitchable,
+        growthRate: species.growthRate,
+        color: species.color,
+        shape: species.shape,
+        habitat: species.habitat,
+        dexNumbers: Object.fromEntries(dexNumbers.map((row) => [row.pokedex, row.number])),
+        evolutionChain: { id: species.evolutionChain, steps: evolutions },
         eggGroups: eggGroups.map((row) => row.eggGroup),
         origins: Object.fromEntries(origins.map((row) => [row.lang, row.note])),
         depositable: forms.some((entry) => entry.depositable),
@@ -247,6 +290,19 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
                 spDef: entry.spDef,
                 spd: entry.spd
             },
+            // The build writes all six or none.
+            evYield:
+                entry.evHp === null
+                    ? null
+                    : {
+                          hp: entry.evHp,
+                          atk: entry.evAtk!,
+                          def: entry.evDef!,
+                          spAtk: entry.evSpAtk!,
+                          spDef: entry.evSpDef!,
+                          spd: entry.evSpd!
+                      },
+            baseExperience: entry.baseExperience,
             sprites: spritesFor(imageBaseUrl, entry.spriteKey)
         })),
         encounters: encounters.map((row) => ({

@@ -35,6 +35,18 @@ export const pokemon = sqliteTable(
         /** -1 = genderless, otherwise eighths female (0 always male, 8 always female). */
         genderRate: integer('gender_rate'),
         eggCycles: integer('egg_cycles'),
+        /** PokéAPI's evolution chain id: species sharing it are one family. */
+        evolutionChain: integer('evolution_chain').notNull(),
+        isLegendary: integer('is_legendary', { mode: 'boolean' }).notNull().default(false),
+        isMythical: integer('is_mythical', { mode: 'boolean' }).notNull().default(false),
+        isBaby: integer('is_baby', { mode: 'boolean' }).notNull().default(false),
+        hasGenderDifferences: integer('has_gender_differences', { mode: 'boolean' }).notNull().default(false),
+        formsSwitchable: integer('forms_switchable', { mode: 'boolean' }).notNull().default(false),
+        growthRate: text('growth_rate').notNull(),
+        color: text('color').notNull(),
+        shape: text('shape').notNull(),
+        /** Only Gens 1-3 had habitats. */
+        habitat: text('habitat'),
         nameEn: text('name_en').notNull(),
         nameJa: text('name_ja'),
         nameJaRomaji: text('name_ja_romaji'),
@@ -57,7 +69,24 @@ export const pokemon = sqliteTable(
         categoryZhHans: text('category_zh_hans'),
         categoryZhHant: text('category_zh_hant')
     },
-    (table) => [index('pokemon_gen_idx').on(table.gen), index('pokemon_name_idx').on(table.nameEn)]
+    (table) => [
+        index('pokemon_gen_idx').on(table.gen),
+        index('pokemon_name_idx').on(table.nameEn),
+        index('pokemon_evolution_chain_idx').on(table.evolutionChain)
+    ]
+)
+
+/** Regional Pokédex numbers, keyed by PokéAPI pokedex identifier (`paldea`, `kitakami`). National is `ndex`. */
+export const pokemonDexNumber = sqliteTable(
+    'pokemon_dex_number',
+    {
+        ndex: integer('ndex')
+            .notNull()
+            .references(() => pokemon.ndex),
+        pokedex: text('pokedex').notNull(),
+        number: integer('number').notNull()
+    },
+    (table) => [primaryKey({ columns: [table.ndex, table.pokedex] })]
 )
 
 export const pokemonEggGroup = sqliteTable(
@@ -114,6 +143,14 @@ export const form = sqliteTable(
         spAtk: integer('sp_atk'),
         spDef: integer('sp_def'),
         spd: integer('spd'),
+        /** Effort values earned for defeating this form, per stat; all null when unknown. */
+        evHp: integer('ev_hp'),
+        evAtk: integer('ev_atk'),
+        evDef: integer('ev_def'),
+        evSpAtk: integer('ev_sp_atk'),
+        evSpDef: integer('ev_sp_def'),
+        evSpd: integer('ev_spd'),
+        baseExperience: integer('base_experience'),
         /** Object prefix in the R2 image bucket; null when no artwork is published. */
         spriteKey: text('sprite_key')
     },
@@ -183,6 +220,67 @@ export const encounter = sqliteTable(
     (table) => [primaryKey({ columns: [table.ndex, table.game, table.location, table.method] })]
 )
 
+/** What an evolution method requires beyond its trigger; absent keys do not apply. Identifiers are PokéAPI's. */
+export interface EvolutionConditions {
+    minLevel?: number
+    item?: string
+    heldItem?: string
+    knownMove?: string
+    knownMoveType?: string
+    usedMove?: string
+    minMoveCount?: number
+    gender?: 'female' | 'male'
+    timeOfDay?: string
+    location?: string
+    region?: string
+    minHappiness?: number
+    minBeauty?: number
+    minAffection?: number
+    /** 1: Attack > Defense, 0: equal, -1: Attack < Defense (Tyrogue). */
+    relativePhysicalStats?: number
+    partySpecies?: string
+    partyType?: string
+    tradeSpecies?: string
+    minSteps?: number
+    minDamageTaken?: number
+    natures?: string[]
+    percentageChance?: number
+    /** PokéAPI's raw rule on hidden values, e.g. `EC 100 % 0 ==` (Tandemaus's 1-in-100 family of three). */
+    expression?: string
+    overworldRain?: true
+    upsideDown?: true
+    multiplayer?: true
+    nearSpecialRock?: true
+}
+
+/**
+ * One way `fromNdex` evolves into `ndex`, as PokéAPI lists it: a species can
+ * have several (Leafeon: a Moss Rock, later a Leaf Stone). `game` is the
+ * version group the method was recorded for; `isDefault` marks the usual one.
+ */
+export const evolution = sqliteTable(
+    'evolution',
+    {
+        /** PokéAPI's evolution id, so ids stay stable across rebuilds. */
+        id: integer('id').primaryKey(),
+        fromNdex: integer('from_ndex')
+            .notNull()
+            .references(() => pokemon.ndex),
+        ndex: integer('ndex')
+            .notNull()
+            .references(() => pokemon.ndex),
+        /** Set when only one form evolves (Galarian Linoone → Obstagoon). */
+        fromFormId: integer('from_form_id').references(() => form.id),
+        /** Set when the result is a specific form (Pikachu → Alolan Raichu in Sun/Moon). */
+        intoFormId: integer('into_form_id').references(() => form.id),
+        trigger: text('trigger').notNull(),
+        game: text('game').notNull(),
+        isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+        conditions: text('conditions', { mode: 'json' }).$type<EvolutionConditions>().notNull()
+    },
+    (table) => [index('evolution_from_idx').on(table.fromNdex), index('evolution_ndex_idx').on(table.ndex)]
+)
+
 /** Free-form provenance written by the scraper and surfaced at /v1/meta. */
 export const meta = sqliteTable('meta', {
     key: text('key').primaryKey(),
@@ -198,6 +296,7 @@ export const pokemonRelations = relations(pokemon, ({ one, many }) => ({
     forms: many(form),
     eggGroups: many(pokemonEggGroup),
     origins: many(pokemonOrigin),
+    dexNumbers: many(pokemonDexNumber),
     encounters: many(encounter)
 }))
 

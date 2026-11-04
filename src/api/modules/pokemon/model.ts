@@ -24,7 +24,57 @@ const formSchema = z.object({
         spDef: z.number().nullable(),
         spd: z.number().nullable()
     }),
+    evYield: z
+        .object({ hp: z.number(), atk: z.number(), def: z.number(), spAtk: z.number(), spDef: z.number(), spd: z.number() })
+        .nullable()
+        .describe('Effort values earned for defeating this form; null when the source does not have them yet'),
+    baseExperience: z.number().nullable(),
     sprites: spritesSchema
+})
+
+const evolutionConditionsSchema = z
+    .object({
+        minLevel: z.number(),
+        item: z.string(),
+        heldItem: z.string(),
+        knownMove: z.string(),
+        knownMoveType: z.string(),
+        usedMove: z.string(),
+        minMoveCount: z.number(),
+        gender: z.enum(['female', 'male']),
+        timeOfDay: z.string(),
+        location: z.string(),
+        region: z.string(),
+        minHappiness: z.number(),
+        minBeauty: z.number(),
+        minAffection: z.number(),
+        relativePhysicalStats: z.number().describe('1: Attack > Defense, 0: equal, -1: Attack < Defense'),
+        partySpecies: z.string(),
+        partyType: z.string(),
+        tradeSpecies: z.string(),
+        minSteps: z.number(),
+        minDamageTaken: z.number(),
+        natures: z.array(z.string()),
+        percentageChance: z.number(),
+        expression: z.string().describe("PokéAPI's raw rule on hidden values, e.g. `EC 100 % 0 ==`"),
+        overworldRain: z.literal(true),
+        upsideDown: z.literal(true),
+        multiplayer: z.literal(true),
+        nearSpecialRock: z.literal(true)
+    })
+    .partial()
+    .describe('What the method needs beyond its trigger; absent keys do not apply. Values are PokéAPI identifiers')
+    .meta({ examples: [{ item: 'thunder-stone' }, { minLevel: 35, timeOfDay: 'night' }] })
+
+const evolutionStepSchema = z.object({
+    from: z.string().describe('Species slug'),
+    into: z.string().describe('Species slug'),
+    fromForm: z.string().nullable().describe('Set when only this form evolves'),
+    intoForm: z.string().nullable().describe('Set when the result is this form'),
+    trigger: z.string().meta({ examples: ['level-up', 'use-item', 'trade'] }),
+    game: z.string().describe('Version group the method was recorded for'),
+    isDefault: z.boolean(),
+    conditions: evolutionConditionsSchema
 })
 
 const listItemSchema = z.object({
@@ -82,6 +132,23 @@ export const pokemonModels = {
             .nullable()
             .describe('-1 when genderless, otherwise eighths female'),
         eggCycles: z.number().nullable(),
+        isLegendary: z.boolean(),
+        isMythical: z.boolean(),
+        isBaby: z.boolean(),
+        hasGenderDifferences: z.boolean(),
+        formsSwitchable: z.boolean(),
+        growthRate: z.string().meta({ examples: ['medium-slow'] }),
+        color: z.string(),
+        shape: z.string(),
+        habitat: z.string().nullable().describe('Only Generations 1-3 had habitats'),
+        dexNumbers: z
+            .record(z.string(), z.number())
+            .describe('Regional Pokédex numbers, keyed by PokéAPI pokedex identifier; National is `ndex`')
+            .meta({ examples: [{ kanto: 25, paldea: 74 }] }),
+        evolutionChain: z.object({
+            id: z.number(),
+            steps: z.array(evolutionStepSchema).describe('Every evolution method in the family, one per game it was recorded for')
+        }),
         eggGroups: z.array(z.string()),
         origins: z.record(z.string(), z.string()).describe('Name etymology, keyed by language'),
         depositable: z.boolean().describe('True when any form can enter Pokemon HOME'),

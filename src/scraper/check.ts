@@ -54,6 +54,13 @@ none('gender rate outside -1..8', 'SELECT count(*) FROM pokemon WHERE gender_rat
 none('forms without one or two types', 'SELECT count(*) FROM form f WHERE (SELECT count(*) FROM form_type t WHERE t.form_id = f.id) NOT IN (1, 2)')
 none('storable forms without abilities', 'SELECT count(*) FROM form f WHERE depositable = 1 AND NOT EXISTS (SELECT 1 FROM form_ability a WHERE a.form_id = f.id)')
 none('species without egg groups', 'SELECT count(*) FROM pokemon p WHERE NOT EXISTS (SELECT 1 FROM pokemon_egg_group e WHERE e.ndex = p.ndex)')
+// Terastal Terapagos is the one form worth 4 (2 Def + 2 Sp. Def, checked on Bulbapedia).
+none('EV yield partly unknown, outside 0..3 per stat or 1..3 in total', "SELECT count(*) FROM form WHERE (ev_hp IS NULL) != (coalesce(ev_atk, ev_def, ev_sp_atk, ev_sp_def, ev_spd) IS NULL) OR min(ev_hp, ev_atk, ev_def, ev_sp_atk, ev_sp_def, ev_spd) < 0 OR max(ev_hp, ev_atk, ev_def, ev_sp_atk, ev_sp_def, ev_spd) > 3 OR (slug != 'terapagos-terastal' AND (ev_hp + ev_atk + ev_def + ev_sp_atk + ev_sp_def + ev_spd) NOT BETWEEN 1 AND 3)")
+none('evolutions crossing families', 'SELECT count(*) FROM evolution e JOIN pokemon a ON a.ndex = e.from_ndex JOIN pokemon b ON b.ndex = e.ndex WHERE a.evolution_chain != b.evolution_chain')
+none('evolution forms of another species', 'SELECT count(*) FROM evolution e LEFT JOIN form f ON f.id = e.from_form_id LEFT JOIN form t ON t.id = e.into_form_id WHERE f.ndex != e.from_ndex OR t.ndex != e.ndex')
+// 0 is real: Victini opens the Unova dex as #000.
+none('negative regional dex numbers', 'SELECT count(*) FROM pokemon_dex_number WHERE number < 0')
+none('species shown twice in one regional dex', 'SELECT count(*) FROM (SELECT pokedex, number FROM pokemon_dex_number GROUP BY pokedex, number HAVING count(*) > 1)')
 none('species HOME cannot store at all', 'SELECT count(*) FROM pokemon p WHERE NOT EXISTS (SELECT 1 FROM form f WHERE f.ndex = p.ndex AND f.depositable = 1)')
 
 console.log('\n— Text')
@@ -89,6 +96,12 @@ fact('Bulbasaur in four languages', 'SELECT name_ja, name_de, name_fr, name_ko F
 fact('accents survive (Flabébé)', 'SELECT name_en FROM pokemon WHERE ndex = 669', { name_en: 'Flabébé' })
 fact('Snorlax weighs 460 kg', "SELECT weight_kg FROM form WHERE slug = 'snorlax'", { weight_kg: 460 })
 fact('Mega Charizard X is not storable in HOME', "SELECT depositable FROM form WHERE slug = 'charizard-mega-x'", { depositable: 0 })
+fact('Eevee evolves into eight species', "SELECT count(DISTINCT ndex) n FROM evolution WHERE from_ndex = 133", { n: 8 })
+fact('Pikachu evolves with a Thunder Stone', "SELECT trigger, conditions FROM evolution WHERE from_ndex = 25 AND game = 'red-blue'", { trigger: 'use-item', conditions: '{"item":"thunder-stone"}' })
+fact('Amped Toxtricity takes 13 natures', "SELECT json_array_length(conditions, '$.natures') n FROM evolution e JOIN form f ON f.id = e.into_form_id WHERE f.slug = 'toxtricity-amped'", { n: 13 })
+fact('Pikachu is #74 in Paldea', "SELECT number FROM pokemon_dex_number WHERE ndex = 25 AND pokedex = 'paldea'", { number: 74 })
+fact('Mewtwo legendary, Mew mythical, Pichu a baby', 'SELECT (SELECT is_legendary FROM pokemon WHERE ndex = 150) l, (SELECT is_mythical FROM pokemon WHERE ndex = 151) m, (SELECT is_baby FROM pokemon WHERE ndex = 172) b', { l: 1, m: 1, b: 1 })
+fact('Gengar yields 3 Sp. Atk EVs', "SELECT ev_sp_atk, base_experience FROM form WHERE slug = 'gengar'", { ev_sp_atk: 3, base_experience: 225 })
 fact('a Mega keeps its own name', "SELECT name_en, name_ja FROM form WHERE slug = 'venusaur-mega'", { name_en: 'Mega Venusaur', name_ja: 'メガフシギバナ' })
 
 console.log('\n— Through the API, response schemas included')
@@ -113,6 +126,7 @@ const missing = (column: string, table: string) =>
     Object.fromEntries(LANGUAGES.map((l) => [l, scalar(`SELECT count(*) FROM ${table} WHERE ${column}_${l} IS NULL`)]).filter(([, n]) => n))
 console.log('  categories missing:', missing('category', 'pokemon'))
 console.log('  form names missing:', missing('name', 'form'))
+console.log('  unknown EV yield:', scalar('SELECT count(*) FROM form WHERE ev_hp IS NULL'), 'forms')
 console.log('  unknown size:', all<{ slug: string }>('SELECT slug FROM form WHERE height_m IS NULL OR weight_kg IS NULL').map((r) => r.slug).join(' ') || 'none')
 console.log('  forms without abilities (none storable):', scalar('SELECT count(*) FROM form f WHERE NOT EXISTS (SELECT 1 FROM form_ability a WHERE a.form_id = f.id)'))
 console.log('  storable but in no game:', all<{ slug: string }>('SELECT slug FROM form f WHERE depositable = 1 AND NOT EXISTS (SELECT 1 FROM form_home_game g WHERE g.form_id = f.id)').map((r) => r.slug).join(' ') || 'none')

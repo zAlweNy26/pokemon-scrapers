@@ -21,7 +21,7 @@ const VERSION = new URL('../../data/version.json', import.meta.url).pathname
 
 /** Children first, so foreign keys hold at every step. */
 const DELETE_ORDER = [
-    'encounter', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_origin',
+    'evolution', 'encounter', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'pokemon_origin',
     'pokemon_egg_group', 'pokemon', 'generation', 'meta'
 ]
 
@@ -92,11 +92,13 @@ const tables: [string, Table][] = [
     ['pokemon', data.pokemon],
     ['pokemon_egg_group', data.eggGroup],
     ['pokemon_origin', { columns: ['ndex', 'lang', 'note'], rows: etymology.rows }],
+    ['pokemon_dex_number', data.dexNumber],
     ['form', data.form],
     ['form_type', data.formType],
     ['form_ability', data.formAbility],
     ['form_home_game', formHomeGame],
     ['encounter', data.encounter],
+    ['evolution', data.evolution],
     ['meta', { columns: ['key', 'value'], rows: [['source_pokeapi', POKEAPI_COMMIT], ['source_serebii', serebiiHash], ['source_bulbapedia', bulbapediaHash]] }]
 ]
 

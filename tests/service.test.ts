@@ -166,6 +166,48 @@ describe('pokemon.detail', () => {
             { name: 'lightning-rod', hidden: true }
         ])
     })
+
+    test('every member of a family gets the whole evolution chain, conditions parsed', async () => {
+        const [pikachu, raichu] = await Promise.all(
+            ['pikachu', 'raichu'].map(async (slug) => pokemon.detail(db, (await pokemon.findSpecies(db, slug))!, IMAGES))
+        )
+
+        expect(raichu!.evolutionChain).toEqual(pikachu!.evolutionChain)
+        expect(pikachu!.evolutionChain.id).toBe(10)
+        expect(pikachu!.evolutionChain.steps).toEqual([
+            {
+                from: 'pikachu', into: 'raichu', fromForm: 'pikachu', intoForm: null, trigger: 'use-item',
+                game: 'red-blue', isDefault: true, conditions: { item: 'thunder-stone' }
+            },
+            {
+                from: 'pikachu', into: 'raichu', fromForm: 'pikachu', intoForm: null, trigger: 'use-item',
+                game: 'sun-moon', isDefault: true, conditions: { item: 'thunder-stone', region: 'alola' }
+            }
+        ])
+    })
+
+    test('a species that does not evolve has an empty chain', async () => {
+        const result = await pokemon.detail(db, (await pokemon.findSpecies(db, 'lapras'))!, IMAGES)
+
+        expect(result.evolutionChain).toEqual({ id: 65, steps: [] })
+        expect(result.dexNumbers).toEqual({})
+    })
+
+    test('reports regional dex numbers, species flags, EV yield and base experience', async () => {
+        const result = await pokemon.detail(db, (await pokemon.findSpecies(db, 'pikachu'))!, IMAGES)
+
+        expect(result.dexNumbers).toEqual({ kanto: 25, kitakami: 21, paldea: 74 })
+        expect(result).toMatchObject({
+            isLegendary: false, isMythical: false, isBaby: false, hasGenderDifferences: true,
+            growthRate: 'medium', color: 'yellow', shape: 'quadruped', habitat: 'forest'
+        })
+        expect(result.forms[0]?.evYield).toEqual({ hp: 0, atk: 0, def: 0, spAtk: 0, spDef: 0, spd: 2 })
+        expect(result.forms[0]?.baseExperience).toBe(112)
+
+        const urshifu = await pokemon.detail(db, (await pokemon.findSpecies(db, 'urshifu'))!, IMAGES)
+        expect(urshifu.isLegendary).toBe(true)
+        expect(urshifu.habitat).toBeNull()
+    })
 })
 
 describe('search', () => {

@@ -1,5 +1,6 @@
 import { LANGUAGE_IDS, readTable } from './pokeapi'
 import type { Value } from './sql'
+import type { EvolutionConditions } from '@/db/schema'
 
 type Row = Record<string, string>
 type Language = keyof typeof LANGUAGE_IDS
@@ -38,6 +39,12 @@ const text = (value: string | undefined): string | null => (value ? value : null
 
 const indexBy = (rows: Row[], key: string) => new Map(rows.map((row) => [row[key]!, row]))
 
+/** `id → identifier` for a PokéAPI lookup table; '' gives null. */
+export const identifiers = (rows: Row[]) => {
+    const byId = new Map(rows.map((row) => [row.id!, row.identifier!]))
+    return (id: string | undefined) => (id ? (byId.get(id) ?? null) : null)
+}
+
 const groupBy = (rows: Row[], key: string) => {
     const groups = new Map<string, Row[]>()
     for (const row of rows) {
@@ -75,13 +82,16 @@ export const buildFromPokeApi = async () => {
         speciesRows, speciesNames, pokemonRows, formRows, formNames, generations, regions,
         pokemonTypes, formTypes, types, pokemonAbilities, abilities, pokemonStats,
         speciesEggGroups, eggGroups, encounters, locationAreas, locations, encounterSlots,
-        encounterMethods, versions
+        encounterMethods, versions, evolutions, evolutionTriggers, versionGroups, items, moves, genders,
+        natures, growthRates, colors, shapes, habitats, pokedexes, dexNumbers
     ] = await Promise.all(
         [
             'pokemon_species', 'pokemon_species_names', 'pokemon', 'pokemon_forms', 'pokemon_form_names',
             'generations', 'regions', 'pokemon_types', 'pokemon_form_types', 'types', 'pokemon_abilities',
             'abilities', 'pokemon_stats', 'pokemon_egg_groups', 'egg_groups', 'encounters', 'location_areas',
-            'locations', 'encounter_slots', 'encounter_methods', 'versions'
+            'locations', 'encounter_slots', 'encounter_methods', 'versions', 'pokemon_evolution',
+            'evolution_triggers', 'version_groups', 'items', 'moves', 'genders', 'natures', 'growth_rates',
+            'pokemon_colors', 'pokemon_shapes', 'pokemon_habitats', 'pokedexes', 'pokemon_dex_numbers'
         ].map(readTable)
     )
 
@@ -102,9 +112,16 @@ export const buildFromPokeApi = async () => {
         ])
     }
 
+    const growthRate = identifiers(growthRates!)
+    const color = identifiers(colors!)
+    const shape = identifiers(shapes!)
+    const habitat = identifiers(habitats!)
+
     const pokemon: Table = {
         columns: [
             'ndex', 'slug', 'gen', 'catch_rate', 'base_friendship', 'gender_rate', 'egg_cycles',
+            'evolution_chain', 'is_legendary', 'is_mythical', 'is_baby', 'has_gender_differences',
+            'forms_switchable', 'growth_rate', 'color', 'shape', 'habitat',
             ...languageColumns('name'), ...languageColumns('category')
         ],
         rows: speciesRows!.map((row) => {
@@ -112,8 +129,23 @@ export const buildFromPokeApi = async () => {
             return [
                 Number(row.id), row.identifier!, Number(row.generation_id), int(row.capture_rate),
                 int(row.base_happiness), int(row.gender_rate), int(row.hatch_counter),
+                Number(row.evolution_chain_id), row.is_legendary === '1', row.is_mythical === '1',
+                row.is_baby === '1', row.has_gender_differences === '1', row.forms_switchable === '1',
+                growthRate(row.growth_rate_id), color(row.color_id), shape(row.shape_id), habitat(row.habitat_id),
                 ...Object.values(localized(names, 'name')), ...Object.values(localized(names, 'genus'))
             ]
+        })
+    }
+
+    // National is the species' own ndex; the Conquest gallery is a spin-off's.
+    const pokedex = identifiers(pokedexes!)
+    const dexNumber: Table = {
+        columns: ['ndex', 'pokedex', 'number'],
+        rows: dexNumbers!.flatMap((row) => {
+            const name = pokedex(row.pokedex_id)!
+            return name === 'national' || name === 'conquest-gallery'
+                ? []
+                : [[Number(row.species_id), name, Number(row.pokedex_number)]]
         })
     }
 
@@ -131,7 +163,8 @@ export const buildFromPokeApi = async () => {
     const form: Table = {
         columns: [
             'id', 'ndex', 'slug', ...languageColumns('name'), 'is_default', 'depositable',
-            'height_m', 'weight_kg', ...STAT_COLUMNS, 'sprite_key'
+            'height_m', 'weight_kg', ...STAT_COLUMNS, ...STAT_COLUMNS.map((stat) => `ev_${stat}`),
+            'base_experience', 'sprite_key'
         ],
         rows: []
     }
@@ -168,7 +201,12 @@ export const buildFromPokeApi = async () => {
         >
         formNames.en ??= speciesNames.en
 
-        const stats = new Map(statsByPokemon.get(row.pokemon_id!)?.map((stat) => [stat.stat_id, int(stat.base_stat)]))
+        const statRows = statsByPokemon.get(row.pokemon_id!) ?? []
+        const stats = new Map(statRows.map((stat) => [stat.stat_id, int(stat.base_stat)]))
+        // Every form yields at least one EV; all zeros is PokéAPI not having the
+        // data yet (Legends Z-A's new Megas), so it is stored as unknown.
+        const effort = new Map(statRows.map((stat) => [stat.stat_id, int(stat.effort) ?? 0]))
+        const effortKnown = [...effort.values()].some(Boolean)
 
         form.rows.push([
             id, ndex, row.identifier!, ...Object.values(formNames), isDefault, false,
@@ -176,6 +214,8 @@ export const buildFromPokeApi = async () => {
             int(variety.height) ? int(variety.height)! / 10 : null,
             int(variety.weight) ? int(variety.weight)! / 10 : null,
             ...STAT_COLUMNS.map((_, index) => stats.get(String(index + 1)) ?? null),
+            ...STAT_COLUMNS.map((_, index) => (effortKnown ? (effort.get(String(index + 1)) ?? 0) : null)),
+            int(variety.base_experience),
             null
         ])
 
@@ -222,5 +262,84 @@ export const buildFromPokeApi = async () => {
         encounter.rows.push(values)
     }
 
-    return { generation, pokemon, eggGroup, form, formType, formAbility, encounter, forms }
+    const speciesById = indexBy(speciesRows!, 'id')
+    const trigger = identifiers(evolutionTriggers!)
+    const game = identifiers(versionGroups!)
+    const lookups: ConditionLookups = {
+        item: identifiers(items!), move: identifiers(moves!), type: identifiers(types!),
+        gender: identifiers(genders!), location: identifiers(locations!), region: identifiers(regions!),
+        species: identifiers(speciesRows!), natures: natures!
+    }
+    const evolution: Table = {
+        columns: ['id', 'from_ndex', 'ndex', 'from_form_id', 'into_form_id', 'trigger', 'game', 'is_default', 'conditions'],
+        rows: evolutions!.map((row) => [
+            Number(row.id),
+            Number(speciesById.get(row.evolved_species_id!)!.evolves_from_species_id),
+            Number(row.evolved_species_id),
+            int(row.required_pokemon_form_id),
+            int(row.evolved_pokemon_form_id),
+            trigger(row.evolution_trigger_id)!,
+            game(row.version_group_id)!,
+            row.is_default === '1',
+            JSON.stringify(evolutionConditions(row, lookups))
+        ])
+    }
+
+    return { generation, pokemon, eggGroup, dexNumber, form, formType, formAbility, encounter, evolution, forms }
+}
+
+type Lookup = (id: string | undefined) => string | null
+
+export interface ConditionLookups {
+    item: Lookup
+    move: Lookup
+    type: Lookup
+    gender: Lookup
+    location: Lookup
+    region: Lookup
+    species: Lookup
+    /** PokéAPI's `natures` rows. */
+    natures: Row[]
+}
+
+/**
+ * The conditions PokéAPI sets on one `pokemon_evolution` row, with ids turned
+ * into identifiers. Unset conditions are left out; flags appear only when true.
+ */
+export const evolutionConditions = (row: Row, lookup: ConditionLookups): EvolutionConditions => {
+    // Bit n is the nature with PokéAPI id n + 1 (checked: Amped Toxtricity's 13 natures).
+    const mask = int(row.nature_bitmask)
+    const conditions: EvolutionConditions = {
+        minLevel: int(row.minimum_level) ?? undefined,
+        item: lookup.item(row.trigger_item_id) ?? undefined,
+        heldItem: lookup.item(row.held_item_id) ?? undefined,
+        knownMove: lookup.move(row.known_move_id) ?? undefined,
+        knownMoveType: lookup.type(row.known_move_type_id) ?? undefined,
+        usedMove: lookup.move(row.used_move_id) ?? undefined,
+        minMoveCount: int(row.minimum_move_count) ?? undefined,
+        gender: (lookup.gender(row.gender_id) as EvolutionConditions['gender'] | null) ?? undefined,
+        timeOfDay: text(row.time_of_day) ?? undefined,
+        location: lookup.location(row.location_id) ?? undefined,
+        region: lookup.region(row.region_id) ?? undefined,
+        minHappiness: int(row.minimum_happiness) ?? undefined,
+        minBeauty: int(row.minimum_beauty) ?? undefined,
+        minAffection: int(row.minimum_affection) ?? undefined,
+        relativePhysicalStats: int(row.relative_physical_stats) ?? undefined,
+        partySpecies: lookup.species(row.party_species_id) ?? undefined,
+        partyType: lookup.type(row.party_type_id) ?? undefined,
+        tradeSpecies: lookup.species(row.trade_species_id) ?? undefined,
+        minSteps: int(row.minimum_steps) ?? undefined,
+        minDamageTaken: int(row.minimum_damage_taken) ?? undefined,
+        natures:
+            mask === null
+                ? undefined
+                : lookup.natures.filter((nature) => mask & (1 << (Number(nature.id) - 1))).map((nature) => nature.identifier!),
+        percentageChance: int(row.percentage_chance) ?? undefined,
+        expression: text(row.condition_expression) ?? undefined,
+        overworldRain: row.needs_overworld_rain === '1' || undefined,
+        upsideDown: row.turn_upside_down === '1' || undefined,
+        multiplayer: row.needs_multiplayer === '1' || undefined,
+        nearSpecialRock: row.near_special_rock === '1' || undefined
+    }
+    return Object.fromEntries(Object.entries(conditions).filter(([, value]) => value !== undefined))
 }
