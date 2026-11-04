@@ -17,17 +17,9 @@ export interface ListFilters {
     depositable?: boolean
     homeGame?: string
     ability?: string
-    hiddenAbility?: string
     eggGroup?: string
     obtainableIn?: string
-    legendary?: boolean
-    mythical?: boolean
-    baby?: boolean
-    color?: string
-    shape?: string
     habitat?: string
-    growthRate?: string
-    ids?: number[]
     sort?: SortKey | `-${SortKey}`
     limit: number
     offset: number
@@ -143,15 +135,6 @@ const filterConditions = (filters: ListFilters) => {
             anyForm(formAbility, formAbility.formId, sql`${formAbility.ability} = ${filters.ability} COLLATE NOCASE`)
         )
 
-    if (filters.hiddenAbility !== undefined)
-        conditions.push(
-            anyForm(
-                formAbility,
-                formAbility.formId,
-                sql`${formAbility.isHidden} = 1 AND ${formAbility.ability} = ${filters.hiddenAbility} COLLATE NOCASE`
-            )
-        )
-
     if (filters.eggGroup !== undefined)
         conditions.push(
             exists(
@@ -169,19 +152,7 @@ const filterConditions = (filters: ListFilters) => {
             )
         )
 
-    if (filters.legendary !== undefined) conditions.push(eq(pokemon.isLegendary, filters.legendary))
-    if (filters.mythical !== undefined) conditions.push(eq(pokemon.isMythical, filters.mythical))
-    if (filters.baby !== undefined) conditions.push(eq(pokemon.isBaby, filters.baby))
-
-    if (filters.color !== undefined) conditions.push(sql`${pokemon.color} = ${filters.color} COLLATE NOCASE`)
-    if (filters.shape !== undefined) conditions.push(sql`${pokemon.shape} = ${filters.shape} COLLATE NOCASE`)
     if (filters.habitat !== undefined) conditions.push(sql`${pokemon.habitat} = ${filters.habitat} COLLATE NOCASE`)
-    if (filters.growthRate !== undefined)
-        conditions.push(sql`${pokemon.growthRate} = ${filters.growthRate} COLLATE NOCASE`)
-
-    // One bound parameter, not one per id: D1 refuses a statement with more than 100.
-    if (filters.ids !== undefined)
-        conditions.push(sql`${pokemon.ndex} IN (SELECT value FROM json_each(${JSON.stringify(filters.ids)}))`)
 
     return conditions.length ? and(...conditions) : undefined
 }

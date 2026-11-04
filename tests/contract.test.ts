@@ -100,9 +100,8 @@ describe('openapi document', () => {
         const names = spec.paths['/v1/pokemon'].get.parameters.map((p: any) => p.name)
 
         expect(names.sort()).toEqual([
-            'ability', 'baby', 'color', 'depositable', 'eggGroup', 'gen', 'growthRate', 'habitat', 'hiddenAbility',
-            'homeGame', 'ids', 'legendary', 'limit', 'mythical', 'obtainableIn', 'offset', 'region', 'shape', 'sort',
-            'type'
+            'ability', 'depositable', 'eggGroup', 'gen', 'habitat', 'homeGame', 'limit', 'obtainableIn', 'offset',
+            'region', 'sort', 'type'
         ])
     })
 

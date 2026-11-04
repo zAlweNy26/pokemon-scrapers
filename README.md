@@ -74,7 +74,7 @@ known facts, or any API response its schema rejects. Gaps the sources leave
 
 | Endpoint | Notes |
 |---|---|
-| `GET /v1/pokemon` | `?gen &type &region &depositable &homeGame &ability &hiddenAbility &eggGroup &obtainableIn &legendary &mythical &baby &color &shape &habitat &growthRate &ids &sort &limit &offset`. `homeGame` takes a version group (`scarlet-violet`), `obtainableIn` a version (`scarlet`); `ids` is up to 100 comma-separated dex numbers. `sort` is `ndex` (default), `name`, `bst`, `hp`, `atk`, `def`, `spAtk`, `spDef`, `spd`, `height` or `weight` of the default form, `-` prefixed for descending (`-bst`); unknown values last, ties by dex number |
+| `GET /v1/pokemon` | `?gen &type &region &depositable &homeGame &ability &eggGroup &obtainableIn &habitat &sort &limit &offset`. `homeGame` takes a version group (`scarlet-violet`), `obtainableIn` a version (`scarlet`). `sort` is `ndex` (default), `name`, `bst`, `hp`, `atk`, `def`, `spAtk`, `spDef`, `spd`, `height` or `weight` of the default form, `-` prefixed for descending (`-bst`); unknown values last, ties by dex number |
 | `GET /v1/pokemon/:idOrName` | Accepts `25`, `pikachu` or `Pikachu`; returns every form |
 | `GET /v1/evolution-chains/:id` | A PokéAPI chain id: its species as list items in `members`, and `steps` exactly as `/v1/pokemon/:idOrName` has them in `evolutionChain` |
 | `GET /v1/forms` | `?gen &type &depositable &homeGame &isDefault &limit &offset`. Every form, where HOME depositability lives: `depositable` is the form's own, so it tells Pikachu apart from Partner Pikachu |

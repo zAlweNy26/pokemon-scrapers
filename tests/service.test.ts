@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { createTestDb, type TestDb } from './support/database'
 import { eq } from 'drizzle-orm'
-import { form, pokemon as species } from '@/db/schema'
+import { form } from '@/db/schema'
 import * as pokemon from '@/api/modules/pokemon/service'
 import * as search from '@/api/modules/search/service'
 import * as reference from '@/api/modules/reference/service'
@@ -94,12 +94,10 @@ describe('pokemon.list', () => {
         expect(await slugs({ homeGame: 'scarlet' })).toEqual([])
     })
 
-    test('ability matches any form, hidden or not; hiddenAbility only hidden ones', async () => {
+    test('ability matches any form, hidden or not', async () => {
         // Battle Bond belongs only to Ash-Greninja, not the default form.
         expect(await slugs({ ability: 'battle-bond' })).toEqual(['greninja'])
         expect(await slugs({ ability: 'Lightning-Rod' })).toEqual(['pikachu', 'raichu'])
-        expect(await slugs({ hiddenAbility: 'lightning-rod' })).toEqual(['pikachu', 'raichu'])
-        expect(await slugs({ hiddenAbility: 'static' })).toEqual([])
     })
 
     test('filters by egg group', async () => {
@@ -113,35 +111,8 @@ describe('pokemon.list', () => {
         expect(await slugs({ obtainableIn: 'scarlet-violet' })).toEqual([])
     })
 
-    test('filters by species flags', async () => {
-        const own = await createTestDb()
-        await own.db.update(species).set({ isMythical: true }).where(eq(species.slug, 'gengar'))
-        await own.db.update(species).set({ isBaby: true }).where(eq(species.slug, 'pikachu'))
-
-        const ownSlugs = async (filters: Partial<pokemon.ListFilters>) =>
-            (await pokemon.list(own.db, { limit: 50, offset: 0, ...filters }, IMAGES)).items.map((i) => i.slug)
-
-        expect(await ownSlugs({ legendary: true })).toEqual(['urshifu', 'ogerpon'])
-        expect(await ownSlugs({ mythical: true })).toEqual(['gengar'])
-        expect(await ownSlugs({ baby: true })).toEqual(['pikachu'])
-        expect(await ownSlugs({ legendary: false, mythical: false, baby: false })).toEqual([
-            'raichu', 'lapras', 'rotom', 'greninja'
-        ])
-        own.close()
-    })
-
-    test('filters by color, shape, habitat and growth rate, ignoring case', async () => {
-        expect(await slugs({ color: 'Blue' })).toEqual(['lapras', 'greninja'])
-        expect(await slugs({ shape: 'humanoid' })).toEqual(['greninja', 'urshifu', 'ogerpon'])
-        expect(await slugs({ habitat: 'forest' })).toEqual(['pikachu', 'raichu'])
-        expect(await slugs({ growthRate: 'medium-slow' })).toEqual(['gengar', 'greninja'])
-    })
-
-    test('filters by dex numbers, in dex order, and counts only matches', async () => {
-        const { total, items } = await list({ ids: [94, 25, 9999] })
-
-        expect(total).toBe(2)
-        expect(items.map((i) => i.slug)).toEqual(['pikachu', 'gengar'])
+    test('filters by habitat, ignoring case', async () => {
+        expect(await slugs({ habitat: 'Forest' })).toEqual(['pikachu', 'raichu'])
     })
 
     test('sorts ascending by English name, stat total, or a single stat of the default form', async () => {
@@ -333,7 +304,7 @@ describe('evolution.chain', () => {
         const raichu = await pokemon.detail(db, (await pokemon.findSpecies(db, 'raichu'))!, IMAGES)
 
         expect(result?.id).toBe(10)
-        expect(result?.members).toEqual((await list({ ids: [25, 26] })).items)
+        expect(result?.members).toEqual((await list({})).items.filter((i) => [25, 26].includes(i.ndex)))
         expect(result?.steps).toEqual(raichu.evolutionChain.steps)
         expect(result?.steps).toHaveLength(2)
     })

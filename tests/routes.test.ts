@@ -68,13 +68,9 @@ describe('GET /v1/pokemon', () => {
 
         expect(await slugs('homeGame=legends-arceus')).toEqual(['rotom'])
         expect(await slugs('ability=levitate')).toEqual(['rotom'])
-        expect(await slugs('hiddenAbility=protean')).toEqual(['greninja'])
         expect(await slugs('eggGroup=indeterminate')).toEqual(['gengar', 'rotom'])
         expect(await slugs('obtainableIn=scarlet')).toEqual(['pikachu'])
-        expect(await slugs('legendary=true&color=green')).toEqual(['ogerpon'])
-        expect(await slugs('mythical=false&baby=false&shape=ball')).toEqual(['rotom'])
-        expect(await slugs('habitat=sea&growthRate=slow')).toEqual(['lapras'])
-        expect(await slugs('ids=658,25,658')).toEqual(['pikachu', 'greninja'])
+        expect(await slugs('habitat=sea')).toEqual(['lapras'])
     })
 
     test('sorts through the query string, ascending or with - descending', async () => {
@@ -92,25 +88,6 @@ describe('GET /v1/pokemon', () => {
             expect(response.status).toBe(422)
             expect(body.errors[0].property).toBe('sort')
         }
-    })
-
-    test('rejects malformed or oversized dex number lists', async () => {
-        const tooMany = Array.from({ length: 101 }, (_, i) => i + 1).join(',')
-
-        for (const ids of ['', 'abc', '0', '1,,2', '1.5', '-1', tooMany]) {
-            const { response, body } = await json(`/v1/pokemon?ids=${ids}`)
-
-            expect(response.status).toBe(422)
-            expect(body.errors[0].property).toStartWith('ids')
-        }
-    })
-
-    test('a full ids list with other filters stays under D1’s 100 bound parameters', async () => {
-        // The test D1 throws past 100, as D1 does; binding one parameter per id would fail here.
-        const ids = Array.from({ length: 100 }, (_, i) => i + 1).join(',')
-        const { response } = await json(`/v1/pokemon?ids=${ids}&type=electric&depositable=true&limit=100`)
-
-        expect(response.status).toBe(200)
     })
 
     test('accepts a generation the code has never heard of', async () => {
@@ -524,7 +501,8 @@ describe('GET /v1/evolution-chains/:id', () => {
 
         expect(response.status).toBe(200)
         expect(body.id).toBe(10)
-        expect(body.members).toEqual((await json('/v1/pokemon?ids=25,26')).body.data)
+        const species = (await json('/v1/pokemon?limit=100')).body.data
+        expect(body.members).toEqual(species.filter((p: any) => [25, 26].includes(p.ndex)))
         expect(body.steps).toEqual(raichu.evolutionChain.steps)
     })
 
