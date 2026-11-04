@@ -1,0 +1,177 @@
+import { relations } from 'drizzle-orm'
+import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+
+/**
+ * The contract between the scraper and the API: the scraper writes it, the API
+ * reads it, and nothing else reshapes it. Migrations are generated from this file
+ * with `bun run db:generate`.
+ *
+ * Modelling note: species-level facts (names, category, breeding) live on
+ * `pokemon`; anything that varies between forms (types, stats, size, HOME
+ * depositability, sprites) lives on `form`. Every species has at least one row in
+ * `form` with `isDefault` set.
+ */
+
+export const generation = sqliteTable('generation', {
+    id: integer('id').primaryKey(),
+    region: text('region').notNull(),
+    debut: integer('debut').notNull()
+})
+
+export const pokemon = sqliteTable(
+    'pokemon',
+    {
+        ndex: integer('ndex').primaryKey(),
+        slug: text('slug').notNull().unique(),
+        gen: integer('gen')
+            .notNull()
+            .references(() => generation.id),
+        category: text('category'),
+        catchRate: integer('catch_rate'),
+        baseFriendship: integer('base_friendship'),
+        /** -1 = genderless, otherwise eighths female (0 always male, 8 always female). */
+        genderRate: integer('gender_rate'),
+        eggCycles: integer('egg_cycles'),
+        nameEn: text('name_en').notNull(),
+        nameJa: text('name_ja'),
+        nameJaRomaji: text('name_ja_romaji'),
+        nameDe: text('name_de'),
+        nameFr: text('name_fr'),
+        nameIt: text('name_it'),
+        nameEs: text('name_es'),
+        nameKo: text('name_ko'),
+        nameZhHans: text('name_zh_hans'),
+        nameZhHant: text('name_zh_hant')
+    },
+    (table) => [index('pokemon_gen_idx').on(table.gen), index('pokemon_name_idx').on(table.nameEn)]
+)
+
+export const pokemonEggGroup = sqliteTable(
+    'pokemon_egg_group',
+    {
+        ndex: integer('ndex')
+            .notNull()
+            .references(() => pokemon.ndex),
+        eggGroup: text('egg_group').notNull()
+    },
+    (table) => [primaryKey({ columns: [table.ndex, table.eggGroup] })]
+)
+
+/** Name etymology, per language. One of homedex's reasons to exist. */
+export const pokemonOrigin = sqliteTable(
+    'pokemon_origin',
+    {
+        ndex: integer('ndex')
+            .notNull()
+            .references(() => pokemon.ndex),
+        lang: text('lang').notNull(),
+        note: text('note').notNull()
+    },
+    (table) => [primaryKey({ columns: [table.ndex, table.lang] })]
+)
+
+export const form = sqliteTable(
+    'form',
+    {
+        id: integer('id').primaryKey({ autoIncrement: true }),
+        ndex: integer('ndex')
+            .notNull()
+            .references(() => pokemon.ndex),
+        slug: text('slug').notNull().unique(),
+        nameEn: text('name_en').notNull(),
+        isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+        /** Can this form be moved into Pokemon HOME? */
+        depositable: integer('depositable', { mode: 'boolean' }).notNull().default(false),
+        heightM: real('height_m'),
+        weightKg: real('weight_kg'),
+        hp: integer('hp'),
+        atk: integer('atk'),
+        def: integer('def'),
+        spAtk: integer('sp_atk'),
+        spDef: integer('sp_def'),
+        spd: integer('spd'),
+        /** Object prefix in the R2 image bucket; null when no artwork is published. */
+        spriteKey: text('sprite_key')
+    },
+    (table) => [
+        index('form_ndex_idx').on(table.ndex),
+        index('form_depositable_idx').on(table.depositable)
+    ]
+)
+
+export const formType = sqliteTable(
+    'form_type',
+    {
+        formId: integer('form_id')
+            .notNull()
+            .references(() => form.id),
+        slot: integer('slot').notNull(),
+        type: text('type').notNull()
+    },
+    (table) => [
+        primaryKey({ columns: [table.formId, table.slot] }),
+        index('form_type_type_idx').on(table.type)
+    ]
+)
+
+export const formAbility = sqliteTable(
+    'form_ability',
+    {
+        formId: integer('form_id')
+            .notNull()
+            .references(() => form.id),
+        slot: integer('slot').notNull(),
+        ability: text('ability').notNull(),
+        isHidden: integer('is_hidden', { mode: 'boolean' }).notNull().default(false)
+    },
+    (table) => [primaryKey({ columns: [table.formId, table.slot] })]
+)
+
+export const encounter = sqliteTable(
+    'encounter',
+    {
+        ndex: integer('ndex')
+            .notNull()
+            .references(() => pokemon.ndex),
+        game: text('game').notNull(),
+        location: text('location').notNull(),
+        method: text('method')
+    },
+    (table) => [index('encounter_ndex_idx').on(table.ndex)]
+)
+
+/** Free-form provenance written by the scraper and surfaced at /v1/meta. */
+export const meta = sqliteTable('meta', {
+    key: text('key').primaryKey(),
+    value: text('value').notNull()
+})
+
+export const generationRelations = relations(generation, ({ many }) => ({
+    pokemon: many(pokemon)
+}))
+
+export const pokemonRelations = relations(pokemon, ({ one, many }) => ({
+    generation: one(generation, { fields: [pokemon.gen], references: [generation.id] }),
+    forms: many(form),
+    eggGroups: many(pokemonEggGroup),
+    origins: many(pokemonOrigin),
+    encounters: many(encounter)
+}))
+
+export const formRelations = relations(form, ({ one, many }) => ({
+    pokemon: one(pokemon, { fields: [form.ndex], references: [pokemon.ndex] }),
+    types: many(formType),
+    abilities: many(formAbility)
+}))
+
+export const formTypeRelations = relations(formType, ({ one }) => ({
+    form: one(form, { fields: [formType.formId], references: [form.id] })
+}))
+
+export const formAbilityRelations = relations(formAbility, ({ one }) => ({
+    form: one(form, { fields: [formAbility.formId], references: [form.id] })
+}))
+
+export type Pokemon = typeof pokemon.$inferSelect
+export type Form = typeof form.$inferSelect
+export type Generation = typeof generation.$inferSelect

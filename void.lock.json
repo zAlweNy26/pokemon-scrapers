@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "source": {
+    "name": "homedex",
+    "cache": {
+      "enabled": true,
+      "cross_version_cache": false
+    },
+    "observability": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    },
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "homedex",
+        "database_id": "local",
+        "migrations_dir": "src/db/migrations"
+      }
+    ],
+    "ratelimits": [
+      {
+        "name": "RL_GLOBAL",
+        "namespace_id": "1001",
+        "simple": {
+          "limit": 120,
+          "period": 60
+        }
+      },
+      {
+        "name": "RL_SEARCH",
+        "namespace_id": "1002",
+        "simple": {
+          "limit": 20,
+          "period": 60
+        }
+      }
+    ]
+  },
+  "resolved": {
+    "name": "homedex",
+    "cache": {
+      "enabled": true,
+      "cross_version_cache": false
+    },
+    "observability": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    },
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "homedex",
+        "database_id": "local",
+        "migrations_dir": "src/db/migrations"
+      }
+    ],
+    "ratelimits": [
+      {
+        "name": "RL_GLOBAL",
+        "namespace_id": "1001",
+        "simple": {
+          "limit": 120,
+          "period": 60
+        }
+      },
+      {
+        "name": "RL_SEARCH",
+        "namespace_id": "1002",
+        "simple": {
+          "limit": 20,
+          "period": 60
+        }
+      }
+    ]
+  },
+  "text": "{\n  \"name\": \"homedex\",\n  \"cache\": {\n    \"enabled\": true,\n    \"cross_version_cache\": false\n  },\n  \"observability\": {\n    \"enabled\": true,\n    \"head_sampling_rate\": 1\n  },\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"homedex\",\n      \"database_id\": \"local\",\n      \"migrations_dir\": \"src/db/migrations\"\n    }\n  ],\n  \"ratelimits\": [\n    {\n      \"name\": \"RL_GLOBAL\",\n      \"namespace_id\": \"1001\",\n      \"simple\": {\n        \"limit\": 120,\n        \"period\": 60\n      }\n    },\n    {\n      \"name\": \"RL_SEARCH\",\n      \"namespace_id\": \"1002\",\n      \"simple\": {\n        \"limit\": 20,\n        \"period\": 60\n      }\n    }\n  ]\n}\n"
+}

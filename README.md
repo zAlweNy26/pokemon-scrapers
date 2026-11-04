@@ -1,11 +1,131 @@
-# Pokémon Scraper
+# homedex
 
-Scraper for the Serebii website.
+A free, read-only Pokémon API focused on what general-purpose APIs cover poorly:
+**Pokémon HOME depositability**, names in **all nine game languages**, real
+**form** handling, **per-game encounter locations**, and **name etymology**.
 
-Pokémon details gathered from Bulbapedia.
+Runs entirely on Cloudflare Workers: Elysia on the edge, Drizzle over D1 for
+storage with an FTS5 index for cross-language search, and Workers Cache in front.
+[Void](https://void.cloud) builds, provisions and deploys it.
 
-## Credits
+## Quick start
 
-- [Serebii](https://www.serebii.net/)
-- [Bulbapedia](https://bulbapedia.bulbagarden.net/wiki/Main_Page)
-- [Pokemon Database](https://pokemondb.net/)
+Needs Node.js 24.22+ (Void's requirement) alongside Bun. Nothing here touches a
+Cloudflare account — the dev server runs D1 locally.
+
+```bash
+bun install
+bun run db:seed      # reset local D1, apply migrations, load the fixture
+bun run dev          # http://localhost:5173
+bun test             # no server and no workerd needed
+bun run typecheck
+```
+
+```bash
+curl 'http://localhost:5173/v1/pokemon/pikachu'
+curl 'http://localhost:5173/v1/search?q=Quaj'      # → Greninja, matched via German "Quajutsu"
+open  http://localhost:5173/docs                   # Scalar UI
+```
+
+`bun run build && bun run preview` runs the production bundle in workerd.
+
+## Deploy
+
+```bash
+bun run deploy       # void deploy
+```
+
+The first run signs in to Cloudflare in the browser, creates the D1 database and
+records its id in `void.lock.json` (commit it), applies pending migrations, and
+uploads the Worker. Data is loaded separately — see `void db execute --remote --file`.
+
+## Endpoints
+
+| Endpoint | Notes |
+|---|---|
+| `GET /v1/pokemon` | `?gen &type &region &depositable &limit &offset` |
+| `GET /v1/pokemon/:idOrName` | Accepts `25`, `pikachu` or `Pikachu`; returns every form |
+| `GET /v1/search?q=` | Cross-language name search; reports which language matched |
+| `GET /v1/generations`, `GET /v1/types` | Reference data with counts |
+| `GET /v1/meta` | Dataset version, counts and provenance |
+| `GET /health` | Reads from D1; never cached |
+| `GET /docs`, `GET /openapi.json` | Scalar UI and the OpenAPI 3.0.3 document |
+
+Single resources are returned bare; collections are wrapped in `{ data, meta }`.
+Every failure is [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) `application/problem+json`
+— note that the generated spec documents those bodies as `application/json`, because
+`@elysiajs/openapi` hard-codes that media type and exposes no document transform.
+`/v1/search` reports `meta.count` (rows returned) rather than a `total`: it is not
+paginated, so there is no unpaginated total to give.
+
+**Rate limits.** 120 requests/minute per IP overall, 20/minute on `/v1/search`.
+Enforced per Cloudflare location, so they are abuse control rather than a quota.
+
+**Caching.** Responses carry a strong `ETag` derived from the dataset version.
+Send `If-None-Match` and you get a `304`. A dataset change always ships as a
+deploy, and Workers Cache keys on the Worker version, so a release invalidates
+the edge on its own.
+
+## Database
+
+Drizzle owns the schema. `src/db/schema.ts` is the contract between the scraper
+and the API; Void generates migrations from it and applies them.
+
+```bash
+bun run db:generate        # schema.ts → src/db/migrations/NNNN_*.sql
+bun run db:migrate         # apply to local D1
+bun run db:migrate:remote  # apply to the real database (deploy also does this)
+bun run db:seed            # reset local D1 and load data/seed.sql
+```
+
+Two things Drizzle deliberately does not cover:
+
+- **`pokemon_fts`** is an FTS5 virtual table, which Drizzle's DSL cannot express.
+  It lives in the hand-written `src/db/migrations/0001_fts5_search.sql`. Void
+  refuses migrations missing from `meta/_journal.json`, so a hand-written file
+  needs a journal entry and the snapshot renamed to its prefix (see Void's
+  "Hand-written migrations" guide).
+- **Search `MATCH`/`rank`** has no query-builder equivalent, so that one query is
+  raw `sql` (still fully parameterised). Everything else is the query builder.
+
+## Layout
+
+```
+src/
+  routes/      [...path].ts — the one Void route; hands every request to Elysia
+  db/          schema.ts (the scraper↔API contract), client.ts (Drizzle over D1),
+               migrations/ (generated + the hand-written FTS5 one)
+  api/
+    handler.ts   bindings + Drizzle client → app → access log; what the Worker runs
+    app.ts       composition root
+    names.ts     the nine game languages, listed once; every projection, type
+                 and alias list is derived from it
+    sprites.ts   R2 image URLs
+    plugins/     cors, openapi, cache, rate-limit, errors
+    modules/     one file per resource, or a folder splitting index (routes) /
+                 model (zod) / service (Drizzle) once it earns one
+  scraper/     not built yet
+data/          seed.sql fixture; the generated dataset lands here
+tests/         service · routes (full request path) · contract (OpenAPI)
+  support/     bun:sqlite stand-in for a D1 binding
+```
+
+Tests drive the real `drizzle-orm/d1` driver through a `bun:sqlite`-backed D1
+stand-in, so the code under test is the production path — same query builder,
+same driver, same SQL, FTS5 included — with no workerd, Vite or network.
+
+## Status
+
+The API is complete and tested against a development fixture. The scraper that
+produces the real dataset is not written yet, and no Cloudflare resources have
+been created.
+
+## Licence and attribution
+
+Code is MIT. **Data is [CC BY-NC-SA 2.5](https://creativecommons.org/licenses/by-nc-sa/2.5/)**,
+inherited from Bulbapedia — non-commercial use only, share-alike. See
+[`NOTICE.md`](./NOTICE.md) for sources and [`DATA-LICENSE.md`](./DATA-LICENSE.md)
+for what that means for you.
+
+Not affiliated with Nintendo, Game Freak, Creatures Inc. or The Pokémon Company.
+Pokémon and all related names are their trademarks.
