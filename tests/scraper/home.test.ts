@@ -35,7 +35,8 @@ const form = (slug: string, ndex: number, pokemonName: string | null, formName: 
     isDefault,
     pokemonName,
     formName,
-    speciesName: { 105: 'Marowak', 201: 'Unown', 869: 'Alcremie', 3: 'Venusaur', 678: 'Meowstic' }[ndex]!
+    speciesName: { 105: 'Marowak', 201: 'Unown', 869: 'Alcremie', 3: 'Venusaur', 678: 'Meowstic' }[ndex]!,
+    signature: ''
 })
 
 const FORMS = [

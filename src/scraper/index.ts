@@ -9,6 +9,7 @@
  */
 import { buildFromPokeApi, type Table } from './build'
 import { check, counts, diff, openDatabase } from './database'
+import { fetchGameEvidence, homeGames } from './games'
 import { matchEntry } from './match'
 import { POKEAPI_COMMIT, checkoutPokeApi, readTable } from './pokeapi'
 import { fetchDepositable } from './serebii'
@@ -51,14 +52,27 @@ const battleOnly = new Set((await readTable('pokemon_forms')).filter((row) => ro
 const wrong = data.forms.filter((form) => depositable.has(form.id) && battleOnly.has(form.id))
 if (wrong.length) fail(`Serebii entries matched battle-only forms: ${wrong.map((form) => form.slug).join(' ')}`)
 
-// What was used, not when it was fetched: an unchanged list must not change the version.
-const serebiiHash = new Bun.CryptoHasher('sha256').update(JSON.stringify(entries)).digest('hex').slice(0, 12)
+// Per game: which depositable forms can be moved in, from each game's availability pages.
+const formsByCode = new Map<string, typeof data.forms>()
+for (const match of matches)
+    if (match.kind === 'matched') {
+        const key = `${match.entry.ndex}${match.entry.code}`
+        formsByCode.set(key, [...(formsByCode.get(key) ?? []), ...match.forms])
+    }
+
+const evidence = await fetchGameEvidence()
+const gameRows = homeGames(data.forms, depositable, formsByCode, evidence)
+
+// What was used, not when it was fetched: unchanged pages must not change the version.
+const serebiiHash = new Bun.CryptoHasher('sha256')
+    .update(JSON.stringify([entries, [...evidence].map(([game, { codes }]) => [game, [...codes].sort()])]))
+    .digest('hex')
+    .slice(0, 12)
 
 const depositableColumn = data.form.columns.indexOf('depositable')
 for (const row of data.form.rows) row[depositableColumn] = depositable.has(row[0] as number)
 
-// Per-game availability is not collected yet: no form is listed for any game.
-const formHomeGame: Table = { columns: ['form_id', 'game'], rows: [] }
+const formHomeGame: Table = { columns: ['form_id', 'game'], rows: gameRows }
 
 const tables: [string, Table][] = [
     ['generation', data.generation],
@@ -110,4 +124,14 @@ await Bun.write(VERSION, `${JSON.stringify({ version, pokeapi: POKEAPI_COMMIT },
 
 console.log(`\n✓ data/dataset.sql (${(Buffer.byteLength(sql) / 1e6).toFixed(1)} MB), version ${version}`)
 console.log('  rows:', counts(next))
-console.log(`  HOME: ${depositable.size} of ${data.forms.length} forms depositable; per-game availability not collected yet`)
+console.log(`  HOME: ${depositable.size} of ${data.forms.length} forms depositable`)
+for (const [game, { codes }] of evidence) {
+    const unknown = [...codes].filter((code) => !formsByCode.has(code))
+    console.log(
+        `    ${game}: ${gameRows.filter(([, g]) => g === game).length} forms`,
+        unknown.length ? `(page codes for forms HOME cannot store: ${unknown.join(' ')})` : ''
+    )
+}
+const placed = new Set(gameRows.map(([id]) => id))
+const nowhere = data.forms.filter((form) => depositable.has(form.id) && !placed.has(form.id))
+console.log(`    depositable but in no game: ${nowhere.length}`, nowhere.map((form) => form.slug).join(' '))

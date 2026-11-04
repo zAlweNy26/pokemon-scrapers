@@ -11,6 +11,7 @@ export const OVERRIDES: Record<string, string[]> = {
     '128-p': ['tauros-paldea-combat-breed'], // the Paldean default breed
     '555-g': ['darmanitan-galar-standard'], // Zen Mode is battle-only
     '676-de': ['furfrou-debutante'], // Serebii spells it "Deputante"
+    '774-r': ['minior-red'], // labelled just "Minior", which would match the Meteor Form
     '854-f': ['sinistea-antique'], // "Authentic Form" in the games, "antique" in PokéAPI
     '855-f': ['polteageist-antique'],
     '901-b': ['ursaluna-bloodmoon'],

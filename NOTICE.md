@@ -10,7 +10,7 @@ under a permissive licence is taken from there instead.
 |---|---|---|
 | [PokéAPI](https://github.com/PokeAPI/pokeapi) | BSD-3-Clause | Base dataset: species, forms, localised names and categories, stats, types, abilities, breeding data, encounters. Read from the repository's CSV files at a pinned commit — no requests to PokéAPI's servers |
 | [Bulbapedia](https://bulbapedia.bulbagarden.net/) | CC BY-NC-SA 2.5 | Recent generations, forms, name etymology |
-| [Serebii](https://www.serebii.net/) | Used with permission — see below | Pokémon HOME depositability |
+| [Serebii](https://www.serebii.net/) | Used with permission — see below | Pokémon HOME depositability, and which HOME-connected games each form can move into |
 
 ## Serebii
 
@@ -20,7 +20,8 @@ permission for this project, on two conditions:
 1. **Do not spam the scraping routine.**
 2. **Do not make money from it.**
 
-Both are honoured. A full build makes one request to Serebii. The scraper is
+Both are honoured. A full build reads 19 Serebii pages — the HOME box list and each
+HOME-connected game's availability lists — and at most once a day. The scraper is
 single-flight with at least 5 seconds between requests, keeps an on-disk cache it
 reuses for 24 hours (Serebii sends no `ETag`/`Last-Modified`, so conditional
 requests cannot help), sends conditional requests where a site supports them,

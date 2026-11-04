@@ -19,6 +19,8 @@ export interface FormInfo {
     pokemonName: string | null
     formName: string | null
     speciesName: string
+    /** Types in slot order and base stats: equal to the default form's means a cosmetic form. */
+    signature: string
 }
 
 const LANGUAGES = Object.keys(LANGUAGE_IDS) as Language[]
@@ -162,7 +164,8 @@ export const buildFromPokeApi = async () => {
             null
         ])
 
-        for (const typeRow of typesByForm.get(row.id!) ?? typesByPokemon.get(row.pokemon_id!) ?? [])
+        const typeRows = typesByForm.get(row.id!) ?? typesByPokemon.get(row.pokemon_id!) ?? []
+        for (const typeRow of typeRows)
             formType.rows.push([id, Number(typeRow.slot), typeById.get(typeRow.type_id!)!.identifier!])
 
         for (const abilityRow of abilitiesByPokemon.get(row.pokemon_id!) ?? [])
@@ -174,7 +177,11 @@ export const buildFromPokeApi = async () => {
         forms.push({
             id, ndex, slug: row.identifier!, isDefault,
             pokemonName: text(english?.pokemon_name), formName: text(english?.form_name),
-            speciesName: speciesNames.en!
+            speciesName: speciesNames.en!,
+            signature: JSON.stringify([
+                [...typeRows].sort((a, b) => Number(a.slot) - Number(b.slot)).map((t) => t.type_id),
+                STAT_COLUMNS.map((_, index) => stats.get(String(index + 1)) ?? null)
+            ])
         })
     }
 

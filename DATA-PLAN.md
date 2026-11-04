@@ -13,28 +13,24 @@ against the source itself.
   HOME depositability per form comes from Serebii's box list: all 1391 entries map to
   forms (1294 of 1579 forms depositable), via a word matcher, 8 hand-written overrides
   and a rule for Alcremie's 62 cream/sweet image codes.
-- **Schema ready, data not collected:** per-game HOME (`form_home_game`, `homeGames` in
-  the API). Serebii's per-game Pokédex pages use the same image codes as the HOME list,
-  so species map cleanly, but each row shows one icon per species: they cannot say which
-  *forms* a game accepts (all Vivillon patterns appear as one). Needs a decision — see below.
+- **Done:** per-game HOME, option 3 below, in `src/scraper/games.ts`. 19 Serebii pages
+  (the HOME list plus 18 game availability lists, fetched once a day at most) give each
+  game's sprite codes, which are the same codes as the HOME list. Resulting forms per
+  game: Let's Go 171, Sword/Shield 785, BDSP 535, Legends: Arceus 287, Scarlet/Violet
+  911, Legends Z-A 431. The rules, each with a test in `tests/scraper/games.test.ts`:
+  1. a species is in a game when its plain dex number, its default form, a number up
+     to `nationalDexUpTo` (BDSP: 493, for Darkrai, Shaymin, Arceus) or a region in
+     `speciesFollowsRegions` (Sword/Shield: `galar`) is shown; its default form follows;
+  2. a regional form (by name: "Galarian Form", not the slug) needs evidence for its own
+     region, or a game's `regionsFollowSpecies` (Let's Go: `alola`);
+  3. any other form is in when shown; when not shown it is out if the game lists that
+     species form by form, or if it is cosmetic and shown for another game (Cap Pikachu);
+     otherwise it follows its species (Rotom, Unown, Alcremie, Zygarde 10%).
+  Three depositable forms land in no game, as Serebii's pages say: Garden and Marine
+  Vivillon, Pom-Pom Oricorio. The build prints them every time.
+- **Not modelled:** origin restrictions (Let's Go only takes back Pokémon that came from
+  Let's Go; BDSP's one-per-save limit for Special Pokémon).
 - **Not started:** step 3, etymology from Bulbapedia.
-
-### Per-game HOME: the open decision
-
-About 14 Serebii pages cover the six HOME-connected Switch games (SV: Paldea, Kitakami,
-Blueberry, "not in Pokédex"; SwSh: Galar, Isle of Armor, Crown Tundra, "other available";
-BDSP: National, "transfer only"; Legends: Arceus: Hisui; Let's Go: Kanto; Legends Z-A:
-Lumiose, Hyperspace, "transfer only"). Options:
-
-1. **Species-level:** a form can enter a game when its species is listed there and the
-   form is depositable. Simple, but over-claims (e.g. a Galarian form in Legends: Arceus).
-2. **Evidence-only:** list a form only when that game's pages show its exact image code
-   (the default form when the species is listed). Never wrong, but under-claims cosmetic forms.
-3. **Evidence plus rules:** option 2, plus cosmetic forms (same types and stats as the
-   default) follow their species. Closest to reality; a few more lines of rules.
-
-Some games also restrict by *origin* (Let's Go only takes back Pokémon that came from
-Let's Go); that cannot be expressed per form and would be documented, not modelled.
 
 ## Left over from the audit (`AUDIT.md`)
 
