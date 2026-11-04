@@ -439,6 +439,59 @@ describe('GET /v1/pokedexes/:slug', () => {
     })
 })
 
+describe('GET /v1/forms', () => {
+    test('applies the /v1/pokemon page defaults and cap', async () => {
+        const { body } = await json('/v1/forms')
+
+        expect(body.meta).toEqual({ total: 13, limit: 20, offset: 0 })
+        expect((await json('/v1/forms?limit=500')).response.status).toBe(422)
+    })
+
+    test('depositable=false finds the blocked form of a species HOME accepts', async () => {
+        const { body } = await json('/v1/forms?depositable=false&gen=1')
+
+        expect(body.data.map((f: any) => [f.slug, f.species.slug, f.depositable])).toEqual([
+            ['pikachu-partner', 'pikachu', false]
+        ])
+        expect((await json('/v1/pokemon?depositable=false&gen=1')).body.meta.total).toBe(0)
+    })
+
+    test('passes every filter through the query string', async () => {
+        const slugs = async (query: string) => (await json(`/v1/forms?${query}`)).body.data.map((f: any) => f.slug)
+
+        expect(await slugs('homeGame=LEGENDS-ARCEUS&type=water')).toEqual(['rotom-wash'])
+        expect(await slugs('isDefault=false&gen=8')).toEqual(['urshifu-rapid-strike'])
+        expect((await json('/v1/forms?isDefault=maybe')).response.status).toBe(422)
+    })
+
+    test('paginates with the unpaginated total', async () => {
+        const { body } = await json('/v1/forms?limit=2&offset=11')
+
+        expect(body.meta).toEqual({ total: 13, limit: 2, offset: 11 })
+        expect(body.data.map((f: any) => f.slug)).toEqual(['ogerpon-teal', 'ogerpon-hearthflame'])
+    })
+})
+
+describe('GET /v1/forms/:slug', () => {
+    test("is the species document's form, plus its species", async () => {
+        const { response, body } = await json('/v1/forms/PIKACHU-PARTNER')
+        const { body: species } = await json('/v1/pokemon/pikachu')
+        const { species: owner, ...rest } = body
+
+        expect(response.status).toBe(200)
+        expect(rest).toEqual(species.forms.find((f: any) => f.slug === 'pikachu-partner'))
+        expect(owner).toEqual({ ndex: 25, slug: 'pikachu', name: species.name })
+    })
+
+    test('answers 404 as a problem for an unknown form', async () => {
+        const { response, body } = await json('/v1/forms/pikachu-cosplay')
+
+        expect(response.status).toBe(404)
+        expect(response.headers.get('content-type')).toBe('application/problem+json')
+        expect(body).toMatchObject({ status: 404, instance: '/v1/forms/pikachu-cosplay' })
+    })
+})
+
 describe('GET /v1/meta', () => {
     test('exposes dataset version, counts and provenance', async () => {
         const { body } = await json('/v1/meta')

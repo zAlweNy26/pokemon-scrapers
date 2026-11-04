@@ -7,6 +7,7 @@ import { errors } from '@/api/plugins/errors'
 import { documentation } from '@/api/plugins/openapi'
 import { globalRateLimit } from '@/api/plugins/rate-limit'
 
+import { forms } from '@/api/modules/forms'
 import { health } from '@/api/modules/health'
 import { meta } from '@/api/modules/meta'
 import { pokemon } from '@/api/modules/pokemon'
@@ -36,6 +37,7 @@ export const app = new Elysia({ adapter: CloudflareAdapter, aot: false })
             .use(cacheable)
             .use(globalRateLimit)
             .use(pokemon)
+            .use(forms)
             .use(search)
             .use(reference)
             .use(meta)

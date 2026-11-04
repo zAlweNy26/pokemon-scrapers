@@ -3,7 +3,7 @@ import {
     MAX_PAGE_SIZE, booleanString, categorySchema, namesSchema, paginationMeta, spritesSchema
 } from '@/api/models'
 
-const formSchema = z.object({
+export const formSchema = z.object({
     slug: z.string(),
     name: namesSchema,
     isDefault: z.boolean(),

@@ -5,6 +5,7 @@ import { form, pokemon as species } from '@/db/schema'
 import * as pokemon from '@/api/modules/pokemon/service'
 import * as search from '@/api/modules/search/service'
 import * as reference from '@/api/modules/reference/service'
+import * as forms from '@/api/modules/forms/service'
 
 const IMAGES = 'https://images.test'
 
@@ -416,5 +417,68 @@ describe('pokemon.pokedex', () => {
 
     test('reports nothing for a Pokédex no species is in', async () => {
         expect(await dex('johto')).toEqual({ total: 0, items: [] })
+    })
+})
+
+describe('forms.list', () => {
+    const formList = (filters: Partial<forms.FormFilters> = {}) =>
+        forms.list(db, { limit: 50, offset: 0, ...filters }, IMAGES)
+    const slugs = async (filters: Partial<forms.FormFilters>) => (await formList(filters)).items.map((item) => item.slug)
+
+    test('lists every form by dex number, default form first', async () => {
+        const { total, items } = await formList()
+
+        expect(total).toBe(13)
+        expect(items.slice(0, 4).map((item) => item.slug)).toEqual(['pikachu', 'pikachu-partner', 'raichu', 'gengar'])
+        expect(items[1]).toEqual({
+            slug: 'pikachu-partner',
+            name: expect.objectContaining({ en: 'Partner Pikachu', ja: null }),
+            species: { ndex: 25, slug: 'pikachu' },
+            isDefault: false,
+            depositable: false,
+            homeGames: [],
+            types: ['electric'],
+            sprites: expect.any(Object)
+        })
+        expect(items[0]?.homeGames).toEqual(['lets-go-pikachu-lets-go-eevee', 'scarlet-violet', 'sword-shield'])
+    })
+
+    test("depositable is the form's own flag, so it tells Pikachu apart from its blocked form", async () => {
+        // Pikachu and Greninja are depositable at species level; these two forms are not.
+        expect(await slugs({ depositable: false })).toEqual(['pikachu-partner', 'greninja-ash'])
+        expect(await slugs({ depositable: true })).toContain('pikachu')
+        expect((await formList({ depositable: true })).total).toBe(11)
+    })
+
+    test('filters by HOME game, type, generation and default flag, ignoring case', async () => {
+        expect(await slugs({ homeGame: 'Legends-Arceus' })).toEqual(['rotom', 'rotom-wash'])
+        expect(await slugs({ type: 'Water' })).toEqual([
+            'lapras', 'rotom-wash', 'greninja', 'greninja-ash', 'urshifu-rapid-strike'
+        ])
+        expect(await slugs({ gen: 1 })).toEqual(['pikachu', 'pikachu-partner', 'raichu', 'gengar', 'lapras'])
+        expect(await slugs({ isDefault: false })).toEqual([
+            'pikachu-partner', 'rotom-wash', 'greninja-ash', 'urshifu-rapid-strike', 'ogerpon-hearthflame'
+        ])
+    })
+
+    test('pages without changing the total', async () => {
+        const { total, items } = await formList({ limit: 2, offset: 1 })
+
+        expect(total).toBe(13)
+        expect(items.map((item) => item.slug)).toEqual(['pikachu-partner', 'raichu'])
+    })
+})
+
+describe('forms.detail', () => {
+    test("is the species document's form, plus its species", async () => {
+        const species = await pokemon.detail(db, (await pokemon.findSpecies(db, 'greninja'))!, IMAGES)
+        const { species: owner, ...rest } = (await forms.detail(db, 'Greninja-Ash', IMAGES))!
+
+        expect(rest).toEqual(species.forms.find((entry) => entry.slug === 'greninja-ash')!)
+        expect(owner).toEqual({ ndex: 658, slug: 'greninja', name: species.name })
+    })
+
+    test('returns undefined for an unknown slug', async () => {
+        expect(await forms.detail(db, 'pikachu-cosplay', IMAGES)).toBeUndefined()
     })
 })

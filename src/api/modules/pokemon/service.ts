@@ -1,12 +1,12 @@
-import { and, count, eq, exists, inArray, notExists, sql } from 'drizzle-orm'
+import { and, count, eq, exists, inArray, notExists, sql, type SQL } from 'drizzle-orm'
 import type { SelectResultFields } from 'drizzle-orm/query-builders/select.types'
 import { alias } from 'drizzle-orm/sqlite-core'
 import type { Db } from '@/db/client'
 import {
     ability, availability, encounter, evolution, form, formAbility, formHomeGame, formType, generation, pokedexEntry,
-    pokemon, pokemonDexNumber, pokemonEggGroup, pokemonOrigin, type Pokemon
+    pokemon, pokemonDexNumber, pokemonEggGroup, pokemonOrigin, type Form, type Pokemon
 } from '@/db/schema'
-import { categoriesOf, nameColumns, nameProjection, namesOf } from '@/api/names'
+import { categoriesOf, nameColumns, nameProjection, namesOf, type NameColumns } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
 
 export interface ListFilters {
@@ -57,7 +57,7 @@ const listColumns = {
 }
 
 /** Rows to a lookup of arrays, preserving the order the query returned them in. */
-const groupBy = <Row, Key, Value>(
+export const groupBy = <Row, Key, Value>(
     rows: Row[],
     keyOf: (row: Row) => Key,
     valueOf: (row: Row) => Value
@@ -224,7 +224,7 @@ const listItems = async (db: Db, rows: SelectResultFields<typeof listColumns>[],
 }
 
 /** Types for a set of forms, grouped by form id and ordered by slot. */
-const typesByForm = async (db: Db, formIds: number[]) => {
+export const typesByForm = async (db: Db, formIds: number[]) => {
     if (!formIds.length) return new Map<number, string[]>()
 
     const rows = await db
@@ -251,6 +251,93 @@ export const findSpecies = async (db: Db, idOrName: string): Promise<Pokemon | u
     return row
 }
 
+/**
+ * The types, abilities and HOME games of the forms `where` picks out, to spread
+ * into a batch. With `formDocuments`, the one definition of a published form, so
+ * /v1/pokemon/:idOrName and /v1/forms/:slug cannot drift apart.
+ */
+export const formFacts = (db: Db, where: SQL) =>
+    [
+        db
+            .select({ formId: formType.formId, slot: formType.slot, type: formType.type })
+            .from(formType)
+            .innerJoin(form, eq(form.id, formType.formId))
+            .where(where)
+            .orderBy(formType.formId, formType.slot),
+        db
+            .select({
+                formId: formAbility.formId,
+                slug: ability.slug,
+                ...nameColumns(ability),
+                isHidden: formAbility.isHidden
+            })
+            .from(formAbility)
+            .innerJoin(form, eq(form.id, formAbility.formId))
+            // Inner join is safe: the build fails if an ability has no name row.
+            .innerJoin(ability, eq(ability.slug, formAbility.ability))
+            .where(where)
+            .orderBy(formAbility.formId, formAbility.slot),
+        db
+            .select({ formId: formHomeGame.formId, game: formHomeGame.game })
+            .from(formHomeGame)
+            .innerJoin(form, eq(form.id, formHomeGame.formId))
+            .where(where)
+            .orderBy(formHomeGame.formId, formHomeGame.game)
+    ] as const
+
+/** Form rows and their `formFacts` rows, as published forms. */
+export const formDocuments = (
+    forms: Form[],
+    typeRows: { formId: number; type: string }[],
+    abilityRows: (NameColumns & { formId: number; slug: string; isHidden: boolean })[],
+    homeRows: { formId: number; game: string }[],
+    imageBaseUrl: string
+) => {
+    const types = groupBy(typeRows, (row) => row.formId, (row) => row.type)
+
+    const homeGames = groupBy(homeRows, (row) => row.formId, (row) => row.game)
+
+    const abilities = groupBy(
+        abilityRows,
+        (row) => row.formId,
+        (row) => ({ slug: row.slug, name: namesOf(row), hidden: row.isHidden })
+    )
+
+    return forms.map((entry) => ({
+        slug: entry.slug,
+        name: namesOf(entry),
+        isDefault: entry.isDefault,
+        depositable: entry.depositable,
+        homeGames: homeGames.get(entry.id) ?? [],
+        types: types.get(entry.id) ?? [],
+        abilities: abilities.get(entry.id) ?? [],
+        height: entry.heightM,
+        weight: entry.weightKg,
+        stats: {
+            hp: entry.hp,
+            atk: entry.atk,
+            def: entry.def,
+            spAtk: entry.spAtk,
+            spDef: entry.spDef,
+            spd: entry.spd
+        },
+        // The build writes all six or none.
+        evYield:
+            entry.evHp === null
+                ? null
+                : {
+                      hp: entry.evHp,
+                      atk: entry.evAtk!,
+                      def: entry.evDef!,
+                      spAtk: entry.evSpAtk!,
+                      spDef: entry.evSpDef!,
+                      spd: entry.evSpd!
+                  },
+        baseExperience: entry.baseExperience,
+        sprites: spritesFor(imageBaseUrl, entry.spriteKey)
+    }))
+}
+
 const evolvesFrom = alias(pokemon, 'evolves_from')
 const evolvesInto = alias(pokemon, 'evolves_into')
 const fromForm = alias(form, 'from_form')
@@ -267,31 +354,7 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
         forms, typeRows, abilityRows, homeRows, eggGroups, origins, encounters, dexNumbers, evolutions, entries, places
     ] = await db.batch([
         db.select().from(form).where(eq(form.ndex, ndex)).orderBy(sql`${form.isDefault} DESC`, form.id),
-        db
-            .select({ formId: formType.formId, slot: formType.slot, type: formType.type })
-            .from(formType)
-            .innerJoin(form, eq(form.id, formType.formId))
-            .where(eq(form.ndex, ndex))
-            .orderBy(formType.formId, formType.slot),
-        db
-            .select({
-                formId: formAbility.formId,
-                slug: ability.slug,
-                ...nameColumns(ability),
-                isHidden: formAbility.isHidden
-            })
-            .from(formAbility)
-            .innerJoin(form, eq(form.id, formAbility.formId))
-            // Inner join is safe: the build fails if an ability has no name row.
-            .innerJoin(ability, eq(ability.slug, formAbility.ability))
-            .where(eq(form.ndex, ndex))
-            .orderBy(formAbility.formId, formAbility.slot),
-        db
-            .select({ formId: formHomeGame.formId, game: formHomeGame.game })
-            .from(formHomeGame)
-            .innerJoin(form, eq(form.id, formHomeGame.formId))
-            .where(eq(form.ndex, ndex))
-            .orderBy(formHomeGame.formId, formHomeGame.game),
+        ...formFacts(db, eq(form.ndex, ndex)),
         db
             .select({ eggGroup: pokemonEggGroup.eggGroup })
             .from(pokemonEggGroup)
@@ -355,16 +418,6 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
             .orderBy(sql`rowid`)
     ])
 
-    const types = groupBy(typeRows, (row) => row.formId, (row) => row.type)
-
-    const homeGames = groupBy(homeRows, (row) => row.formId, (row) => row.game)
-
-    const abilities = groupBy(
-        abilityRows,
-        (row) => row.formId,
-        (row) => ({ slug: row.slug, name: namesOf(row), hidden: row.isHidden })
-    )
-
     return {
         ndex: species.ndex,
         slug: species.slug,
@@ -389,39 +442,7 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
         eggGroups: eggGroups.map((row) => row.eggGroup),
         origins: Object.fromEntries(origins.map((row) => [row.lang, row.note])),
         depositable: forms.some((entry) => entry.depositable),
-        forms: forms.map((entry) => ({
-            slug: entry.slug,
-            name: namesOf(entry),
-            isDefault: entry.isDefault,
-            depositable: entry.depositable,
-            homeGames: homeGames.get(entry.id) ?? [],
-            types: types.get(entry.id) ?? [],
-            abilities: abilities.get(entry.id) ?? [],
-            height: entry.heightM,
-            weight: entry.weightKg,
-            stats: {
-                hp: entry.hp,
-                atk: entry.atk,
-                def: entry.def,
-                spAtk: entry.spAtk,
-                spDef: entry.spDef,
-                spd: entry.spd
-            },
-            // The build writes all six or none.
-            evYield:
-                entry.evHp === null
-                    ? null
-                    : {
-                          hp: entry.evHp,
-                          atk: entry.evAtk!,
-                          def: entry.evDef!,
-                          spAtk: entry.evSpAtk!,
-                          spDef: entry.evSpDef!,
-                          spd: entry.evSpd!
-                      },
-            baseExperience: entry.baseExperience,
-            sprites: spritesFor(imageBaseUrl, entry.spriteKey)
-        })),
+        forms: formDocuments(forms, typeRows, abilityRows, homeRows, imageBaseUrl),
         // '' is the stored "none" for these key columns; the API says null.
         pokedexEntries: entries.map((row) => ({ game: row.game, form: row.form || null, text: row.text })),
         availability: places.map((row) => ({

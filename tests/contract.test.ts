@@ -30,6 +30,8 @@ describe('openapi document', () => {
         expect(Object.keys(spec.paths).sort()).toEqual([
             '/v1/abilities',
             '/v1/egg-groups',
+            '/v1/forms',
+            '/v1/forms/{slug}',
             '/v1/generations',
             '/v1/home-games',
             '/v1/meta',
@@ -52,6 +54,20 @@ describe('openapi document', () => {
         expect(Object.keys(operation.responses).sort()).toEqual(['200', '404', '422', '429'])
         expect(operation.responses['200'].content['application/json'].schema.$ref).toBe(
             '#/components/schemas/reference.pokedex'
+        )
+    })
+
+    test('documents the form filters and the form detail', () => {
+        const list = spec.paths['/v1/forms'].get
+        const detail = spec.paths['/v1/forms/{slug}'].get
+
+        expect(list.parameters.map((p: any) => p.name).sort()).toEqual([
+            'depositable', 'gen', 'homeGame', 'isDefault', 'limit', 'offset', 'type'
+        ])
+        expect(list.responses['200'].content['application/json'].schema.$ref).toBe('#/components/schemas/forms.list')
+        expect(Object.keys(detail.responses).sort()).toEqual(['200', '404', '422', '429'])
+        expect(detail.responses['200'].content['application/json'].schema.$ref).toBe(
+            '#/components/schemas/forms.detail'
         )
     })
 
