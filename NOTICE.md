@@ -11,6 +11,11 @@ under a permissive licence is taken from there instead.
 | [PokéAPI](https://github.com/PokeAPI/pokeapi) | BSD-3-Clause | Base dataset: species, forms, localised names and categories, stats, types, abilities, breeding data, encounters. Read from the repository's CSV files at a pinned commit — no requests to PokéAPI's servers |
 | [Bulbapedia](https://bulbapedia.bulbagarden.net/) | CC BY-NC-SA 2.5 | Name etymology in every language, from each species' page. Read through its MediaWiki API, 50 pages per request (~21 requests) with `maxlag=5`, at most once a month |
 | [Serebii](https://www.serebii.net/) | Used with permission — see below | Pokémon HOME depositability, and which HOME-connected games each form can move into |
+| [PokéAPI sprites](https://github.com/PokeAPI/sprites) | Repository CC0; artwork © The Pokémon Company | Official artwork, resized to WebP and served from the image bucket. Read from a git checkout at a pinned commit |
+
+The artwork is not licensed by anyone who can license it: it is The Pokémon
+Company's, and served here on the same non-commercial fan-use basis as PokéAPI
+serves it. It is not part of the CC BY-NC-SA dataset.
 
 ## Serebii
 

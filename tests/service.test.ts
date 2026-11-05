@@ -154,7 +154,7 @@ describe('pokemon.list', () => {
         expect(items[0]?.sprites).toEqual({
             '96': `${IMAGES}/pokemon/25/pikachu/96.webp`,
             '256': `${IMAGES}/pokemon/25/pikachu/256.webp`,
-            '512': `${IMAGES}/pokemon/25/pikachu/512.webp`
+            '475': `${IMAGES}/pokemon/25/pikachu/475.webp`
         })
     })
 })

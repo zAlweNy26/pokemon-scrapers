@@ -1,5 +1,5 @@
-/** Sizes produced by the scraper's Bun.Image ladder and uploaded to R2. */
-export const SPRITE_SIZES = [96, 256, 512] as const
+/** Sizes produced by `bun run data:sprites` and uploaded to R2. 475 is the official artwork's own size: never upscaled. */
+export const SPRITE_SIZES = [96, 256, 475] as const
 
 export type Sprites = Record<string, string>
 

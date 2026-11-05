@@ -16,6 +16,7 @@ import { fetchGameEvidence, homeGames } from './games'
 import { matchEntry } from './match'
 import { POKEAPI_COMMIT, checkoutPokeApi, readTable } from './pokeapi'
 import { fetchDepositable } from './serebii'
+import { SPRITES_COMMIT, artworkKeys, checkoutArtwork } from './sprites'
 import { insert, literal } from './sql'
 
 const DATASET = new URL('../../data/dataset.sql', import.meta.url).pathname
@@ -33,7 +34,8 @@ const fail = (message: string): never => {
 }
 
 await checkoutPokeApi()
-const data = await buildFromPokeApi()
+await checkoutArtwork()
+const data = await buildFromPokeApi(await artworkKeys())
 
 // HOME: which forms can be stored, from Serebii's box list.
 const { entries } = await fetchDepositable()
@@ -127,7 +129,7 @@ const tables: [string, Table][] = [
     ['form_home_game', formHomeGame],
     ['encounter', data.encounter],
     ['evolution', data.evolution],
-    ['meta', { columns: ['key', 'value'], rows: [['source_pokeapi', POKEAPI_COMMIT], ['source_serebii', serebiiHash], ['source_bulbapedia', bulbapediaHash]] }]
+    ['meta', { columns: ['key', 'value'], rows: [['source_pokeapi', POKEAPI_COMMIT], ['source_sprites', SPRITES_COMMIT], ['source_serebii', serebiiHash], ['source_bulbapedia', bulbapediaHash]] }]
 ]
 
 const body = [
@@ -179,6 +181,9 @@ for (const [game, { codes }] of evidence) {
 const placed = new Set(gameRows.map(([id]) => id))
 const nowhere = data.forms.filter((form) => depositable.has(form.id) && !placed.has(form.id))
 console.log(`    depositable but in no game: ${nowhere.length}`, nowhere.map((form) => form.slug).join(' '))
+const spriteColumn = data.form.columns.indexOf('sprite_key')
+const noArtwork = data.form.rows.filter((row) => row[spriteColumn] === null).map((row) => row[2])
+console.log(`  artwork: ${data.form.rows.length - noArtwork.length} of ${data.form.rows.length} forms`, noArtwork.join(' '))
 
 const byLanguage = Object.groupBy(origins.rows, ([, language]) => language as string)
 console.log(

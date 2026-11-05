@@ -7,6 +7,9 @@ The **dataset** served by this API is licensed under
 inherited from Bulbapedia, which is the most restrictive licence among its
 sources. See [`NOTICE.md`](./NOTICE.md) for the full source list.
 
+The **images** behind `sprites` URLs are not covered by this licence. They are
+official artwork © The Pokémon Company, and homedex cannot grant any rights to them.
+
 ## What that means for you
 
 You may use, copy, adapt and redistribute the data, provided you:

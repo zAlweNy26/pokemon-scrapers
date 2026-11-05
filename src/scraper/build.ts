@@ -78,7 +78,8 @@ const localized = (names: Map<string, Row> | undefined, field: string): Record<L
 
 const languageColumns = (prefix: string) => LANGUAGES.map((language) => `${prefix}_${language}`)
 
-export const buildFromPokeApi = async () => {
+/** `artwork`: the official-artwork file stems in PokeAPI/sprites, from `artworkKeys()`. */
+export const buildFromPokeApi = async (artwork: Set<string>) => {
     const [
         speciesRows, speciesNames, pokemonRows, formRows, formNames, generations, regions,
         pokemonTypes, formTypes, types, pokemonAbilities, abilities, pokemonStats,
@@ -224,6 +225,12 @@ export const buildFromPokeApi = async () => {
         const effort = new Map(statRows.map((stat) => [stat.stat_id, int(stat.effort) ?? 0]))
         const effortKnown = [...effort.values()].some(Boolean)
 
+        // PokeAPI/sprites names a variety's own form by its pokemon id and any other form
+        // `${ndex}-${form}`. A form with no artwork of its own (Scatterbug's patterns,
+        // Mothim's cloaks) looks like its variety, so it falls back to that.
+        const own = row.is_default === '1' ? row.pokemon_id! : `${ndex}-${row.form_identifier}`
+        const spriteKey = [own, row.pokemon_id!].find((key) => artwork.has(key)) ?? null
+
         form.rows.push([
             id, ndex, row.identifier!, ...Object.values(formNames), isDefault, false,
             // 0 is PokéAPI's "unknown" (Eternamax Eternatus weighs "???"), not a weight.
@@ -232,7 +239,7 @@ export const buildFromPokeApi = async () => {
             ...STAT_COLUMNS.map((_, index) => stats.get(String(index + 1)) ?? null),
             ...STAT_COLUMNS.map((_, index) => (effortKnown ? (effort.get(String(index + 1)) ?? 0) : null)),
             int(variety.base_experience),
-            null
+            spriteKey
         ])
 
         const typeRows = typesByForm.get(row.id!) ?? typesByPokemon.get(row.pokemon_id!) ?? []

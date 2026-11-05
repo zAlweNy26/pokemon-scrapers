@@ -103,6 +103,10 @@ export const check = (sqlite: Database): string[] => {
     )
     if (homeless) problems.push(`${homeless} HOME game rows belong to forms HOME cannot store`)
 
+    // Every form HOME can store has artwork today; a sprites bump that loses some should stop the build.
+    const unpictured = scalar('SELECT count(*) FROM form WHERE depositable = 1 AND sprite_key IS NULL')
+    if (unpictured) problems.push(`${unpictured} depositable forms have no artwork in PokeAPI/sprites`)
+
     // The name tables are not foreign keys; an identifier without a name would vanish from the API's joins.
     const unnamed = scalar(`SELECT
         (SELECT count(*) FROM form_type WHERE type NOT IN (SELECT slug FROM type)) +

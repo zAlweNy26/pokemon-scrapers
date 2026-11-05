@@ -44,6 +44,7 @@ uploads the Worker. Data is loaded separately, **before** deploying — see belo
 ```bash
 bun run data:build         # → data/dataset.sql + data/version.json, validated and diffed
 bun run data:check         # quality checks + every species through the API; writes .cache/homedex.sqlite
+bun run data:sprites       # artwork → R2 as {key}/{96,256,475}.webp; without S3_* in .env, to .cache/sprites-out/
 bun run data:load:local    # reset local D1 and load it; run `bun test` and try the API
 bun run data:load:remote   # load it into the real database
 # wait a minute, then: bun run deploy
@@ -63,6 +64,16 @@ stops with a non-zero exit and writes nothing if a Serebii entry cannot be match
 to a form — add an override in `src/scraper/match.ts` — or if the dataset fails a
 check (search index, one default form per species, stored counts). `DATA_VERSION`
 is a hash of the dataset, so ETags change exactly when the data does.
+
+Sprites are PokéAPI's official artwork, from a sparse checkout of
+[PokeAPI/sprites](https://github.com/PokeAPI/sprites) pinned in
+`src/scraper/sprites.ts`. The build stores each form's file stem as `sprite_key`
+(a form without artwork of its own uses its variety's); `data:sprites` resizes
+each one to WebP with `Bun.Image` and uploads it with `Bun.s3` to the bucket behind
+`IMAGE_BASE_URL`. It needs an R2 API token's S3 credentials in `.env`:
+`S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
+`S3_ENDPOINT=https://<account id>.r2.cloudflarestorage.com` and `S3_BUCKET`.
+Rerun it whenever a build changes the sprite keys.
 
 `data:check` exits non-zero on malformed data: broken references, values out of
 range, mojibake or leftover wiki markup in any of ~42,000 texts, a handful of
