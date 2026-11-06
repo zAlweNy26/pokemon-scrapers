@@ -39,6 +39,11 @@ The first run signs in to Cloudflare in the browser, creates the D1 database and
 records its id in `void.lock.json` (commit it), applies pending migrations, and
 uploads the Worker. Data is loaded separately, **before** deploying — see below.
 
+After that first deploy, `.github/workflows/deploy.yml` tests and deploys every push
+to `main`. Set the repository secret `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit,
+D1: Edit). A push that changes `data/version.json` is held: load the data, wait a
+minute, then run the workflow by hand (Actions → Deploy → Run workflow).
+
 ## Data
 
 ```bash
