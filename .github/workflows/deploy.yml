@@ -17,14 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
 
       # The first deploy creates the D1 database and writes its id to void.lock.json.
       # Run it locally and commit the lock, or every CI run would provision a new one.
+      # Only `resolved` gets the real id; `source` mirrors void.config.ts's 'local' placeholder.
       - name: Require a committed first deploy
         run: |
-          if grep -q '"database_id": "local"' void.lock.json; then
+          if ! jq -e '.resolved.d1_databases | all(.database_id != "local")' void.lock.json >/dev/null; then
             echo "::error::void.lock.json has no D1 id yet. Run 'bun run deploy' locally once and commit void.lock.json."
             exit 1
           fi
@@ -36,6 +35,11 @@ jobs:
         env:
           BEFORE: ${{ github.event.before }}
         run: |
+          # After a force-push the previous tip is on no branch; GitHub still serves it by SHA.
+          if ! git fetch -q --no-tags --depth=1 origin "$BEFORE"; then
+            echo "::error::Can't fetch the previous main ($BEFORE) to compare data/version.json. If the data is loaded, run this workflow manually."
+            exit 1
+          fi
           if ! git diff --quiet "$BEFORE" HEAD -- data/version.json; then
             echo "::error::data/version.json changed. Run 'bun run data:load:remote', wait a minute, then run this workflow manually."
             exit 1
@@ -53,6 +57,6 @@ jobs:
       - run: bun run typecheck
 
       # Applies pending D1 migrations, then uploads the Worker.
-      - run: bun run deploy -- --platform cloudflare
+      - run: bun run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

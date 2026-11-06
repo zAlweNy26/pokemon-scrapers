@@ -32,7 +32,7 @@ open  http://localhost:5173/docs                   # Scalar UI
 ## Deploy
 
 ```bash
-bun run deploy       # void deploy
+bun run deploy       # void deploy --platform cloudflare (skips the "link existing Worker" prompt)
 ```
 
 The first run signs in to Cloudflare in the browser, creates the D1 database and
@@ -51,7 +51,7 @@ bun run data:build         # → data/dataset.sql + data/version.json, validated
 bun run data:check         # quality checks + every species through the API; writes .cache/homedex.sqlite
 bun run data:sprites       # artwork → R2 as {key}/{96,256,475}.webp; without S3_* in .env, to .cache/sprites-out/
 bun run data:load:local    # reset local D1 and load it; run `bun test` and try the API
-bun run data:load:remote   # load it into the real database
+bun run data:load:remote   # load it into the real database (wrangler: void db execute passes the 8.6 MB file as one argument and hits E2BIG; the id is void.lock.json's D1)
 # wait a minute, then: bun run deploy
 ```
 
