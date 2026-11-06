@@ -2,6 +2,15 @@ import { Elysia } from 'elysia'
 import { openapi } from '@elysiajs/openapi'
 import { z } from 'zod'
 
+// Inline so the Worker serves no static asset. A house, not a Poke Ball: the API
+// is unaffiliated. The pink matches the sidebar accent in Elysia's Scalar theme.
+const favicon = `data:image/svg+xml,${encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">' +
+        '<rect width="32" height="32" rx="8" fill="#f06292"/>' +
+        '<path d="M16 6 5 15h3v11h6v-7h4v7h6V15h3z" fill="#fff"/>' +
+        '</svg>'
+)}`
+
 /**
  * Scalar UI at /docs, machine-readable spec at /openapi.json.
  *
@@ -26,6 +35,9 @@ export const documentation = new Elysia({ name: 'documentation' }).use(
                 z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' })
         },
         specPath: '/openapi.json',
+        // The <title> comes from info.title ("homedex"), which also names the spec;
+        // metaData overrides only the browser tab once Scalar loads.
+        scalar: { favicon, metaData: { title: 'homedex · API reference' } },
         exclude: { paths: ['/health'] },
         documentation: {
             info: {
