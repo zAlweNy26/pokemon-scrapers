@@ -51,7 +51,7 @@
       {
         "binding": "DB",
         "database_name": "homedex",
-        "database_id": "local",
+        "database_id": "30a87976-0a8e-4494-8c4b-eec46aaee36b",
         "migrations_dir": "src/db/migrations"
       }
     ],
@@ -72,7 +72,8 @@
           "period": 60
         }
       }
-    ]
+    ],
+    "account_id": "28f9d81693d9f738ed980133d3e09488"
   },
-  "text": "{\n  \"name\": \"homedex\",\n  \"cache\": {\n    \"enabled\": true,\n    \"cross_version_cache\": false\n  },\n  \"observability\": {\n    \"enabled\": true,\n    \"head_sampling_rate\": 1\n  },\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"homedex\",\n      \"database_id\": \"local\",\n      \"migrations_dir\": \"src/db/migrations\"\n    }\n  ],\n  \"ratelimits\": [\n    {\n      \"name\": \"RL_GLOBAL\",\n      \"namespace_id\": \"1001\",\n      \"simple\": {\n        \"limit\": 120,\n        \"period\": 60\n      }\n    },\n    {\n      \"name\": \"RL_SEARCH\",\n      \"namespace_id\": \"1002\",\n      \"simple\": {\n        \"limit\": 20,\n        \"period\": 60\n      }\n    }\n  ]\n}\n"
+  "text": "{\n  \"name\": \"homedex\",\n  \"cache\": {\n    \"enabled\": true,\n    \"cross_version_cache\": false\n  },\n  \"observability\": {\n    \"enabled\": true,\n    \"head_sampling_rate\": 1\n  },\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"homedex\",\n      \"database_id\": \"30a87976-0a8e-4494-8c4b-eec46aaee36b\",\n      \"migrations_dir\": \"src/db/migrations\"\n    }\n  ],\n  \"ratelimits\": [\n    {\n      \"name\": \"RL_GLOBAL\",\n      \"namespace_id\": \"1001\",\n      \"simple\": {\n        \"limit\": 120,\n        \"period\": 60\n      }\n    },\n    {\n      \"name\": \"RL_SEARCH\",\n      \"namespace_id\": \"1002\",\n      \"simple\": {\n        \"limit\": 20,\n        \"period\": 60\n      }\n    }\n  ],\n  \"account_id\": \"28f9d81693d9f738ed980133d3e09488\"\n}\n"
 }
