@@ -1,0 +1,58 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # The first deploy creates the D1 database and writes its id to void.lock.json.
+      # Run it locally and commit the lock, or every CI run would provision a new one.
+      - name: Require a committed first deploy
+        run: |
+          if grep -q '"database_id": "local"' void.lock.json; then
+            echo "::error::void.lock.json has no D1 id yet. Run 'bun run deploy' locally once and commit void.lock.json."
+            exit 1
+          fi
+
+      # DATA_VERSION is baked into the deploy: shipping a new one before the rows are
+      # loaded caches old rows under it. CI can't load data (dataset.sql is built locally).
+      - name: Hold deploys that change the dataset
+        if: github.event_name == 'push'
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if ! git diff --quiet "$BEFORE" HEAD -- data/version.json; then
+            echo "::error::data/version.json changed. Run 'bun run data:load:remote', wait a minute, then run this workflow manually."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - run: bun install --frozen-lockfile
+      - run: bun test
+      - run: bun run typecheck
+
+      # Applies pending D1 migrations, then uploads the Worker.
+      - run: bun run deploy -- --platform cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

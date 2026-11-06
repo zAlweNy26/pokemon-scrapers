@@ -1,20 +1,35 @@
 {
-  "name": "serebii-scraper",
-  "module": "index.ts",
+  "name": "homedex",
   "type": "module",
+  "private": true,
   "scripts": {
-    "scrape": "bun run pokemondb/general.ts && bun run details.ts"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/cli-progress": "^3.11.6"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "void deploy",
+    "typecheck": "void prepare && tsc --noEmit",
+    "test": "bun test",
+    "db:generate": "void db generate",
+    "db:migrate": "void db migrate",
+    "db:migrate:remote": "void db migrate --remote",
+    "db:seed": "void db seed --file data/seed.sql",
+    "data:build": "bun src/scraper/index.ts",
+    "data:check": "bun src/scraper/check.ts",
+    "data:sprites": "bun src/scraper/upload-sprites.ts",
+    "data:load:local": "void db seed --file data/dataset.sql",
+    "data:load:remote": "void db execute --remote --file data/dataset.sql"
   },
   "dependencies": {
-    "cheerio": "^1.0.0",
-    "cli-progress": "^3.12.0",
-    "mwn": "^2.0.4"
+    "@elysiajs/cors": "1.4.2",
+    "@elysiajs/openapi": "1.4.17",
+    "drizzle-orm": "^0.45.4",
+    "elysia": "1.4.30",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "void": "1.6.0"
   }
 }

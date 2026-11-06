@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1793792219176,
+      "tag": "20261104113659_initial_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793803575460,
+      "tag": "20261104144615_evolutions_dex_numbers_flags",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793804056974,
+      "tag": "20261104145416_localized_reference_names",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1793804669341,
+      "tag": "20261104150429_pokedex_entries_availability",
+      "breakpoints": true
+    }
+  ]
+}

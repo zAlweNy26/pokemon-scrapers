@@ -1,0 +1,143 @@
+CREATE TABLE `encounter` (
+	`ndex` integer NOT NULL,
+	`game` text NOT NULL,
+	`location` text NOT NULL,
+	`method` text NOT NULL,
+	PRIMARY KEY(`ndex`, `game`, `location`, `method`),
+	FOREIGN KEY (`ndex`) REFERENCES `pokemon`(`ndex`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `form` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`ndex` integer NOT NULL,
+	`slug` text NOT NULL,
+	`name_en` text NOT NULL,
+	`name_ja` text,
+	`name_ja_romaji` text,
+	`name_de` text,
+	`name_fr` text,
+	`name_it` text,
+	`name_es` text,
+	`name_ko` text,
+	`name_zh_hans` text,
+	`name_zh_hant` text,
+	`is_default` integer DEFAULT false NOT NULL,
+	`depositable` integer DEFAULT false NOT NULL,
+	`height_m` real,
+	`weight_kg` real,
+	`hp` integer,
+	`atk` integer,
+	`def` integer,
+	`sp_atk` integer,
+	`sp_def` integer,
+	`spd` integer,
+	`sprite_key` text,
+	FOREIGN KEY (`ndex`) REFERENCES `pokemon`(`ndex`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `form_slug_unique` ON `form` (`slug`);--> statement-breakpoint
+CREATE INDEX `form_ndex_idx` ON `form` (`ndex`);--> statement-breakpoint
+CREATE INDEX `form_depositable_idx` ON `form` (`depositable`);--> statement-breakpoint
+CREATE UNIQUE INDEX `form_one_default_idx` ON `form` (`ndex`) WHERE is_default = 1;--> statement-breakpoint
+CREATE TABLE `form_ability` (
+	`form_id` integer NOT NULL,
+	`slot` integer NOT NULL,
+	`ability` text NOT NULL,
+	`is_hidden` integer DEFAULT false NOT NULL,
+	PRIMARY KEY(`form_id`, `slot`),
+	FOREIGN KEY (`form_id`) REFERENCES `form`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `form_home_game` (
+	`form_id` integer NOT NULL,
+	`game` text NOT NULL,
+	PRIMARY KEY(`form_id`, `game`),
+	FOREIGN KEY (`form_id`) REFERENCES `form`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `form_type` (
+	`form_id` integer NOT NULL,
+	`slot` integer NOT NULL,
+	`type` text NOT NULL,
+	PRIMARY KEY(`form_id`, `slot`),
+	FOREIGN KEY (`form_id`) REFERENCES `form`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `form_type_type_idx` ON `form_type` (`type`);--> statement-breakpoint
+CREATE TABLE `generation` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`region` text NOT NULL,
+	`debut` integer NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `meta` (
+	`key` text PRIMARY KEY NOT NULL,
+	`value` text NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `pokemon` (
+	`ndex` integer PRIMARY KEY NOT NULL,
+	`slug` text NOT NULL,
+	`gen` integer NOT NULL,
+	`catch_rate` integer,
+	`base_friendship` integer,
+	`gender_rate` integer,
+	`egg_cycles` integer,
+	`name_en` text NOT NULL,
+	`name_ja` text,
+	`name_ja_romaji` text,
+	`name_de` text,
+	`name_fr` text,
+	`name_it` text,
+	`name_es` text,
+	`name_ko` text,
+	`name_zh_hans` text,
+	`name_zh_hant` text,
+	`category_en` text,
+	`category_ja` text,
+	`category_ja_romaji` text,
+	`category_de` text,
+	`category_fr` text,
+	`category_it` text,
+	`category_es` text,
+	`category_ko` text,
+	`category_zh_hans` text,
+	`category_zh_hant` text,
+	FOREIGN KEY (`gen`) REFERENCES `generation`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `pokemon_slug_unique` ON `pokemon` (`slug`);--> statement-breakpoint
+CREATE INDEX `pokemon_gen_idx` ON `pokemon` (`gen`);--> statement-breakpoint
+CREATE INDEX `pokemon_name_idx` ON `pokemon` (`name_en`);--> statement-breakpoint
+CREATE TABLE `pokemon_egg_group` (
+	`ndex` integer NOT NULL,
+	`egg_group` text NOT NULL,
+	PRIMARY KEY(`ndex`, `egg_group`),
+	FOREIGN KEY (`ndex`) REFERENCES `pokemon`(`ndex`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `pokemon_origin` (
+	`ndex` integer NOT NULL,
+	`lang` text NOT NULL,
+	`note` text NOT NULL,
+	PRIMARY KEY(`ndex`, `lang`),
+	FOREIGN KEY (`ndex`) REFERENCES `pokemon`(`ndex`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+-- Hand-added below this line: drizzle-kit cannot express FTS5 virtual tables, so
+-- this table is invisible to the schema snapshot. Keep it when regenerating.
+--
+-- The trigram tokenizer supports substring matching in any script, but cannot
+-- index queries shorter than 3 characters - two-character CJK queries are served
+-- by a LIKE prefix fallback in the search service instead.
+--
+-- This is an external-content index over `pokemon`: it is NOT kept in sync by
+-- triggers. A load ends with `INSERT INTO pokemon_fts(pokemon_fts) VALUES('rebuild')`,
+-- which is the only time `pokemon` changes.
+CREATE VIRTUAL TABLE pokemon_fts USING fts5(
+    slug, name_en, name_ja, name_ja_romaji, name_de, name_fr,
+    name_it, name_es, name_ko, name_zh_hans, name_zh_hant,
+    content='pokemon',
+    content_rowid='ndex',
+    tokenize='trigram'
+);
