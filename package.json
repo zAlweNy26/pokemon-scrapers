@@ -6,7 +6,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "void deploy",
+    "deploy": "void deploy --platform cloudflare",
     "typecheck": "void prepare && tsc --noEmit",
     "test": "bun test",
     "db:generate": "void db generate",

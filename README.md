@@ -32,7 +32,7 @@ open  http://localhost:5173/docs                   # Scalar UI
 ## Deploy
 
 ```bash
-bun run deploy       # void deploy
+bun run deploy       # void deploy --platform cloudflare (skips the "link existing Worker" prompt)
 ```
 
 The first run signs in to Cloudflare in the browser, creates the D1 database and
