@@ -66,16 +66,6 @@ export const identifiers = (rows: Row[]) => {
     return (id: string | undefined) => (id ? (byId.get(id) ?? null) : null)
 }
 
-const groupBy = (rows: Row[], key: string) => {
-    const groups = new Map<string, Row[]>()
-    for (const row of rows) {
-        const list = groups.get(row[key]!)
-        if (list) list.push(row)
-        else groups.set(row[key]!, [row])
-    }
-    return groups
-}
-
 /** `id → { languageId → row }` for a PokéAPI `*_names` table. */
 const byLanguage = (rows: Row[], key: string) => {
     const result = new Map<string, Map<string, Row>>()
@@ -197,10 +187,10 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
         rows: speciesEggGroups!.map((row) => [Number(row.species_id), eggGroupById.get(row.egg_group_id!)!.identifier!])
     }
 
-    const typesByPokemon = groupBy(pokemonTypes!, 'pokemon_id')
-    const typesByForm = groupBy(formTypes!, 'pokemon_form_id')
-    const abilitiesByPokemon = groupBy(pokemonAbilities!, 'pokemon_id')
-    const statsByPokemon = groupBy(pokemonStats!, 'pokemon_id')
+    const typesByPokemon = Map.groupBy(pokemonTypes!, (row) => row.pokemon_id!)
+    const typesByForm = Map.groupBy(formTypes!, (row) => row.pokemon_form_id!)
+    const abilitiesByPokemon = Map.groupBy(pokemonAbilities!, (row) => row.pokemon_id!)
+    const statsByPokemon = Map.groupBy(pokemonStats!, (row) => row.pokemon_id!)
 
     const forms: FormInfo[] = []
     const formFacts: Parameters<typeof categoryOf>[1][] = []
