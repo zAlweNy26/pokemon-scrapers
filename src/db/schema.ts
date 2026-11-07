@@ -285,18 +285,27 @@ export const formHomeGame = sqliteTable(
     (table) => [primaryKey({ columns: [table.formId, table.game] })]
 )
 
-/** Where a species is found: one row per (game, location, method), level ranges and slots collapsed. */
+/**
+ * Where a form is found: one row per (form, game, location, method), level ranges
+ * and slots collapsed. `ndex` is the form's species, kept for per-species reads.
+ */
 export const encounter = sqliteTable(
     'encounter',
     {
         ndex: integer('ndex')
             .notNull()
             .references(() => pokemon.ndex),
+        formId: integer('form_id')
+            .notNull()
+            .references(() => form.id),
         game: text('game').notNull(),
         location: text('location').notNull(),
         method: text('method').notNull()
     },
-    (table) => [primaryKey({ columns: [table.ndex, table.game, table.location, table.method] })]
+    (table) => [
+        primaryKey({ columns: [table.ndex, table.formId, table.game, table.location, table.method] }),
+        index('encounter_form_idx').on(table.formId)
+    ]
 )
 
 /** What an evolution method requires beyond its trigger; absent keys do not apply. Identifiers are PokéAPI's. */

@@ -11,7 +11,10 @@ const ENCOUNTER_GROUPS = [25, 42]
 /** pokeos names whose PokéAPI form slug is spelled differently. */
 const FORM_OVERRIDES: Record<string, string> = {
     'terapagos-tera': 'terapagos-terastal',
-    'eteral-floette-mega': 'floette-mega'
+    'eteral-floette-mega': 'floette-mega',
+    'tauros-paldea-aqua': 'tauros-paldea-aqua-breed',
+    'tauros-paldea-blaze': 'tauros-paldea-blaze-breed',
+    'tauros-paldea-combat': 'tauros-paldea-combat-breed'
 }
 
 /** One row of pokeos's `pokemon_data`: a species (`id` = `number`) or one of its forms. */
@@ -54,28 +57,35 @@ export const placeOf = ({ location_identifier: location, description }: Encounte
 
 const get = async (path: string) => JSON.parse((await fetchPage(`${API}/${path}`, { maxAgeDays: 30 })).body)
 
+type HomedexForm = { id: number; ndex: number; slug: string; isDefault: boolean }
+
 /**
- * Homedex form ids of the forms pokeos marks shiny-locked. A species row maps to
+ * The homedex form id a pokeos row stands for, or undefined. A species row maps to
  * its default form; a form row by name, since pokeos's form ids are not PokéAPI's.
- * `unmatched` lists pokeos forms homedex does not have (Ogerpon's Tera states).
  */
-export const shinyLockedForms = (
-    rows: PokeosRow[],
-    forms: { id: number; ndex: number; slug: string; isDefault: boolean }[],
-    speciesSlug: Map<number, string>
-) => {
+export const formResolver = (forms: HomedexForm[], speciesSlug: Map<number, string>) => {
     const bySlug = new Map(forms.map((form) => [form.slug, form.id]))
     const defaultOf = new Map(forms.filter((form) => form.isDefault).map((form) => [form.ndex, form.id]))
+
+    return (row: PokeosRow): number | undefined => {
+        if (row.id === row.number) return defaultOf.get(row.number)
+        const name = row.identifier.toLowerCase().replaceAll(' ', '-')
+        return bySlug.get(FORM_OVERRIDES[name] ?? name) ?? bySlug.get(`${speciesSlug.get(row.number)}-${row.form_identifier}`)
+    }
+}
+
+/**
+ * Homedex form ids of the forms pokeos marks shiny-locked. `unmatched` lists
+ * pokeos forms homedex does not have (Ogerpon's Tera states).
+ */
+export const shinyLockedForms = (rows: PokeosRow[], forms: HomedexForm[], speciesSlug: Map<number, string>) => {
+    const formOf = formResolver(forms, speciesSlug)
     const ids = new Set<number>()
     const unmatched: string[] = []
 
     for (const row of rows.filter((row) => row.is_shiny_locked === 1)) {
-        const name = row.identifier.toLowerCase().replaceAll(' ', '-')
-        const id =
-            row.id === row.number
-                ? defaultOf.get(row.number)
-                : (bySlug.get(FORM_OVERRIDES[name] ?? name) ?? bySlug.get(`${speciesSlug.get(row.number)}-${row.form_identifier}`))
-        if (id === undefined) unmatched.push(name)
+        const id = formOf(row)
+        if (id === undefined) unmatched.push(row.identifier.toLowerCase().replaceAll(' ', '-'))
         else ids.add(id)
     }
 
@@ -107,8 +117,9 @@ export const fetchPokeos = async () => {
         if (row.pronunciation)
             pronunciations.set(row.number, { respelling: row.pronunciation, ipa: row.ipa })
 
-    // [ndex, game, location, method], deduplicated like PokéAPI's rows in build.ts.
-    const encounters = new Map<string, [number, string, string, string]>()
+    // [ndex, pokeos id, game, location, method], deduplicated like PokéAPI's rows in build.ts;
+    // the pokeos id says which form (Alolan Vulpix), for `formResolver`.
+    const encounters = new Map<string, [number, number, string, string, string]>()
     for (const group of ENCOUNTER_GROUPS)
         for (const location of await get(`poke/encounters/locations?version_group_id=${group}&lang=en`)) {
             // Skipped before fetching: `anywhere-trade`, `-evolve`, `-breed`, `-event` are ways in, which availability covers.
@@ -120,7 +131,9 @@ export const fetchPokeos = async () => {
                 const ndex = ndexOf.get(row.pokemon_id)
                 const place = placeOf(row)
                 if (ndex === undefined || place === null) continue
-                const values: [number, string, string, string] = [ndex, row.version_identifier, place, row.method_identifier]
+                const values: [number, number, string, string, string] = [
+                    ndex, row.pokemon_id, row.version_identifier, place, row.method_identifier
+                ]
                 encounters.set(values.join('|'), values)
             }
         }

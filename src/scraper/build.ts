@@ -198,6 +198,8 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
 
     const forms: FormInfo[] = []
     const formFacts: Parameters<typeof categoryOf>[1][] = []
+    /** PokéAPI `pokemon.id` → its own default form's id: encounters are recorded per variety. */
+    const varietyForm = new Map<string, number>()
     const switchable = new Set(speciesRows!.filter((row) => row.forms_switchable === '1').map((row) => Number(row.id)))
     const form: Table = {
         columns: [
@@ -277,6 +279,7 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
             ])
 
         const english = formNamesById.get(row.id!)?.get('9')
+        if (row.is_default === '1') varietyForm.set(row.pokemon_id!, id)
         formFacts.push({ battleOnly: row.is_battle_only === '1', identifier: row.form_identifier ?? '', switchable: switchable.has(ndex) })
         forms.push({
             id, ndex, slug: row.identifier!, isDefault,
@@ -293,18 +296,19 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
     const defaults = new Map(forms.filter((entry) => entry.isDefault).map((entry) => [entry.ndex, entry]))
     form.rows.forEach((row, index) => row.push(categoryOf(forms[index]!, formFacts[index]!, defaults.get(forms[index]!.ndex))))
 
-    // Slot- and level-range rows collapse to one per (species, game, location, method).
+    // Slot- and level-range rows collapse to one per (form, game, location, method).
     const areaById = indexBy(locationAreas!, 'id')
     const locationById = indexBy(locations!, 'id')
     const slotById = indexBy(encounterSlots!, 'id')
     const methodById = indexBy(encounterMethods!, 'id')
     const versionById = indexBy(versions!, 'id')
     const seen = new Set<string>()
-    const encounter: Table = { columns: ['ndex', 'game', 'location', 'method'], rows: [] }
+    const encounter: Table = { columns: ['ndex', 'form_id', 'game', 'location', 'method'], rows: [] }
 
     for (const row of encounters!) {
         const values = [
             Number(pokemonById.get(row.pokemon_id!)!.species_id),
+            varietyForm.get(row.pokemon_id!)!,
             versionById.get(row.version_id!)!.identifier!,
             locationById.get(areaById.get(row.location_area_id!)!.location_id!)!.identifier!,
             methodById.get(slotById.get(row.encounter_slot_id!)!.encounter_method_id!)!.identifier!

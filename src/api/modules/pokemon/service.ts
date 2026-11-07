@@ -339,6 +339,24 @@ export const formDocuments = (
     }))
 }
 
+/**
+ * Encounters `where` picks out, each with the slug of the form found there, to put
+ * in a batch. The one definition, so /v1/pokemon/:idOrName and /v1/forms/:slug agree.
+ */
+export const encountersOf = (db: Db, where: SQL) =>
+    db
+        .select({
+            game: encounter.game,
+            location: encounter.location,
+            method: encounter.method,
+            // Renamed: D1 batches key rows by column name.
+            form: sql<string>`${form.slug}`.as('form_slug')
+        })
+        .from(encounter)
+        .innerJoin(form, eq(form.id, encounter.formId))
+        .where(where)
+        .orderBy(encounter.game, encounter.location, form.id)
+
 const evolvesFrom = alias(pokemon, 'evolves_from')
 const evolvesInto = alias(pokemon, 'evolves_into')
 const fromForm = alias(form, 'from_form')
@@ -392,15 +410,7 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
             .from(pokemonOrigin)
             .where(eq(pokemonOrigin.ndex, ndex))
             .orderBy(pokemonOrigin.lang),
-        db
-            .select({
-                game: encounter.game,
-                location: encounter.location,
-                method: encounter.method
-            })
-            .from(encounter)
-            .where(eq(encounter.ndex, ndex))
-            .orderBy(encounter.game, encounter.location),
+        encountersOf(db, eq(encounter.ndex, ndex)),
         db
             .select({ pokedex: pokemonDexNumber.pokedex, number: pokemonDexNumber.number })
             .from(pokemonDexNumber)
@@ -463,10 +473,6 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
             area: row.area,
             obtainable: row.obtainable
         })),
-        encounters: encounters.map((row) => ({
-            game: row.game,
-            location: row.location,
-            method: row.method
-        }))
+        encounters
     }
 }

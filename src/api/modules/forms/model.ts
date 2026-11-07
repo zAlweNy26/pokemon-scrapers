@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { booleanString, namesSchema, paginationMeta } from '@/api/models'
-import { formSchema, listQuery } from '@/api/modules/pokemon/model'
+import { encounterSchema, formSchema, listQuery } from '@/api/modules/pokemon/model'
 import { FORM_CATEGORIES } from '@/db/schema'
 
 const listItemSchema = formSchema
@@ -31,6 +31,7 @@ export const formsModels = {
     }),
 
     'forms.detail': formSchema.extend({
-        species: z.object({ ndex: z.number(), slug: z.string(), name: namesSchema })
+        species: z.object({ ndex: z.number(), slug: z.string(), name: namesSchema }),
+        encounters: z.array(encounterSchema).describe('Where this form itself is found, per game')
     })
 }

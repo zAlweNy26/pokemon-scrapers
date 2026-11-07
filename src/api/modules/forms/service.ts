@@ -3,7 +3,7 @@ import type { Db } from '@/db/client'
 import { form, formHomeGame, formType, pokemon, type FormCategory } from '@/db/schema'
 import { nameColumns, nameProjection, namesOf } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
-import { formDocuments, formFacts, groupBy, typesByForm } from '@/api/modules/pokemon/service'
+import { encountersOf, formDocuments, formFacts, groupBy, typesByForm } from '@/api/modules/pokemon/service'
 
 export interface FormFilters {
     gen?: number
@@ -115,19 +115,20 @@ export const detail = async (db: Db, slug: string, imageBaseUrl: string) => {
     // Slugs are stored lowercase; COLLATE NOCASE would skip the unique index and scan every form, five times.
     const where = eq(form.slug, slug.toLowerCase())
 
-    const [forms, species, typeRows, abilityRows, homeRows] = await db.batch([
+    const [forms, species, typeRows, abilityRows, homeRows, encounters] = await db.batch([
         db.select().from(form).where(where),
         db
             .select({ ndex: pokemon.ndex, slug: pokemon.slug, ...nameProjection })
             .from(pokemon)
             .innerJoin(form, eq(form.ndex, pokemon.ndex))
             .where(where),
-        ...formFacts(db, where)
+        ...formFacts(db, where),
+        encountersOf(db, where)
     ])
 
     const [document] = formDocuments(forms, typeRows, abilityRows, homeRows, imageBaseUrl)
     const [owner] = species
     if (!document || !owner) return undefined
 
-    return { ...document, species: { ndex: owner.ndex, slug: owner.slug, name: namesOf(owner) } }
+    return { ...document, species: { ndex: owner.ndex, slug: owner.slug, name: namesOf(owner) }, encounters }
 }

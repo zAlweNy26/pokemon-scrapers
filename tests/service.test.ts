@@ -524,10 +524,21 @@ describe('forms.list', () => {
 describe('forms.detail', () => {
     test("is the species document's form, plus its species", async () => {
         const species = await pokemon.detail(db, (await pokemon.findSpecies(db, 'greninja'))!, IMAGES)
-        const { species: owner, ...rest } = (await forms.detail(db, 'Greninja-Ash', IMAGES))!
+        const { species: owner, encounters, ...rest } = (await forms.detail(db, 'Greninja-Ash', IMAGES))!
 
         expect(rest).toEqual(species.forms.find((entry) => entry.slug === 'greninja-ash')!)
+        expect(encounters).toEqual([])
         expect(owner).toEqual({ ndex: 658, slug: 'greninja', name: species.name })
+    })
+
+    test("lists the form's own encounters, not its species'", async () => {
+        const rapid = await forms.detail(db, 'urshifu-rapid-strike', IMAGES)
+        const species = await pokemon.detail(db, (await pokemon.findSpecies(db, 'urshifu'))!, IMAGES)
+
+        expect(rapid?.encounters).toEqual([
+            { game: 'sword', location: 'tower-of-waters', method: 'gift', form: 'urshifu-rapid-strike' }
+        ])
+        expect(species.encounters.map((row) => row.form)).toEqual(['urshifu-single-strike', 'urshifu-rapid-strike'])
     })
 
     test('returns undefined for an unknown slug', async () => {

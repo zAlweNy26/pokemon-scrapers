@@ -173,13 +173,14 @@ INSERT INTO form_home_game (form_id, game) VALUES
     (9,'sword-shield'),(9,'scarlet-violet'),(10,'sword-shield'),(10,'scarlet-violet'),
     (11,'scarlet-violet'),(12,'scarlet-violet');
 
-INSERT INTO encounter (ndex, game, location, method) VALUES
-    (25,'red','viridian-forest','walk'),
-    (25,'scarlet','south-province-area-three','walk'),
-    (26,'red','kanto-power-plant','walk'),
-    (131,'red','silph-co','gift'),
-    (892,'sword','tower-of-darkness','gift'),
-    (1017,'scarlet','oni-mountain','only-one');
+INSERT INTO encounter (ndex, form_id, game, location, method) VALUES
+    (25,1,'red','viridian-forest','walk'),
+    (25,1,'scarlet','south-province-area-three','walk'),
+    (26,13,'red','kanto-power-plant','walk'),
+    (131,4,'red','silph-co','gift'),
+    (892,9,'sword','tower-of-darkness','gift'),
+    (892,10,'sword','tower-of-waters','gift'),
+    (1017,11,'scarlet','oni-mountain','only-one');
 
 -- From Pikachu's Bulbapedia page, in its order: oldest game first, forms after the species.
 INSERT INTO pokedex_entry (ndex, form, game, text) VALUES

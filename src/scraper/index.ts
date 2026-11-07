@@ -16,7 +16,7 @@ import { availabilityOf, dexEntriesOf } from './pokedex'
 import { fetchGameEvidence, homeGames } from './games'
 import { matchEntry } from './match'
 import { POKEAPI_COMMIT, checkoutPokeApi, readTable } from './pokeapi'
-import { fetchPokeos, shinyLockedForms } from './pokeos'
+import { fetchPokeos, formResolver, shinyLockedForms } from './pokeos'
 import { fetchDepositable } from './serebii'
 import { SPRITES_COMMIT, artworkKeys, checkoutArtwork } from './sprites'
 import { insert, literal } from './sql'
@@ -128,10 +128,21 @@ const shinyLocked = shinyLockedForms(pokeos.rows, data.forms, speciesSlug)
 data.form.columns.push('is_shiny_locked')
 for (const row of data.form.rows) row.push(shinyLocked.ids.has(row[0] as number))
 // Only games PokéAPI has no encounters for, so its rows take over once it has some.
-const pokeApiGames = new Set(data.encounter.rows.map((row) => row[1]))
-const pokeosEncounters = pokeos.encounters.filter(
-    ([ndex, game]) => speciesSlug.has(ndex) && versions.has(game) && !pokeApiGames.has(game)
-)
+const pokeApiGames = new Set(data.encounter.rows.map((row) => row[2]))
+const pokeosForm = formResolver(data.forms, speciesSlug)
+const pokeosRowById = new Map(pokeos.rows.map((row) => [row.id, row]))
+// A form homedex lacks is left out rather than filed under the species' default form, which would be wrong.
+const unplacedForms = new Set<string>()
+const pokeosEncounters = pokeos.encounters.flatMap(([ndex, pokeosId, game, location, method]) => {
+    if (!speciesSlug.has(ndex) || !versions.has(game) || pokeApiGames.has(game)) return []
+    const row = pokeosRowById.get(pokeosId)!
+    const formId = pokeosForm(row)
+    if (formId === undefined) {
+        unplacedForms.add(row.identifier)
+        return []
+    }
+    return [[ndex, formId, game, location, method]]
+})
 data.encounter.rows.push(...pokeosEncounters)
 const pokeosHash = new Bun.CryptoHasher('sha256')
     .update(JSON.stringify([[...pokeos.flags], [...pokeos.pronunciations], [...shinyLocked.ids], pokeosEncounters]))
@@ -226,10 +237,11 @@ console.log(`  Pokédex entries: ${pokedexEntry.rows.length}, game locations: ${
 console.log(`    labels that are not a main-series game, left out: ${[...skippedGames].join(', ')}`)
 console.log(
     `  pokeos: ${pokeos.pronunciations.size} pronunciations, ${shinyLocked.ids.size} shiny-locked forms,`,
-    `${pokeosEncounters.length} encounters (${Object.entries(Object.groupBy(pokeosEncounters, ([, game]) => game)).map(([game, rows]) => `${game} ${rows!.length}`).join(', ')})`
+    `${pokeosEncounters.length} encounters (${Object.entries(Object.groupBy(pokeosEncounters, ([, , game]) => game as string)).map(([game, rows]) => `${game} ${rows!.length}`).join(', ')})`
 )
 console.log(`    shiny-locked forms homedex does not have: ${shinyLocked.unmatched.join(' ') || 'none'}`)
-const pokeosDropped = pokeos.encounters.filter(([ndex, game]) => !speciesSlug.has(ndex) || !versions.has(game))
+if (unplacedForms.size) console.log(`  ⚠ pokeos encounters for forms homedex does not have, left out: ${[...unplacedForms].join(' ')}`)
+const pokeosDropped = pokeos.encounters.filter(([ndex, , game]) => !speciesSlug.has(ndex) || !versions.has(game))
 if (pokeosDropped.length)
     console.log(`  ⚠ pokeos encounters for an unknown species or game, left out: ${pokeosDropped.length}`, pokeosDropped.slice(0, 5).map((row) => row.join('/')).join(' '))
 if (unknownTemplates.size)

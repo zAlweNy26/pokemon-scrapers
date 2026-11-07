@@ -478,11 +478,12 @@ describe('GET /v1/forms/:slug', () => {
     test("is the species document's form, plus its species", async () => {
         const { response, body } = await json('/v1/forms/PIKACHU-PARTNER')
         const { body: species } = await json('/v1/pokemon/pikachu')
-        const { species: owner, ...rest } = body
+        const { species: owner, encounters, ...rest } = body
 
         expect(response.status).toBe(200)
         expect(rest).toEqual(species.forms.find((f: any) => f.slug === 'pikachu-partner'))
         expect(owner).toEqual({ ndex: 25, slug: 'pikachu', name: species.name })
+        expect(encounters).toEqual([])
     })
 
     test('answers 404 as a problem for an unknown form', async () => {
@@ -573,7 +574,7 @@ describe('GET /v1/meta', () => {
         const { body } = await json('/v1/meta')
 
         expect(body.dataVersion).toBe('test-0001')
-        expect(body.counts).toEqual({ pokemon: 8, forms: 13, encounters: 6 })
+        expect(body.counts).toEqual({ pokemon: 8, forms: 13, encounters: 7 })
         expect(Object.keys(body.sources)).toContain('source_serebii')
         expect(Object.keys(body.sources)).not.toContain('count_pokemon')
     })

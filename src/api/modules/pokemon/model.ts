@@ -87,6 +87,13 @@ export const evolutionStepSchema = z.object({
     conditions: evolutionConditionsSchema
 })
 
+export const encounterSchema = z.object({
+    game: z.string().describe('PokéAPI version identifier'),
+    location: z.string(),
+    method: z.string().nullable(),
+    form: z.string().describe('Slug of the form found there (`vulpix-alola`)')
+})
+
 export const listItemSchema = z.object({
     ndex: z.number(),
     slug: z.string(),
@@ -227,12 +234,6 @@ export const pokemonModels = {
                 })
             )
             .describe('Game locations for every main-series game and DLC, from Bulbapedia, oldest first'),
-        encounters: z.array(
-            z.object({
-                game: z.string(),
-                location: z.string(),
-                method: z.string().nullable()
-            })
-        )
+        encounters: z.array(encounterSchema)
     })
 }
