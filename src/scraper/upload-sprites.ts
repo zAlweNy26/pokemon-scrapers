@@ -1,11 +1,12 @@
 /**
  * `bun run data:sprites` - turns every `sprite_key` in data/dataset.sql into
- * `${key}/${size}.webp` for each of SPRITE_SIZES, from PokéAPI's official artwork.
+ * `${key}/${size}.webp` for each of SPRITE_SIZES, from PokéAPI's official artwork,
+ * and every `shiny_sprite_key` (`shiny/25`) the same way.
  *
  * With R2's S3 credentials in .env (S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY,
  * S3_ENDPOINT, S3_BUCKET) it uploads to the bucket; without them it writes to
  * .cache/sprites-out/ so the result can be inspected first. Every run rewrites
- * every object (~4,600 writes, well inside R2's free monthly operations).
+ * every object (~9,200 writes, well inside R2's free monthly operations).
  */
 import { SPRITE_SIZES } from '@/api/sprites'
 import { openDatabase } from './database'
@@ -18,7 +19,9 @@ const CONCURRENCY = 8
 await checkoutArtwork()
 const db = await openDatabase(await Bun.file(DATASET).text())
 const keys = db
-    .query<{ key: string }, []>('SELECT DISTINCT sprite_key AS key FROM form WHERE sprite_key IS NOT NULL')
+    .query<{ key: string }, []>(
+        'SELECT sprite_key AS key FROM form WHERE sprite_key IS NOT NULL UNION SELECT shiny_sprite_key FROM form WHERE shiny_sprite_key IS NOT NULL'
+    )
     .all()
     .map((row) => row.key)
 

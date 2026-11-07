@@ -36,6 +36,13 @@
       "when": 1794051895402,
       "tag": "20261107114455_pokeos_flags_pronunciation",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794056589453,
+      "tag": "20261107130309_shiny_sprites",
+      "breakpoints": true
     }
   ]
 }

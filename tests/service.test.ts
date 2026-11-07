@@ -219,6 +219,7 @@ describe('pokemon.detail', () => {
 
         expect(ash?.depositable).toBe(false)
         expect(ash?.sprites).toBeNull()
+        expect(ash?.shinySprites).toBeNull()
         expect(result.depositable).toBe(true)
     })
 
@@ -477,7 +478,12 @@ describe('forms.list', () => {
             depositable: false,
             homeGames: [],
             types: ['electric'],
-            sprites: expect.any(Object)
+            sprites: expect.any(Object),
+            shinySprites: {
+                '96': `${IMAGES}/shiny/pokemon/25/pikachu-partner/96.webp`,
+                '256': `${IMAGES}/shiny/pokemon/25/pikachu-partner/256.webp`,
+                '475': `${IMAGES}/shiny/pokemon/25/pikachu-partner/475.webp`
+            }
         })
         expect(items[0]?.homeGames).toEqual(['lets-go-pikachu-lets-go-eevee', 'scarlet-violet', 'sword-shield'])
     })

@@ -223,7 +223,9 @@ export const form = sqliteTable(
         evSpd: integer('ev_spd'),
         baseExperience: integer('base_experience'),
         /** Object prefix in the R2 image bucket; null when no artwork is published. */
-        spriteKey: text('sprite_key')
+        spriteKey: text('sprite_key'),
+        /** The shiny artwork's prefix (`shiny/25`), from the same picture as `spriteKey`; null when there is none. */
+        shinySpriteKey: text('shiny_sprite_key')
     },
     (table) => [
         index('form_ndex_idx').on(table.ndex),

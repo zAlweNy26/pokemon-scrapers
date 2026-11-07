@@ -59,7 +59,8 @@ export const list = async (db: Db, filters: FormFilters, imageBaseUrl: string) =
                 speciesSlug: sql<string>`${pokemon.slug}`.as('species_slug'),
                 isDefault: form.isDefault,
                 depositable: form.depositable,
-                spriteKey: form.spriteKey
+                spriteKey: form.spriteKey,
+                shinySpriteKey: form.shinySpriteKey
             })
             .from(form)
             .innerJoin(pokemon, eq(pokemon.ndex, form.ndex))
@@ -82,7 +83,8 @@ export const list = async (db: Db, filters: FormFilters, imageBaseUrl: string) =
             depositable: row.depositable,
             homeGames: homeGames.get(row.id) ?? [],
             types: types.get(row.id) ?? [],
-            sprites: spritesFor(imageBaseUrl, row.spriteKey)
+            sprites: spritesFor(imageBaseUrl, row.spriteKey),
+            shinySprites: spritesFor(imageBaseUrl, row.shinySpriteKey)
         }))
     }
 }

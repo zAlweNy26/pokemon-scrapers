@@ -1,0 +1,1 @@
+ALTER TABLE `form` ADD `shiny_sprite_key` text;

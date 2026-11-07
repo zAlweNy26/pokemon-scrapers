@@ -3,7 +3,7 @@ import { booleanString, namesSchema, paginationMeta } from '@/api/models'
 import { formSchema, listQuery } from '@/api/modules/pokemon/model'
 
 const listItemSchema = formSchema
-    .pick({ slug: true, name: true, isDefault: true, depositable: true, homeGames: true, types: true, sprites: true })
+    .pick({ slug: true, name: true, isDefault: true, depositable: true, homeGames: true, types: true, sprites: true, shinySprites: true })
     .extend({ species: z.object({ ndex: z.number(), slug: z.string() }) })
 
 /** Input schemas stay values, not named models: see `listQuery`. */

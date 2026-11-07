@@ -333,7 +333,8 @@ export const formDocuments = (
                       spd: entry.evSpd!
                   },
         baseExperience: entry.baseExperience,
-        sprites: spritesFor(imageBaseUrl, entry.spriteKey)
+        sprites: spritesFor(imageBaseUrl, entry.spriteKey),
+        shinySprites: spritesFor(imageBaseUrl, entry.shinySpriteKey)
     }))
 }
 

@@ -120,21 +120,21 @@ INSERT INTO pokemon_origin (ndex, lang, note) VALUES
 
 INSERT INTO form
     (id, ndex, slug, name_en, name_ja, is_default, depositable, height_m, weight_kg, hp, atk, def, sp_atk, sp_def, spd,
-     ev_hp, ev_atk, ev_def, ev_sp_atk, ev_sp_def, ev_spd, base_experience, sprite_key)
+     ev_hp, ev_atk, ev_def, ev_sp_atk, ev_sp_def, ev_spd, base_experience, sprite_key, shiny_sprite_key)
 VALUES
-    (1,  25,  'pikachu',                 'Pikachu',             'ピカチュウ',       1, 1, 0.4,  6.0,  35, 55, 40, 50, 50,  90, 0, 0, 0, 0, 0, 2, 112, 'pokemon/25/pikachu'),
-    (2,  25,  'pikachu-partner',         'Partner Pikachu',     NULL,              0, 0, 0.4,  6.0,  45, 80, 50, 75, 60, 120, 0, 0, 0, 0, 0, 2, 112, 'pokemon/25/pikachu-partner'),
-    (13, 26,  'raichu',                  'Raichu',              'ライチュウ',       1, 1, 0.8, 30.0,  60, 90, 55, 90, 80, 110, 0, 0, 0, 0, 0, 3, 218, 'pokemon/26/raichu'),
-    (3,  94,  'gengar',                  'Gengar',              'ゲンガー',         1, 1, 1.5, 40.5,  60, 65, 60, 130, 75, 110, 0, 0, 0, 3, 0, 0, 225, 'pokemon/94/gengar'),
-    (4,  131, 'lapras',                  'Lapras',              'ラプラス',         1, 1, 2.5, 220.0, 130, 85, 80, 85, 95,  60, 2, 0, 0, 0, 0, 0, 187, 'pokemon/131/lapras'),
-    (5,  479, 'rotom',                   'Rotom',               'ロトム',           1, 1, 0.3,  0.3,  50, 50, 77, 95, 77,  91, 0, 0, 0, 1, 0, 1, 154, 'pokemon/479/rotom'),
-    (6,  479, 'rotom-wash',              'Wash Rotom',          'ウォッシュロトム', 0, 1, 0.3,  0.3,  50, 65, 107, 105, 107, 86, 0, 0, 0, 1, 0, 1, 182, 'pokemon/479/rotom-wash'),
-    (7,  658, 'greninja',                'Greninja',            'ゲッコウガ',       1, 1, 1.5, 40.0,  72, 95, 67, 103, 71, 122, 0, 0, 0, 0, 0, 3, 239, 'pokemon/658/greninja'),
-    (8,  658, 'greninja-ash',            'Ash-Greninja',        'サトシゲッコウガ', 0, 0, 1.5, 40.0,  72, 145, 67, 153, 71, 132, 0, 0, 0, 0, 0, 3, 288, NULL),
-    (9,  892, 'urshifu-single-strike',   'Single Strike Style', NULL,              1, 1, 1.9, 105.0, 100, 130, 100, 63, 60, 97, 0, 3, 0, 0, 0, 0, 275, 'pokemon/892/urshifu-single-strike'),
-    (10, 892, 'urshifu-rapid-strike',    'Rapid Strike Style',  NULL,              0, 1, 1.9, 105.0, 100, 130, 100, 63, 60, 97, 0, 3, 0, 0, 0, 0, 275, 'pokemon/892/urshifu-rapid-strike'),
-    (11, 1017,'ogerpon-teal',            'Teal Mask',           NULL,              1, 1, 1.2, 39.8,  80, 120, 84, 60, 96, 110, 0, 3, 0, 0, 0, 0, 275, 'pokemon/1017/ogerpon-teal'),
-    (12, 1017,'ogerpon-hearthflame',     'Hearthflame Mask',    NULL,              0, 1, 1.2, 39.8,  80, 120, 84, 60, 96, 110, 0, 3, 0, 0, 0, 0, 275, 'pokemon/1017/ogerpon-hearthflame');
+    (1,  25,  'pikachu',                 'Pikachu',             'ピカチュウ',       1, 1, 0.4,  6.0,  35, 55, 40, 50, 50,  90, 0, 0, 0, 0, 0, 2, 112, 'pokemon/25/pikachu', 'shiny/pokemon/25/pikachu'),
+    (2,  25,  'pikachu-partner',         'Partner Pikachu',     NULL,              0, 0, 0.4,  6.0,  45, 80, 50, 75, 60, 120, 0, 0, 0, 0, 0, 2, 112, 'pokemon/25/pikachu-partner', 'shiny/pokemon/25/pikachu-partner'),
+    (13, 26,  'raichu',                  'Raichu',              'ライチュウ',       1, 1, 0.8, 30.0,  60, 90, 55, 90, 80, 110, 0, 0, 0, 0, 0, 3, 218, 'pokemon/26/raichu', 'shiny/pokemon/26/raichu'),
+    (3,  94,  'gengar',                  'Gengar',              'ゲンガー',         1, 1, 1.5, 40.5,  60, 65, 60, 130, 75, 110, 0, 0, 0, 3, 0, 0, 225, 'pokemon/94/gengar', 'shiny/pokemon/94/gengar'),
+    (4,  131, 'lapras',                  'Lapras',              'ラプラス',         1, 1, 2.5, 220.0, 130, 85, 80, 85, 95,  60, 2, 0, 0, 0, 0, 0, 187, 'pokemon/131/lapras', 'shiny/pokemon/131/lapras'),
+    (5,  479, 'rotom',                   'Rotom',               'ロトム',           1, 1, 0.3,  0.3,  50, 50, 77, 95, 77,  91, 0, 0, 0, 1, 0, 1, 154, 'pokemon/479/rotom', 'shiny/pokemon/479/rotom'),
+    (6,  479, 'rotom-wash',              'Wash Rotom',          'ウォッシュロトム', 0, 1, 0.3,  0.3,  50, 65, 107, 105, 107, 86, 0, 0, 0, 1, 0, 1, 182, 'pokemon/479/rotom-wash', 'shiny/pokemon/479/rotom-wash'),
+    (7,  658, 'greninja',                'Greninja',            'ゲッコウガ',       1, 1, 1.5, 40.0,  72, 95, 67, 103, 71, 122, 0, 0, 0, 0, 0, 3, 239, 'pokemon/658/greninja', 'shiny/pokemon/658/greninja'),
+    (8,  658, 'greninja-ash',            'Ash-Greninja',        'サトシゲッコウガ', 0, 0, 1.5, 40.0,  72, 145, 67, 153, 71, 132, 0, 0, 0, 0, 0, 3, 288, NULL, NULL),
+    (9,  892, 'urshifu-single-strike',   'Single Strike Style', NULL,              1, 1, 1.9, 105.0, 100, 130, 100, 63, 60, 97, 0, 3, 0, 0, 0, 0, 275, 'pokemon/892/urshifu-single-strike', 'shiny/pokemon/892/urshifu-single-strike'),
+    (10, 892, 'urshifu-rapid-strike',    'Rapid Strike Style',  NULL,              0, 1, 1.9, 105.0, 100, 130, 100, 63, 60, 97, 0, 3, 0, 0, 0, 0, 275, 'pokemon/892/urshifu-rapid-strike', 'shiny/pokemon/892/urshifu-rapid-strike'),
+    (11, 1017,'ogerpon-teal',            'Teal Mask',           NULL,              1, 1, 1.2, 39.8,  80, 120, 84, 60, 96, 110, 0, 3, 0, 0, 0, 0, 275, 'pokemon/1017/ogerpon-teal', 'shiny/pokemon/1017/ogerpon-teal'),
+    (12, 1017,'ogerpon-hearthflame',     'Hearthflame Mask',    NULL,              0, 1, 1.2, 39.8,  80, 120, 84, 60, 96, 110, 0, 3, 0, 0, 0, 0, 275, 'pokemon/1017/ogerpon-hearthflame', 'shiny/pokemon/1017/ogerpon-hearthflame');
 
 INSERT INTO form_type (form_id, slot, type) VALUES
     (1,1,'electric'),(2,1,'electric'),(13,1,'electric'),

@@ -30,7 +30,8 @@ export const formSchema = z.object({
         .nullable()
         .describe('Effort values earned for defeating this form; null when the source does not have them yet'),
     baseExperience: z.number().nullable(),
-    sprites: spritesSchema
+    sprites: spritesSchema,
+    shinySprites: spritesSchema.describe('Like `sprites`, for the shiny colouring; null when no shiny artwork is published')
 })
 
 const evolutionConditionsSchema = z

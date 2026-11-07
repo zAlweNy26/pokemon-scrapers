@@ -214,6 +214,9 @@ console.log(`    depositable but in no game: ${nowhere.length}`, nowhere.map((fo
 const spriteColumn = data.form.columns.indexOf('sprite_key')
 const noArtwork = data.form.rows.filter((row) => row[spriteColumn] === null).map((row) => row[2])
 console.log(`  artwork: ${data.form.rows.length - noArtwork.length} of ${data.form.rows.length} forms`, noArtwork.join(' '))
+const shinyColumn = data.form.columns.indexOf('shiny_sprite_key')
+const noShiny = data.form.rows.filter((row) => row[spriteColumn] !== null && row[shinyColumn] === null).map((row) => row[2])
+console.log(`    with artwork but no shiny: ${noShiny.length}`, noShiny.join(' '))
 
 const byLanguage = Object.groupBy(origins.rows, ([, language]) => language as string)
 console.log(

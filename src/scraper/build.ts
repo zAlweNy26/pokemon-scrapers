@@ -181,7 +181,7 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
         columns: [
             'id', 'ndex', 'slug', ...languageColumns('name'), 'is_default', 'depositable',
             'height_m', 'weight_kg', ...STAT_COLUMNS, ...STAT_COLUMNS.map((stat) => `ev_${stat}`),
-            'base_experience', 'sprite_key'
+            'base_experience', 'sprite_key', 'shiny_sprite_key'
         ],
         rows: []
     }
@@ -230,6 +230,8 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
         // Mothim's cloaks) looks like its variety, so it falls back to that.
         const own = row.is_default === '1' ? row.pokemon_id! : `${ndex}-${row.form_identifier}`
         const spriteKey = [own, row.pokemon_id!].find((key) => artwork.has(key)) ?? null
+        // The shiny of the same picture, never another form's: Mothim's cloaks share one.
+        const shinySpriteKey = spriteKey && artwork.has(`shiny/${spriteKey}`) ? `shiny/${spriteKey}` : null
 
         form.rows.push([
             id, ndex, row.identifier!, ...Object.values(formNames), isDefault, false,
@@ -239,7 +241,8 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
             ...STAT_COLUMNS.map((_, index) => stats.get(String(index + 1)) ?? null),
             ...STAT_COLUMNS.map((_, index) => (effortKnown ? (effort.get(String(index + 1)) ?? 0) : null)),
             int(variety.base_experience),
-            spriteKey
+            spriteKey,
+            shinySpriteKey
         ])
 
         const typeRows = typesByForm.get(row.id!) ?? typesByPokemon.get(row.pokemon_id!) ?? []
