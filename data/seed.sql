@@ -6,6 +6,7 @@
 
 DELETE FROM evolution;
 DELETE FROM encounter;
+DELETE FROM form_shiny;
 DELETE FROM form_home_game;
 DELETE FROM form_ability;
 DELETE FROM form_type;
@@ -172,6 +173,11 @@ INSERT INTO form_home_game (form_id, game) VALUES
     (7,'scarlet-violet'),(7,'legends-za'),
     (9,'sword-shield'),(9,'scarlet-violet'),(10,'sword-shield'),(10,'scarlet-violet'),
     (11,'scarlet-violet'),(12,'scarlet-violet');
+
+-- As Bulbapedia's list of unobtainable shinies has them: Ogerpon locked in Generation IX, every mask.
+INSERT INTO form_shiny (form_id, generation, status, games) VALUES
+    (11, 9, 'unobtainable', NULL),
+    (12, 9, 'unobtainable', NULL);
 
 INSERT INTO encounter (ndex, form_id, game, location, method) VALUES
     (25,1,'red','viridian-forest','walk'),

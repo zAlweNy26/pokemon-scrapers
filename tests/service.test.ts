@@ -225,7 +225,18 @@ describe('pokemon.detail', () => {
         expect(ash?.depositable).toBe(false)
         expect(ash?.sprites).toBeNull()
         expect(ash?.shinySprites).toBeNull()
+        expect(ash?.shinyAvailability).toEqual([])
         expect(result.depositable).toBe(true)
+    })
+
+    test('gives shiny availability per form, empty when nothing is known', async () => {
+        const result = await pokemon.detail(db, (await pokemon.findSpecies(db, 'ogerpon'))!, IMAGES)
+
+        expect(result.forms.map((form) => form.shinyAvailability)).toEqual([
+            [{ generation: 9, status: 'unobtainable', games: null }],
+            [{ generation: 9, status: 'unobtainable', games: null }]
+        ])
+        expect((await forms.detail(db, 'pikachu', IMAGES))?.shinyAvailability).toEqual([])
     })
 
     test('flags hidden abilities', async () => {

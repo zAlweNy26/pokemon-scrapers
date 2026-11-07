@@ -88,6 +88,8 @@ const render = (inner: string, unknown: Set<string>): string => {
     // Colour helpers ({{normal color dark}}) only feed styles; version marks
     // ({{sup/t|N}}) are footnotes the text reads fine without.
     if (SILENT.has(name) || / colou?r( dark| light)?$/.test(name) || name.startsWith('sup/') || name.startsWith('locationcolor')) return ''
+    // {{gameabbrev4|Pt}}, {{gameabbrevss|GO}}: a game's abbreviation, spaced so runs of them stay apart.
+    if (/^gameabbrev(\d+|ss)$/.test(name)) return ` ${positional.at(-1) ?? ''} `
     if (!KNOWN.has(name)) unknown.add(rawName.trim())
 
     switch (name) {

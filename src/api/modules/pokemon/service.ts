@@ -3,8 +3,8 @@ import type { SelectResultFields } from 'drizzle-orm/query-builders/select.types
 import { alias } from 'drizzle-orm/sqlite-core'
 import type { Db } from '@/db/client'
 import {
-    ability, availability, encounter, evolution, form, formAbility, formHomeGame, formType, generation, pokedexEntry,
-    pokemon, pokemonDexNumber, pokemonEggGroup, pokemonOrigin, type Form, type Pokemon
+    ability, availability, encounter, evolution, form, formAbility, formHomeGame, formShiny, formType, generation, pokedexEntry,
+    pokemon, pokemonDexNumber, pokemonEggGroup, pokemonOrigin, type Form, type Pokemon, type ShinyStatus
 } from '@/db/schema'
 import { categoriesOf, nameColumns, nameProjection, namesOf, type NameColumns } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
@@ -289,7 +289,13 @@ export const formFacts = (db: Db, where: SQL) =>
             .from(formHomeGame)
             .innerJoin(form, eq(form.id, formHomeGame.formId))
             .where(where)
-            .orderBy(formHomeGame.formId, formHomeGame.game)
+            .orderBy(formHomeGame.formId, formHomeGame.game),
+        db
+            .select({ formId: formShiny.formId, generation: formShiny.generation, status: formShiny.status, games: formShiny.games })
+            .from(formShiny)
+            .innerJoin(form, eq(form.id, formShiny.formId))
+            .where(where)
+            .orderBy(formShiny.formId, formShiny.generation)
     ] as const
 
 /** Form rows and their `formFacts` rows, as published forms. */
@@ -298,11 +304,14 @@ export const formDocuments = (
     typeRows: { formId: number; type: string }[],
     abilityRows: (NameColumns & { formId: number; slug: string; isHidden: boolean })[],
     homeRows: { formId: number; game: string }[],
+    shinyRows: { formId: number; generation: number; status: ShinyStatus; games: string | null }[],
     imageBaseUrl: string
 ) => {
     const types = groupBy(typeRows, (row) => row.formId, (row) => row.type)
 
     const homeGames = groupBy(homeRows, (row) => row.formId, (row) => row.game)
+
+    const shiny = groupBy(shinyRows, (row) => row.formId, ({ generation, status, games }) => ({ generation, status, games }))
 
     const abilities = groupBy(
         abilityRows,
@@ -317,6 +326,7 @@ export const formDocuments = (
         category: entry.category,
         depositable: entry.depositable,
         isShinyLocked: entry.isShinyLocked,
+        shinyAvailability: shiny.get(entry.id) ?? [],
         homeGames: homeGames.get(entry.id) ?? [],
         types: types.get(entry.id) ?? [],
         abilities: abilities.get(entry.id) ?? [],
@@ -398,14 +408,14 @@ export const evolutionSteps = (db: Db, chain: number) =>
         .orderBy(evolution.id)
 
 /**
- * The full document in one round trip. Eleven statements are cheaper batched than
+ * The full document in one round trip. Twelve statements are cheaper batched than
  * awaited in sequence, and this is the endpoint most likely to miss the cache.
  */
 export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => {
     const { ndex } = species
 
     const [
-        forms, typeRows, abilityRows, homeRows, eggGroups, origins, encounters, dexNumbers, evolutions, entries, places
+        forms, typeRows, abilityRows, homeRows, shinyRows, eggGroups, origins, encounters, dexNumbers, evolutions, entries, places
     ] = await db.batch([
         db.select().from(form).where(eq(form.ndex, ndex)).orderBy(sql`${form.isDefault} DESC`, form.id),
         ...formFacts(db, eq(form.ndex, ndex)),
@@ -474,7 +484,7 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
         eggGroups: eggGroups.map((row) => row.eggGroup),
         origins: Object.fromEntries(origins.map((row) => [row.lang, row.note])),
         depositable: forms.some((entry) => entry.depositable),
-        forms: formDocuments(forms, typeRows, abilityRows, homeRows, imageBaseUrl),
+        forms: formDocuments(forms, typeRows, abilityRows, homeRows, shinyRows, imageBaseUrl),
         // '' is the stored "none" for these key columns; the API says null.
         pokedexEntries: entries.map((row) => ({ game: row.game, form: row.form || null, text: row.text })),
         availability: places.map((row) => ({

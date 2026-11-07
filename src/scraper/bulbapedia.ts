@@ -77,3 +77,23 @@ export const fetchSpeciesPages = async (species: { ndex: number; name: string }[
     result.pages = new Map([...pages].sort(([a], [b]) => a - b))
     return result
 }
+
+/** One page's wikitext through the API, cached for 30 days like the species pages. Throws when the page is gone. */
+export const fetchWikitext = async (title: string): Promise<string> => {
+    const params = new URLSearchParams({
+        action: 'query',
+        prop: 'revisions',
+        rvprop: 'content',
+        rvslots: 'main',
+        titles: title,
+        redirects: '1',
+        format: 'json',
+        formatversion: '2',
+        maxlag: '5'
+    })
+    const json = JSON.parse((await fetchPage(`${API}?${params}`, { maxAgeDays: 30 })).body)
+    if (json.error) throw new Error(`Bulbapedia: ${json.error.code} - ${json.error.info}`)
+    const page = json.query.pages[0]
+    if (!page || page.missing || !page.revisions) throw new Error(`Bulbapedia has no page "${title}"`)
+    return page.revisions[0].slots.main.content
+}

@@ -287,6 +287,31 @@ export const formHomeGame = sqliteTable(
     (table) => [primaryKey({ columns: [table.formId, table.game] })]
 )
 
+export const SHINY_STATUSES = ['obtainable', 'event', 'unobtainable'] as const
+export type ShinyStatus = (typeof SHINY_STATUSES)[number]
+
+/**
+ * Whether a form's shiny can be had, per generation, for the forms Bulbapedia's
+ * "List of unobtainable Shiny Pokémon" lists: `obtainable` in game (in `games`
+ * when named), `event` (distributions or transfer only), `unobtainable`. The page
+ * is per generation and incomplete; a form without rows has no known restriction.
+ */
+export const formShiny = sqliteTable(
+    'form_shiny',
+    {
+        formId: integer('form_id')
+            .notNull()
+            .references(() => form.id),
+        generation: integer('generation')
+            .notNull()
+            .references(() => generation.id),
+        status: text('status', { enum: SHINY_STATUSES }).notNull(),
+        /** The games the page names ("USUM; PE"), as it abbreviates them; null for the whole generation. */
+        games: text('games')
+    },
+    (table) => [primaryKey({ columns: [table.formId, table.generation] })]
+)
+
 /**
  * Where a form is found: one row per (form, game, location, method), level ranges
  * and slots collapsed. `ndex` is the form's species, kept for per-species reads.
@@ -394,7 +419,8 @@ export const formRelations = relations(form, ({ one, many }) => ({
     pokemon: one(pokemon, { fields: [form.ndex], references: [pokemon.ndex] }),
     types: many(formType),
     abilities: many(formAbility),
-    homeGames: many(formHomeGame)
+    homeGames: many(formHomeGame),
+    shiny: many(formShiny)
 }))
 
 export const formHomeGameRelations = relations(formHomeGame, ({ one }) => ({

@@ -115,7 +115,7 @@ export const detail = async (db: Db, slug: string, imageBaseUrl: string) => {
     // Slugs are stored lowercase; COLLATE NOCASE would skip the unique index and scan every form, five times.
     const where = eq(form.slug, slug.toLowerCase())
 
-    const [forms, species, typeRows, abilityRows, homeRows, encounters] = await db.batch([
+    const [forms, species, typeRows, abilityRows, homeRows, shinyRows, encounters] = await db.batch([
         db.select().from(form).where(where),
         db
             .select({ ndex: pokemon.ndex, slug: pokemon.slug, ...nameProjection })
@@ -126,7 +126,7 @@ export const detail = async (db: Db, slug: string, imageBaseUrl: string) => {
         encountersOf(db, where)
     ])
 
-    const [document] = formDocuments(forms, typeRows, abilityRows, homeRows, imageBaseUrl)
+    const [document] = formDocuments(forms, typeRows, abilityRows, homeRows, shinyRows, imageBaseUrl)
     const [owner] = species
     if (!document || !owner) return undefined
 

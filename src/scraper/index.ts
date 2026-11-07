@@ -10,7 +10,7 @@
  */
 import { buildFromPokeApi, type Table } from './build'
 import { check, counts, diff, openDatabase } from './database'
-import { fetchSpeciesPages } from './bulbapedia'
+import { fetchSpeciesPages, fetchWikitext } from './bulbapedia'
 import { originsOf } from './etymology'
 import { availabilityOf, dexEntriesOf, exclusivesOf } from './pokedex'
 import { fetchGameEvidence, homeGames } from './games'
@@ -18,6 +18,7 @@ import { matchEntry } from './match'
 import { POKEAPI_COMMIT, checkoutPokeApi, readTable } from './pokeapi'
 import { fetchPokeos, formResolver, shinyLockedForms } from './pokeos'
 import { fetchDepositable } from './serebii'
+import { SHINY_PAGE, shinyRowsOf, shinyTableOf } from './shiny'
 import { SPRITES_COMMIT, artworkKeys, checkoutArtwork } from './sprites'
 import { insert, literal } from './sql'
 
@@ -26,7 +27,7 @@ const VERSION = new URL('../../data/version.json', import.meta.url).pathname
 
 /** Children first, so foreign keys hold at every step. */
 const DELETE_ORDER = [
-    'evolution', 'encounter', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'availability', 'pokedex_entry', 'pokemon_origin',
+    'evolution', 'encounter', 'form_shiny', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'availability', 'pokedex_entry', 'pokemon_origin',
     'pokemon_egg_group', 'pokemon', 'generation', 'type', 'ability', 'move', 'meta'
 ]
 
@@ -116,11 +117,17 @@ for (const [ndex, wikitext] of bulbapedia.pages) {
         for (const label of skipped) skippedGames.add(label)
     }
 }
+// Shiny availability per generation for the forms Bulbapedia lists as hard to get shiny.
+const shiny = shinyRowsOf(shinyTableOf(await fetchWikitext(SHINY_PAGE)), data.forms)
+if (shiny.unresolved.length)
+    fail(`"${SHINY_PAGE}" rows that match no form - add them to GROUPS in src/scraper/shiny.ts: ${shiny.unresolved.join(', ')}`)
+const formShiny: Table = { columns: ['form_id', 'generation', 'status', 'games'], rows: shiny.rows }
+
 const exclusive = exclusivesOf(availability.rows as [number, string, string, string | null, boolean][], siblings)
 availability.columns.push('exclusive')
 for (const row of availability.rows) row.push(row[4] === true && exclusive.has(`${row[0]}|${row[1]}`))
 const bulbapediaHash = new Bun.CryptoHasher('sha256')
-    .update(JSON.stringify([origins.rows, pokedexEntry.rows, availability.rows]))
+    .update(JSON.stringify([origins.rows, pokedexEntry.rows, availability.rows, formShiny.rows]))
     .digest('hex')
     .slice(0, 12)
 
@@ -174,6 +181,7 @@ const tables: [string, Table][] = [
     ['form_type', data.formType],
     ['form_ability', data.formAbility],
     ['form_home_game', formHomeGame],
+    ['form_shiny', formShiny],
     ['encounter', data.encounter],
     ['evolution', data.evolution],
     ['meta', { columns: ['key', 'value'], rows: [['source_pokeapi', POKEAPI_COMMIT], ['source_sprites', SPRITES_COMMIT], ['source_serebii', serebiiHash], ['source_bulbapedia', bulbapediaHash], ['source_pokeos', pokeosHash]] }]
@@ -244,6 +252,7 @@ console.log(
     `  etymology: ${Object.entries(byLanguage).map(([language, rows]) => `${language} ${rows!.length}`).join(', ')}`
 )
 console.log(`  Pokédex entries: ${pokedexEntry.rows.length}, game locations: ${availability.rows.length}`)
+console.log(`  shiny availability: ${new Set(formShiny.rows.map(([id]) => id)).size} forms, ${formShiny.rows.length} generation rows`)
 console.log(`    labels that are not a main-series game, left out: ${[...skippedGames].join(', ')}`)
 console.log(
     `  pokeos: ${pokeos.pronunciations.size} pronunciations, ${shinyLocked.ids.size} shiny-locked forms,`,

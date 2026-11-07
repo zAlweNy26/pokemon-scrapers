@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { FORM_CATEGORIES } from '@/db/schema'
+import { FORM_CATEGORIES, SHINY_STATUSES } from '@/db/schema'
 import {
     MAX_PAGE_SIZE, booleanString, categorySchema, namesSchema, paginationMeta, spritesSchema
 } from '@/api/models'
@@ -17,6 +17,21 @@ export const formSchema = z.object({
         ),
     depositable: z.boolean().describe('Can this form be stored in Pokémon HOME?'),
     isShinyLocked: z.boolean().describe('No shiny can be obtained in normal play; from pokeos'),
+    shinyAvailability: z
+        .array(
+            z.object({
+                generation: z.number(),
+                status: z
+                    .enum(SHINY_STATUSES)
+                    .describe('`obtainable` in game, `event` (distributions or transfer only), or `unobtainable`'),
+                games: z.string().nullable().describe('The games named, as Bulbapedia abbreviates them; null for the whole generation')
+            })
+        )
+        .describe(
+            "Per generation, for the forms Bulbapedia's incomplete list of unobtainable shinies covers; " +
+                'empty when the form has no known restriction'
+        )
+        .meta({ examples: [[{ generation: 8, status: 'event', games: null }]] }),
     homeGames: z
         .array(z.string())
         .describe('Games this form can be moved into from HOME, as version-group identifiers')
