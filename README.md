@@ -54,7 +54,7 @@ bun run data:build         # → data/dataset.sql + data/version.json, validated
 bun run data:check         # quality checks + every species through the API; writes .cache/homedex.sqlite
 bun run data:sprites       # artwork → R2 as {key}/{96,256,475}.webp; without S3_* in .env, to .cache/sprites-out/
 bun run data:load:local    # reset local D1 and load it; run `bun test` and try the API
-bun run data:load:remote   # load it into the real database (wrangler: void db execute passes the 8.6 MB file as one argument and hits E2BIG; the id is void.lock.json's D1)
+bun run data:load:remote   # apply pending migrations, then load it into the real database (the new rows may need new columns; wrangler: void db execute passes the 8.6 MB file as one argument and hits E2BIG; the id is void.lock.json's D1)
 # then commit and push data/version.json: CI deploys once the load is a minute old
 ```
 
@@ -136,7 +136,7 @@ and the API; Void generates migrations from it and applies them.
 ```bash
 bun run db:generate        # schema.ts → src/db/migrations/NNNN_*.sql
 bun run db:migrate         # apply to local D1
-bun run db:migrate:remote  # apply to the real database (deploy also does this)
+bun run db:migrate:remote  # apply to the real database (deploy and data:load:remote also do this)
 bun run db:seed            # reset local D1 and load data/seed.sql
 ```
 
