@@ -66,17 +66,20 @@ the new version, for a week.
 The build reads PokéAPI's CSV files from a pinned git checkout in `.cache/` (no
 requests to PokéAPI), 19 Serebii pages — the HOME box list plus each
 HOME-connected game's availability lists — reused for 24 hours, and Bulbapedia's
-species pages (~21 API requests of 50 pages each) reused for 30 days. Requests go
+species pages (~21 API requests of 50 pages each) plus two list pages (unobtainable
+shinies, Legends: Z-A alphas), reused for 30 days. Requests go
 one at a time, at least 5 s apart. It
 stops with a non-zero exit and writes nothing if a Serebii entry cannot be matched
-to a form — add an override in `src/scraper/match.ts` — or if the dataset fails a
+to a form — add an override in `src/scraper/match.ts` — likewise a Bulbapedia shiny
+row (`src/scraper/shiny.ts`), or if the dataset fails a
 check (search index, one default form per species, stored counts). `DATA_VERSION`
 is a hash of the dataset, so ETags change exactly when the data does.
 
 Sprites are PokéAPI's official artwork, from a sparse checkout of
 [PokeAPI/sprites](https://github.com/PokeAPI/sprites) pinned in
 `src/scraper/sprites.ts`. The build stores each form's file stem as `sprite_key`
-(a form without artwork of its own uses its variety's); `data:sprites` resizes
+(a form without artwork of its own uses its variety's), and the same picture's
+shiny as `shiny_sprite_key` (`shiny/25`); `data:sprites` resizes
 each one to WebP with `Bun.Image` and uploads it with `Bun.s3` to the bucket behind
 `IMAGE_BASE_URL`. It needs an R2 API token's S3 credentials in `.env`:
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
@@ -93,11 +96,11 @@ known facts, or any API response its schema rejects. Gaps the sources leave
 
 | Endpoint | Notes |
 |---|---|
-| `GET /v1/pokemon` | `?gen &type &region &depositable &homeGame &ability &eggGroup &obtainableIn &habitat &sort &limit &offset`. `homeGame` takes a version group (`scarlet-violet`), `obtainableIn` a version (`scarlet`). `sort` is `ndex` (default), `name`, `bst`, `hp`, `atk`, `def`, `spAtk`, `spDef`, `spd`, `height` or `weight` of the default form, `-` prefixed for descending (`-bst`); unknown values last, ties by dex number |
+| `GET /v1/pokemon` | `?gen &type &region &depositable &homeGame &ability &eggGroup &obtainableIn &exclusiveTo &habitat &sort &limit &offset`. `homeGame` takes a version group (`scarlet-violet`), `obtainableIn` and `exclusiveTo` a version (`scarlet`). `sort` is `ndex` (default), `name`, `bst`, `hp`, `atk`, `def`, `spAtk`, `spDef`, `spd`, `height` or `weight` of the default form, `-` prefixed for descending (`-bst`); unknown values last, ties by dex number |
 | `GET /v1/pokemon/:idOrName` | Accepts `25`, `pikachu` or `Pikachu`; returns every form |
 | `GET /v1/evolution-chains/:id` | A PokéAPI chain id: its species as list items in `members`, and `steps` exactly as `/v1/pokemon/:idOrName` has them in `evolutionChain` |
-| `GET /v1/forms` | `?gen &type &depositable &homeGame &isDefault &limit &offset`. Every form, where HOME depositability lives: `depositable` is the form's own, so it tells Pikachu apart from Partner Pikachu |
-| `GET /v1/forms/:slug` | One form as `/v1/pokemon/:idOrName` lists it in `forms`, plus its `species` |
+| `GET /v1/forms` | `?gen &type &depositable &homeGame &isDefault &category &limit &offset`. Every form, where HOME depositability lives: `depositable` is the form's own, so it tells Pikachu apart from Partner Pikachu |
+| `GET /v1/forms/:slug` | One form as `/v1/pokemon/:idOrName` lists it in `forms`, plus its `species` and its own `encounters` |
 | `GET /v1/search?q=` | Cross-language name search; reports which language matched |
 | `GET /v1/generations`, `GET /v1/types` | Reference data with counts; types carry their names in every language |
 | `GET /v1/abilities`, `GET /v1/moves` | Every main-series ability and move, with its name in every language |
