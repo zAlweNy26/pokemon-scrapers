@@ -50,7 +50,8 @@ const request = async (url: string, cached: Cached | null): Promise<Response> =>
         if (cached?.lastModified) headers['if-modified-since'] = cached.lastModified
 
         const response = await fetch(url, { headers, redirect: 'follow' })
-        const retryable = response.status === 429 || response.status >= 500
+        // MediaWiki answers `maxlag` with a 200 error body and Retry-After: cached, it would fail every build for 30 days.
+        const retryable = response.status === 429 || response.status >= 500 || response.headers.has('retry-after')
 
         if (!retryable) return response
         if (attempt >= MAX_ATTEMPTS)
