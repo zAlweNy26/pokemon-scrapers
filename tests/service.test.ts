@@ -159,7 +159,7 @@ describe('pokemon.list', () => {
         expect(items[0]?.sprites).toEqual({
             '96': `${IMAGES}/pokemon/25/pikachu/96.webp`,
             '256': `${IMAGES}/pokemon/25/pikachu/256.webp`,
-            '475': `${IMAGES}/pokemon/25/pikachu/475.webp`
+            '512': `${IMAGES}/pokemon/25/pikachu/512.webp`
         })
     })
 })
@@ -237,6 +237,16 @@ describe('pokemon.detail', () => {
             [{ generation: 9, status: 'unobtainable', games: null }]
         ])
         expect((await forms.detail(db, 'pikachu', IMAGES))?.shinyAvailability).toEqual([])
+    })
+
+    test('splits a form into male and female looks only when HOME draws them apart', async () => {
+        const result = await pokemon.detail(db, (await pokemon.findSpecies(db, 'pikachu'))!, IMAGES)
+        const [pikachu, partner] = result.forms
+
+        expect(pikachu?.variants.map((variant) => variant.gender)).toEqual(['male', 'female'])
+        expect(pikachu?.variants[0]?.sprites).toEqual(pikachu!.sprites)
+        expect(pikachu?.variants[1]?.shinySprites?.['96']).toBe(`${IMAGES}/shiny/female/pokemon/25/pikachu/96.webp`)
+        expect(partner?.variants).toEqual([{ gender: null, sprites: partner!.sprites, shinySprites: partner!.shinySprites }])
     })
 
     test('says which forms Gigantamax, can be alphas, and which mark each game gives', async () => {
@@ -511,8 +521,9 @@ describe('forms.list', () => {
             shinySprites: {
                 '96': `${IMAGES}/shiny/pokemon/25/pikachu-partner/96.webp`,
                 '256': `${IMAGES}/shiny/pokemon/25/pikachu-partner/256.webp`,
-                '475': `${IMAGES}/shiny/pokemon/25/pikachu-partner/475.webp`
-            }
+                '512': `${IMAGES}/shiny/pokemon/25/pikachu-partner/512.webp`
+            },
+            variants: [{ gender: null, sprites: expect.any(Object), shinySprites: expect.any(Object) }]
         })
         expect(items[0]?.homeGames).toEqual(['lets-go-pikachu-lets-go-eevee', 'scarlet-violet', 'sword-shield'])
     })

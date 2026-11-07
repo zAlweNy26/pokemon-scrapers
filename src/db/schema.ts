@@ -229,10 +229,13 @@ export const form = sqliteTable(
         evSpDef: integer('ev_sp_def'),
         evSpd: integer('ev_spd'),
         baseExperience: integer('base_experience'),
-        /** Object prefix in the R2 image bucket; null when no artwork is published. */
+        /** Object prefix in the R2 image bucket (`home/25`, a Pokémon HOME render); null when no artwork is published. */
         spriteKey: text('sprite_key'),
-        /** The shiny artwork's prefix (`shiny/25`), from the same picture as `spriteKey`; null when there is none. */
+        /** The shiny render's prefix (`home/shiny/25`), from the same picture as `spriteKey`; null when there is none. */
         shinySpriteKey: text('shiny_sprite_key'),
+        /** HOME's female render (`home/female/25`) when this form's females look different; null otherwise. */
+        femaleSpriteKey: text('female_sprite_key'),
+        femaleShinySpriteKey: text('female_shiny_sprite_key'),
         /** Has a Gigantamax form of its own: `venusaur-gmax`, or `alcremie-gmax` for every Alcremie. */
         canGigantamax: integer('can_gigantamax', { mode: 'boolean' }).notNull().default(false),
         /** Can appear as an alpha: in Legends: Arceus by Bulbapedia's rule, in Legends: Z-A from its table. */

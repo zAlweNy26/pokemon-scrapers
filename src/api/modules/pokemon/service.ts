@@ -298,6 +298,21 @@ export const formFacts = (db: Db, where: SQL) =>
             .orderBy(formShiny.formId, formShiny.generation)
     ] as const
 
+type SpriteKeys = Pick<Form, 'spriteKey' | 'shinySpriteKey' | 'femaleSpriteKey' | 'femaleShinySpriteKey'>
+
+/** The looks a tracker collects for a form: one, or male and female when HOME draws them apart. */
+export const variantsOf = (keys: SpriteKeys, imageBaseUrl: string) => {
+    const look = (gender: 'male' | 'female' | null, sprite: string | null, shiny: string | null) => ({
+        gender,
+        sprites: spritesFor(imageBaseUrl, sprite),
+        shinySprites: spritesFor(imageBaseUrl, shiny)
+    })
+
+    return keys.femaleSpriteKey
+        ? [look('male', keys.spriteKey, keys.shinySpriteKey), look('female', keys.femaleSpriteKey, keys.femaleShinySpriteKey)]
+        : [look(null, keys.spriteKey, keys.shinySpriteKey)]
+}
+
 /** Form rows and their `formFacts` rows, as published forms. */
 export const formDocuments = (
     forms: Form[],
@@ -359,7 +374,8 @@ export const formDocuments = (
                   },
         baseExperience: entry.baseExperience,
         sprites: spritesFor(imageBaseUrl, entry.spriteKey),
-        shinySprites: spritesFor(imageBaseUrl, entry.shinySpriteKey)
+        shinySprites: spritesFor(imageBaseUrl, entry.shinySpriteKey),
+        variants: variantsOf(entry, imageBaseUrl)
     }))
 }
 

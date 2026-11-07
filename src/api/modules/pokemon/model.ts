@@ -61,7 +61,22 @@ export const formSchema = z.object({
         .describe('Effort values earned for defeating this form; null when the source does not have them yet'),
     baseExperience: z.number().nullable(),
     sprites: spritesSchema,
-    shinySprites: spritesSchema.describe('Like `sprites`, for the shiny colouring; null when no shiny artwork is published')
+    shinySprites: spritesSchema.describe('Like `sprites`, for the shiny colouring; null when no shiny artwork is published'),
+    variants: z
+        .array(
+            z.object({
+                gender: z
+                    .enum(['male', 'female'])
+                    .nullable()
+                    .describe('Set when males and females of this form look different; null when they look alike'),
+                sprites: spritesSchema,
+                shinySprites: spritesSchema
+            })
+        )
+        .describe(
+            'The looks to collect for this form: one, or a male and a female one (Pikachu, Hippowdon). A species whose ' +
+                'female is a form of its own (Meowstic) has it in `forms` instead, so it is never counted twice'
+        )
 })
 
 const evolutionConditionsSchema = z

@@ -75,11 +75,13 @@ row (`src/scraper/shiny.ts`), or if the dataset fails a
 check (search index, one default form per species, stored counts). `DATA_VERSION`
 is a hash of the dataset, so ETags change exactly when the data does.
 
-Sprites are PokéAPI's official artwork, from a sparse checkout of
+Sprites are Pokémon HOME's renders, from a sparse checkout of
 [PokeAPI/sprites](https://github.com/PokeAPI/sprites) pinned in
-`src/scraper/sprites.ts`. The build stores each form's file stem as `sprite_key`
-(a form without artwork of its own uses its variety's), and the same picture's
-shiny as `shiny_sprite_key` (`shiny/25`); `data:sprites` resizes
+`src/scraper/sprites.ts`. The build stores each form's render as `sprite_key`
+(`home/25`; a form without one of its own uses its variety's), the same picture's
+shiny as `shiny_sprite_key` (`home/shiny/25`), and, where HOME draws females
+differently, `female_sprite_key` and its shiny; the API publishes them per form as
+`variants`. `data:sprites` resizes
 each one to WebP with `Bun.Image` and uploads it with `Bun.s3` to the bucket behind
 `IMAGE_BASE_URL`. It needs an R2 API token's S3 credentials in `.env`:
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,

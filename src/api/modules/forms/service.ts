@@ -3,7 +3,7 @@ import type { Db } from '@/db/client'
 import { form, formHomeGame, formType, pokemon, type FormCategory } from '@/db/schema'
 import { nameColumns, nameProjection, namesOf } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
-import { encountersOf, formDocuments, formFacts, groupBy, typesByForm } from '@/api/modules/pokemon/service'
+import { encountersOf, formDocuments, formFacts, groupBy, typesByForm, variantsOf } from '@/api/modules/pokemon/service'
 
 export interface FormFilters {
     gen?: number
@@ -64,7 +64,9 @@ export const list = async (db: Db, filters: FormFilters, imageBaseUrl: string) =
                 category: form.category,
                 depositable: form.depositable,
                 spriteKey: form.spriteKey,
-                shinySpriteKey: form.shinySpriteKey
+                shinySpriteKey: form.shinySpriteKey,
+                femaleSpriteKey: form.femaleSpriteKey,
+                femaleShinySpriteKey: form.femaleShinySpriteKey
             })
             .from(form)
             .innerJoin(pokemon, eq(pokemon.ndex, form.ndex))
@@ -89,7 +91,8 @@ export const list = async (db: Db, filters: FormFilters, imageBaseUrl: string) =
             homeGames: homeGames.get(row.id) ?? [],
             types: types.get(row.id) ?? [],
             sprites: spritesFor(imageBaseUrl, row.spriteKey),
-            shinySprites: spritesFor(imageBaseUrl, row.shinySpriteKey)
+            shinySprites: spritesFor(imageBaseUrl, row.shinySpriteKey),
+            variants: variantsOf(row, imageBaseUrl)
         }))
     }
 }

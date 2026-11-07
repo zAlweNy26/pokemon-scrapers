@@ -98,7 +98,13 @@ const localized = (names: Map<string, Row> | undefined, field: string): Record<L
 
 const languageColumns = (prefix: string) => LANGUAGES.map((language) => `${prefix}_${language}`)
 
-/** `artwork`: the official-artwork file stems in PokeAPI/sprites, from `artworkKeys()`. */
+/** `artwork`: the HOME renders in PokeAPI/sprites, from `artworkKeys()`. */
+/** The shiny render of the same picture (`home/25` → `home/shiny/25`), or null. */
+const shinyOf = (key: string | null, artwork: Set<string>) => {
+    const shiny = key?.replace(/^home\//, 'home/shiny/')
+    return shiny && artwork.has(shiny) ? shiny : null
+}
+
 export const buildFromPokeApi = async (artwork: Set<string>) => {
     const [
         speciesRows, speciesNames, pokemonRows, formRows, formNames, generations, regions,
@@ -253,9 +259,11 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
         // `${ndex}-${form}`. A form with no artwork of its own (Scatterbug's patterns,
         // Mothim's cloaks) looks like its variety, so it falls back to that.
         const own = row.is_default === '1' ? row.pokemon_id! : `${ndex}-${row.form_identifier}`
-        const spriteKey = [own, row.pokemon_id!].find((key) => artwork.has(key)) ?? null
+        // A female form PokéAPI keeps apart within its variety (Frillish) is the variety's female render, never its male one.
+        const fallback = row.form_identifier === 'female' ? `female/${row.pokemon_id}` : row.pokemon_id!
+        const spriteKey = [`home/${own}`, `home/${fallback}`].find((key) => artwork.has(key)) ?? null
         // The shiny of the same picture, never another form's: Mothim's cloaks share one.
-        const shinySpriteKey = spriteKey && artwork.has(`shiny/${spriteKey}`) ? `shiny/${spriteKey}` : null
+        const shinySpriteKey = shinyOf(spriteKey, artwork)
 
         form.rows.push([
             id, ndex, row.identifier!, ...Object.values(formNames), isDefault, false,
@@ -307,6 +315,20 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
                 if (entry.ndex === gmax.ndex && !formFacts[index]!.battleOnly) canGigantamax.add(entry.id)
             })
     }
+    // Female looks for forms whose females differ without being a form of their own: HOME's
+    // female render of the same picture. A species PokéAPI splits by gender (Meowstic) gets
+    // none: its female is already a form, and would be counted twice.
+    const categoryColumn = form.columns.indexOf('category')
+    const splitByGender = new Set(forms.filter((_, index) => form.rows[index]![categoryColumn] === 'gender').map((entry) => entry.ndex))
+    const spriteColumn = form.columns.indexOf('sprite_key')
+    form.columns.push('female_sprite_key', 'female_shiny_sprite_key')
+    form.rows.forEach((row, index) => {
+        const key = row[spriteColumn] as string | null
+        const female = key && !key.startsWith('home/female/') ? key.replace(/^home\//, 'home/female/') : null
+        const own = female && artwork.has(female) && !splitByGender.has(forms[index]!.ndex) ? female : null
+        row.push(own, shinyOf(own, artwork))
+    })
+
     form.columns.push('can_gigantamax')
     form.rows.forEach((row, index) => row.push(canGigantamax.has(forms[index]!.id)))
 

@@ -4,7 +4,7 @@ import { encounterSchema, formSchema, listQuery } from '@/api/modules/pokemon/mo
 import { FORM_CATEGORIES } from '@/db/schema'
 
 const listItemSchema = formSchema
-    .pick({ slug: true, name: true, isDefault: true, category: true, depositable: true, homeGames: true, types: true, sprites: true, shinySprites: true })
+    .pick({ slug: true, name: true, isDefault: true, category: true, depositable: true, homeGames: true, types: true, sprites: true, shinySprites: true, variants: true })
     .extend({ species: z.object({ ndex: z.number(), slug: z.string() }) })
 
 /** Input schemas stay values, not named models: see `listQuery`. */
