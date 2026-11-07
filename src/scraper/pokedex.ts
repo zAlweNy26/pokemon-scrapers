@@ -128,3 +128,24 @@ export const exclusivesOf = (
         })
     )
 }
+
+/**
+ * The origin mark a Pokémon caught in each version carries, from Bulbapedia's
+ * "Origin mark". Generations III-V have none; Generation I and II Pokémon get the
+ * Game Boy mark, and FireRed and LeafGreen the Game Boy Advance one, only from the
+ * Nintendo Switch releases, the only copies that reach HOME.
+ */
+export const ORIGIN_MARKS: Record<string, string> = {
+    ...Object.fromEntries(
+        ['red', 'blue', 'yellow', 'red-japan', 'green-japan', 'blue-japan', 'gold', 'silver', 'crystal'].map((game) => [game, 'game-boy'])
+    ),
+    firered: 'game-boy-advance', leafgreen: 'game-boy-advance',
+    x: 'pentagon', y: 'pentagon', 'omega-ruby': 'pentagon', 'alpha-sapphire': 'pentagon',
+    sun: 'alola', moon: 'alola', 'ultra-sun': 'alola', 'ultra-moon': 'alola',
+    'lets-go-pikachu': 'lets-go', 'lets-go-eevee': 'lets-go',
+    sword: 'galar', shield: 'galar',
+    'brilliant-diamond': 'brilliant-diamond-shining-pearl', 'shining-pearl': 'brilliant-diamond-shining-pearl',
+    'legends-arceus': 'legends-arceus',
+    scarlet: 'scarlet-violet', violet: 'scarlet-violet',
+    'legends-za': 'legends-za'
+}

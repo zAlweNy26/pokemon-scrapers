@@ -8,11 +8,12 @@
  * Fails loudly - non-zero exit, nothing written - on any unresolved Serebii entry
  * or a dataset that does not pass `check`.
  */
+import { alphaFormsOf, legendsArceusAlphas, ZA_ALPHA_PAGE, zaAlphaRowsOf } from './alpha'
 import { buildFromPokeApi, type Table } from './build'
 import { check, counts, diff, openDatabase } from './database'
 import { fetchSpeciesPages, fetchWikitext } from './bulbapedia'
 import { originsOf } from './etymology'
-import { availabilityOf, dexEntriesOf, exclusivesOf } from './pokedex'
+import { ORIGIN_MARKS, availabilityOf, dexEntriesOf, exclusivesOf } from './pokedex'
 import { fetchGameEvidence, homeGames } from './games'
 import { matchEntry } from './match'
 import { POKEAPI_COMMIT, checkoutPokeApi, readTable } from './pokeapi'
@@ -125,9 +126,19 @@ const formShiny: Table = { columns: ['form_id', 'generation', 'status', 'games']
 
 const exclusive = exclusivesOf(availability.rows as [number, string, string, string | null, boolean][], siblings)
 availability.columns.push('exclusive')
-for (const row of availability.rows) row.push(row[4] === true && exclusive.has(`${row[0]}|${row[1]}`))
+availability.columns.push('origin_mark')
+for (const row of availability.rows) row.push(row[4] === true && exclusive.has(`${row[0]}|${row[1]}`), ORIGIN_MARKS[row[1] as string] ?? null)
+
+// Which forms can be alphas: Legends: Arceus by Bulbapedia's rule, Legends: Z-A from its table.
+const inGame = (game: string) => new Set(gameRows.filter(([, g]) => g === game).map(([id]) => id))
+const legendaryColumns = ['is_legendary', 'is_mythical'].map((column) => data.pokemon.columns.indexOf(column))
+const legendary = new Set(data.pokemon.rows.filter((row) => legendaryColumns.some((column) => row[column])).map((row) => row[0] as number))
+const alphasLA = legendsArceusAlphas(data.forms, inGame('legends-arceus'), legendary)
+const alphasZA = alphaFormsOf(zaAlphaRowsOf(await fetchWikitext(ZA_ALPHA_PAGE)), data.forms, inGame('legends-za'))
+data.form.columns.push('alpha_legends_arceus', 'alpha_legends_za')
+for (const row of data.form.rows) row.push(alphasLA.has(row[0] as number), alphasZA.has(row[0] as number))
 const bulbapediaHash = new Bun.CryptoHasher('sha256')
-    .update(JSON.stringify([origins.rows, pokedexEntry.rows, availability.rows, formShiny.rows]))
+    .update(JSON.stringify([origins.rows, pokedexEntry.rows, availability.rows, formShiny.rows, [...alphasZA]]))
     .digest('hex')
     .slice(0, 12)
 
@@ -252,6 +263,7 @@ console.log(
     `  etymology: ${Object.entries(byLanguage).map(([language, rows]) => `${language} ${rows!.length}`).join(', ')}`
 )
 console.log(`  Pokédex entries: ${pokedexEntry.rows.length}, game locations: ${availability.rows.length}`)
+console.log(`  alphas: Legends: Arceus ${alphasLA.size} forms, Legends: Z-A ${alphasZA.size} forms`)
 console.log(`  shiny availability: ${new Set(formShiny.rows.map(([id]) => id)).size} forms, ${formShiny.rows.length} generation rows`)
 console.log(`    labels that are not a main-series game, left out: ${[...skippedGames].join(', ')}`)
 console.log(

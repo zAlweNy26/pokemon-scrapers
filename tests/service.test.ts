@@ -239,6 +239,18 @@ describe('pokemon.detail', () => {
         expect((await forms.detail(db, 'pikachu', IMAGES))?.shinyAvailability).toEqual([])
     })
 
+    test('says which forms Gigantamax, can be alphas, and which mark each game gives', async () => {
+        const result = await pokemon.detail(db, (await pokemon.findSpecies(db, 'pikachu'))!, IMAGES)
+        const [pikachu, partner] = result.forms
+
+        expect([pikachu?.canGigantamax, partner?.canGigantamax]).toEqual([true, false])
+        expect(pikachu?.alphaIn).toEqual(['legends-arceus', 'legends-za'])
+        expect(partner?.alphaIn).toEqual([])
+        expect(result.availability.map((row) => row.originMark)).toEqual([
+            'game-boy', null, null, 'scarlet-violet', 'scarlet-violet', 'legends-za'
+        ])
+    })
+
     test('flags hidden abilities', async () => {
         const species = await pokemon.findSpecies(db, 'pikachu')
         const result = await pokemon.detail(db, species!, IMAGES)

@@ -296,6 +296,20 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
     const defaults = new Map(forms.filter((entry) => entry.isDefault).map((entry) => [entry.ndex, entry]))
     form.rows.forEach((row, index) => row.push(categoryOf(forms[index]!, formFacts[index]!, defaults.get(forms[index]!.ndex))))
 
+    // `venusaur-gmax` is Venusaur's; a Gigantamax form named after the species
+    // (`alcremie-gmax`) serves every form of it that is not battle-only.
+    const canGigantamax = new Set<number>()
+    for (const gmax of forms.filter((entry) => entry.slug.endsWith('-gmax'))) {
+        const base = forms.find((entry) => entry.slug === gmax.slug.slice(0, -'-gmax'.length))
+        if (base) canGigantamax.add(base.id)
+        else
+            forms.forEach((entry, index) => {
+                if (entry.ndex === gmax.ndex && !formFacts[index]!.battleOnly) canGigantamax.add(entry.id)
+            })
+    }
+    form.columns.push('can_gigantamax')
+    form.rows.forEach((row, index) => row.push(canGigantamax.has(forms[index]!.id)))
+
     // Slot- and level-range rows collapse to one per (form, game, location, method).
     const areaById = indexBy(locationAreas!, 'id')
     const locationById = indexBy(locations!, 'id')

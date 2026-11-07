@@ -327,6 +327,11 @@ export const formDocuments = (
         depositable: entry.depositable,
         isShinyLocked: entry.isShinyLocked,
         shinyAvailability: shiny.get(entry.id) ?? [],
+        canGigantamax: entry.canGigantamax,
+        alphaIn: [
+            ...(entry.alphaLegendsArceus ? (['legends-arceus'] as const) : []),
+            ...(entry.alphaLegendsZa ? (['legends-za'] as const) : [])
+        ],
         homeGames: homeGames.get(entry.id) ?? [],
         types: types.get(entry.id) ?? [],
         abilities: abilities.get(entry.id) ?? [],
@@ -449,7 +454,8 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
                 dlc: availability.dlc,
                 area: availability.area,
                 obtainable: availability.obtainable,
-                exclusive: availability.exclusive
+                exclusive: availability.exclusive,
+                originMark: availability.originMark
             })
             .from(availability)
             .where(eq(availability.ndex, ndex))
@@ -492,7 +498,8 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
             dlc: row.dlc || null,
             area: row.area,
             obtainable: row.obtainable,
-            exclusive: row.exclusive
+            exclusive: row.exclusive,
+            originMark: row.originMark
         })),
         encounters
     }

@@ -142,7 +142,9 @@ export const availability = sqliteTable(
         area: text('area'),
         obtainable: integer('obtainable', { mode: 'boolean' }).notNull(),
         /** Obtainable here and in no other version of the group (Scarlet, not Violet); from `exclusivesOf`. */
-        exclusive: integer('exclusive', { mode: 'boolean' }).notNull().default(false)
+        exclusive: integer('exclusive', { mode: 'boolean' }).notNull().default(false),
+        /** The origin mark a Pokémon caught here carries (`galar`); null for games without one. ORIGIN_MARKS has them. */
+        originMark: text('origin_mark')
     },
     (table) => [primaryKey({ columns: [table.ndex, table.game, table.dlc] })]
 )
@@ -231,6 +233,11 @@ export const form = sqliteTable(
         spriteKey: text('sprite_key'),
         /** The shiny artwork's prefix (`shiny/25`), from the same picture as `spriteKey`; null when there is none. */
         shinySpriteKey: text('shiny_sprite_key'),
+        /** Has a Gigantamax form of its own: `venusaur-gmax`, or `alcremie-gmax` for every Alcremie. */
+        canGigantamax: integer('can_gigantamax', { mode: 'boolean' }).notNull().default(false),
+        /** Can appear as an alpha: in Legends: Arceus by Bulbapedia's rule, in Legends: Z-A from its table. */
+        alphaLegendsArceus: integer('alpha_legends_arceus', { mode: 'boolean' }).notNull().default(false),
+        alphaLegendsZa: integer('alpha_legends_za', { mode: 'boolean' }).notNull().default(false),
         /** Why the form exists; `categoryOf` in src/scraper/build.ts has the rules. */
         category: text('category', { enum: FORM_CATEGORIES }).notNull().default('default')
     },

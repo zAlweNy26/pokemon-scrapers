@@ -32,6 +32,13 @@ export const formSchema = z.object({
                 'empty when the form has no known restriction'
         )
         .meta({ examples: [[{ generation: 8, status: 'event', games: null }]] }),
+    canGigantamax: z.boolean().describe('Has a Gigantamax form (Alcremie\'s one serves all of its forms)'),
+    alphaIn: z
+        .array(z.enum(['legends-arceus', 'legends-za']))
+        .describe(
+            'Games where this form can be an alpha, as version-group identifiers: Legends: Arceus by Bulbapedia\'s rule ' +
+                '(all but Legendary, Mythical and gift-only Alolan Vulpix and Ninetales), Legends: Z-A from its alpha table'
+        ),
     homeGames: z
         .array(z.string())
         .describe('Games this form can be moved into from HOME, as version-group identifiers')
@@ -252,6 +259,14 @@ export const pokemonModels = {
                     dlc: z.string().nullable().meta({ examples: ['expansion-pass', 'mega-dimension'] }),
                     area: z.string().nullable().describe('Where and how, as Bulbapedia words it, form notes included'),
                     obtainable: z.boolean().describe('False when the game cannot get it on its own; `area` then says how it gets in'),
+                    originMark: z
+                        .string()
+                        .nullable()
+                        .describe(
+                            'Origin mark a Pokémon caught here carries; null for Generations III-V. Game Boy and Game Boy ' +
+                                'Advance marks come only from the Nintendo Switch / Virtual Console releases'
+                        )
+                        .meta({ examples: ['galar', 'pentagon', 'legends-za'] }),
                     exclusive: z
                         .boolean()
                         .describe(

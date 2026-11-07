@@ -121,21 +121,22 @@ INSERT INTO pokemon_origin (ndex, lang, note) VALUES
 
 INSERT INTO form
     (id, ndex, slug, name_en, name_ja, is_default, depositable, height_m, weight_kg, hp, atk, def, sp_atk, sp_def, spd,
-     ev_hp, ev_atk, ev_def, ev_sp_atk, ev_sp_def, ev_spd, base_experience, sprite_key, shiny_sprite_key, category)
+     ev_hp, ev_atk, ev_def, ev_sp_atk, ev_sp_def, ev_spd, base_experience, sprite_key, shiny_sprite_key, category,
+     can_gigantamax, alpha_legends_arceus, alpha_legends_za)
 VALUES
-    (1,  25,  'pikachu',                 'Pikachu',             'ピカチュウ',       1, 1, 0.4,  6.0,  35, 55, 40, 50, 50,  90, 0, 0, 0, 0, 0, 2, 112, 'pokemon/25/pikachu', 'shiny/pokemon/25/pikachu', 'default'),
-    (2,  25,  'pikachu-partner',         'Partner Pikachu',     NULL,              0, 0, 0.4,  6.0,  45, 80, 50, 75, 60, 120, 0, 0, 0, 0, 0, 2, 112, 'pokemon/25/pikachu-partner', 'shiny/pokemon/25/pikachu-partner', 'variant'),
-    (13, 26,  'raichu',                  'Raichu',              'ライチュウ',       1, 1, 0.8, 30.0,  60, 90, 55, 90, 80, 110, 0, 0, 0, 0, 0, 3, 218, 'pokemon/26/raichu', 'shiny/pokemon/26/raichu', 'default'),
-    (3,  94,  'gengar',                  'Gengar',              'ゲンガー',         1, 1, 1.5, 40.5,  60, 65, 60, 130, 75, 110, 0, 0, 0, 3, 0, 0, 225, 'pokemon/94/gengar', 'shiny/pokemon/94/gengar', 'default'),
-    (4,  131, 'lapras',                  'Lapras',              'ラプラス',         1, 1, 2.5, 220.0, 130, 85, 80, 85, 95,  60, 2, 0, 0, 0, 0, 0, 187, 'pokemon/131/lapras', 'shiny/pokemon/131/lapras', 'default'),
-    (5,  479, 'rotom',                   'Rotom',               'ロトム',           1, 1, 0.3,  0.3,  50, 50, 77, 95, 77,  91, 0, 0, 0, 1, 0, 1, 154, 'pokemon/479/rotom', 'shiny/pokemon/479/rotom', 'default'),
-    (6,  479, 'rotom-wash',              'Wash Rotom',          'ウォッシュロトム', 0, 1, 0.3,  0.3,  50, 65, 107, 105, 107, 86, 0, 0, 0, 1, 0, 1, 182, 'pokemon/479/rotom-wash', 'shiny/pokemon/479/rotom-wash', 'switchable'),
-    (7,  658, 'greninja',                'Greninja',            'ゲッコウガ',       1, 1, 1.5, 40.0,  72, 95, 67, 103, 71, 122, 0, 0, 0, 0, 0, 3, 239, 'pokemon/658/greninja', 'shiny/pokemon/658/greninja', 'default'),
-    (8,  658, 'greninja-ash',            'Ash-Greninja',        'サトシゲッコウガ', 0, 0, 1.5, 40.0,  72, 145, 67, 153, 71, 132, 0, 0, 0, 0, 0, 3, 288, NULL, NULL, 'battle-only'),
-    (9,  892, 'urshifu-single-strike',   'Single Strike Style', NULL,              1, 1, 1.9, 105.0, 100, 130, 100, 63, 60, 97, 0, 3, 0, 0, 0, 0, 275, 'pokemon/892/urshifu-single-strike', 'shiny/pokemon/892/urshifu-single-strike', 'default'),
-    (10, 892, 'urshifu-rapid-strike',    'Rapid Strike Style',  NULL,              0, 1, 1.9, 105.0, 100, 130, 100, 63, 60, 97, 0, 3, 0, 0, 0, 0, 275, 'pokemon/892/urshifu-rapid-strike', 'shiny/pokemon/892/urshifu-rapid-strike', 'variant'),
-    (11, 1017,'ogerpon-teal',            'Teal Mask',           NULL,              1, 1, 1.2, 39.8,  80, 120, 84, 60, 96, 110, 0, 3, 0, 0, 0, 0, 275, 'pokemon/1017/ogerpon-teal', 'shiny/pokemon/1017/ogerpon-teal', 'default'),
-    (12, 1017,'ogerpon-hearthflame',     'Hearthflame Mask',    NULL,              0, 1, 1.2, 39.8,  80, 120, 84, 60, 96, 110, 0, 3, 0, 0, 0, 0, 275, 'pokemon/1017/ogerpon-hearthflame', 'shiny/pokemon/1017/ogerpon-hearthflame', 'variant');
+    (1,  25,  'pikachu',                 'Pikachu',             'ピカチュウ',       1, 1, 0.4,  6.0,  35, 55, 40, 50, 50,  90, 0, 0, 0, 0, 0, 2, 112, 'pokemon/25/pikachu', 'shiny/pokemon/25/pikachu', 'default', 1, 1, 1),
+    (2,  25,  'pikachu-partner',         'Partner Pikachu',     NULL,              0, 0, 0.4,  6.0,  45, 80, 50, 75, 60, 120, 0, 0, 0, 0, 0, 2, 112, 'pokemon/25/pikachu-partner', 'shiny/pokemon/25/pikachu-partner', 'variant', 0, 0, 0),
+    (13, 26,  'raichu',                  'Raichu',              'ライチュウ',       1, 1, 0.8, 30.0,  60, 90, 55, 90, 80, 110, 0, 0, 0, 0, 0, 3, 218, 'pokemon/26/raichu', 'shiny/pokemon/26/raichu', 'default', 0, 1, 1),
+    (3,  94,  'gengar',                  'Gengar',              'ゲンガー',         1, 1, 1.5, 40.5,  60, 65, 60, 130, 75, 110, 0, 0, 0, 3, 0, 0, 225, 'pokemon/94/gengar', 'shiny/pokemon/94/gengar', 'default', 1, 1, 1),
+    (4,  131, 'lapras',                  'Lapras',              'ラプラス',         1, 1, 2.5, 220.0, 130, 85, 80, 85, 95,  60, 2, 0, 0, 0, 0, 0, 187, 'pokemon/131/lapras', 'shiny/pokemon/131/lapras', 'default', 1, 0, 0),
+    (5,  479, 'rotom',                   'Rotom',               'ロトム',           1, 1, 0.3,  0.3,  50, 50, 77, 95, 77,  91, 0, 0, 0, 1, 0, 1, 154, 'pokemon/479/rotom', 'shiny/pokemon/479/rotom', 'default', 0, 1, 1),
+    (6,  479, 'rotom-wash',              'Wash Rotom',          'ウォッシュロトム', 0, 1, 0.3,  0.3,  50, 65, 107, 105, 107, 86, 0, 0, 0, 1, 0, 1, 182, 'pokemon/479/rotom-wash', 'shiny/pokemon/479/rotom-wash', 'switchable', 0, 1, 1),
+    (7,  658, 'greninja',                'Greninja',            'ゲッコウガ',       1, 1, 1.5, 40.0,  72, 95, 67, 103, 71, 122, 0, 0, 0, 0, 0, 3, 239, 'pokemon/658/greninja', 'shiny/pokemon/658/greninja', 'default', 0, 0, 0),
+    (8,  658, 'greninja-ash',            'Ash-Greninja',        'サトシゲッコウガ', 0, 0, 1.5, 40.0,  72, 145, 67, 153, 71, 132, 0, 0, 0, 0, 0, 3, 288, NULL, NULL, 'battle-only', 0, 0, 0),
+    (9,  892, 'urshifu-single-strike',   'Single Strike Style', NULL,              1, 1, 1.9, 105.0, 100, 130, 100, 63, 60, 97, 0, 3, 0, 0, 0, 0, 275, 'pokemon/892/urshifu-single-strike', 'shiny/pokemon/892/urshifu-single-strike', 'default', 1, 0, 0),
+    (10, 892, 'urshifu-rapid-strike',    'Rapid Strike Style',  NULL,              0, 1, 1.9, 105.0, 100, 130, 100, 63, 60, 97, 0, 3, 0, 0, 0, 0, 275, 'pokemon/892/urshifu-rapid-strike', 'shiny/pokemon/892/urshifu-rapid-strike', 'variant', 1, 0, 0),
+    (11, 1017,'ogerpon-teal',            'Teal Mask',           NULL,              1, 1, 1.2, 39.8,  80, 120, 84, 60, 96, 110, 0, 3, 0, 0, 0, 0, 275, 'pokemon/1017/ogerpon-teal', 'shiny/pokemon/1017/ogerpon-teal', 'default', 0, 0, 0),
+    (12, 1017,'ogerpon-hearthflame',     'Hearthflame Mask',    NULL,              0, 1, 1.2, 39.8,  80, 120, 84, 60, 96, 110, 0, 3, 0, 0, 0, 0, 275, 'pokemon/1017/ogerpon-hearthflame', 'shiny/pokemon/1017/ogerpon-hearthflame', 'variant', 0, 0, 0);
 
 INSERT INTO form_type (form_id, slot, type) VALUES
     (1,1,'electric'),(2,1,'electric'),(13,1,'electric'),
@@ -197,14 +198,14 @@ INSERT INTO pokedex_entry (ndex, form, game, text) VALUES
     (25,'','legends-za','It has small electric sacs on both its cheeks. When in a tough spot, this Pokémon discharges electricity.');
 
 -- Gengar's Omega Ruby row is illustrative: marked exclusive so the flag and its filter have a case.
-INSERT INTO availability (ndex, game, dlc, area, obtainable, exclusive) VALUES
-    (25,'red','','Viridian Forest, Power Plant',1,0),
-    (25,'xd','',NULL,0,0),
-    (25,'black','','Poké Transfer, Event',0,0),
-    (25,'scarlet','','South Province: Area Two, Area Four, Artazon; East Province: Area One; West Province: Area Three; Tera Raid Battles (2★, 3★)',1,0),
-    (25,'scarlet','the-hidden-treasure-of-area-zero','Kitakami Road, Apple Hills, Oni Mountain, Wistful Fields, Paradise Barrens, Kitakami Wilds, Timeless Woods',1,0),
-    (25,'legends-za','mega-dimension','Hyperspace Lumiose (2★ & 4★ Electric-type wild zones)',1,0),
-    (94,'omega-ruby','','Evolve Haunter',1,1);
+INSERT INTO availability (ndex, game, dlc, area, obtainable, exclusive, origin_mark) VALUES
+    (25,'red','','Viridian Forest, Power Plant',1,0,'game-boy'),
+    (25,'xd','',NULL,0,0,NULL),
+    (25,'black','','Poké Transfer, Event',0,0,NULL),
+    (25,'scarlet','','South Province: Area Two, Area Four, Artazon; East Province: Area One; West Province: Area Three; Tera Raid Battles (2★, 3★)',1,0,'scarlet-violet'),
+    (25,'scarlet','the-hidden-treasure-of-area-zero','Kitakami Road, Apple Hills, Oni Mountain, Wistful Fields, Paradise Barrens, Kitakami Wilds, Timeless Woods',1,0,'scarlet-violet'),
+    (25,'legends-za','mega-dimension','Hyperspace Lumiose (2★ & 4★ Electric-type wild zones)',1,0,'legends-za'),
+    (94,'omega-ruby','','Evolve Haunter',1,1,'pentagon');
 
 INSERT INTO pokemon_dex_number (ndex, pokedex, number) VALUES
     (25,'kanto',25),(25,'paldea',74),(25,'kitakami',21),(25,'kalos-central',36),
