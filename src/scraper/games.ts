@@ -84,7 +84,7 @@ export const fetchGameEvidence = async (): Promise<Map<string, GameEvidence>> =>
 }
 
 /** The region of a regional variant ("Galarian Form" → galar), or null. Not the slug: `pikachu-alola-cap` is no regional form. */
-const regionOf = (form: FormInfo) => {
+export const regionOf = (form: Pick<FormInfo, 'formName' | 'pokemonName'>) => {
     const word = /^(Alolan|Galarian|Hisuian|Paldean)\b/.exec(form.formName ?? form.pokemonName ?? '')?.[1]
     return word ? { Alolan: 'alola', Galarian: 'galar', Hisuian: 'hisui', Paldean: 'paldea' }[word]! : null
 }

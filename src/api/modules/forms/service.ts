@@ -1,6 +1,6 @@
 import { and, count, eq, exists, inArray, sql } from 'drizzle-orm'
 import type { Db } from '@/db/client'
-import { form, formHomeGame, formType, pokemon } from '@/db/schema'
+import { form, formHomeGame, formType, pokemon, type FormCategory } from '@/db/schema'
 import { nameColumns, nameProjection, namesOf } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
 import { formDocuments, formFacts, groupBy, typesByForm } from '@/api/modules/pokemon/service'
@@ -11,6 +11,7 @@ export interface FormFilters {
     depositable?: boolean
     homeGame?: string
     isDefault?: boolean
+    category?: FormCategory
     limit: number
     offset: number
 }
@@ -41,6 +42,8 @@ const filterConditions = (filters: FormFilters) => {
 
     if (filters.isDefault !== undefined) conditions.push(eq(form.isDefault, filters.isDefault))
 
+    if (filters.category !== undefined) conditions.push(eq(form.category, filters.category))
+
     return conditions.length ? and(...conditions) : undefined
 }
 
@@ -58,6 +61,7 @@ export const list = async (db: Db, filters: FormFilters, imageBaseUrl: string) =
                 // Renamed: D1 batches key rows by column name, and the form's is `slug` too.
                 speciesSlug: sql<string>`${pokemon.slug}`.as('species_slug'),
                 isDefault: form.isDefault,
+                category: form.category,
                 depositable: form.depositable,
                 spriteKey: form.spriteKey,
                 shinySpriteKey: form.shinySpriteKey
@@ -80,6 +84,7 @@ export const list = async (db: Db, filters: FormFilters, imageBaseUrl: string) =
             name: namesOf(row),
             species: { ndex: row.ndex, slug: row.speciesSlug },
             isDefault: row.isDefault,
+            category: row.category,
             depositable: row.depositable,
             homeGames: homeGames.get(row.id) ?? [],
             types: types.get(row.id) ?? [],

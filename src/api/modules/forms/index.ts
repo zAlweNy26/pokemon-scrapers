@@ -19,6 +19,7 @@ export const forms = new Elysia({ name: 'module.forms', prefix: '/forms' })
                     depositable: query.depositable,
                     homeGame: query.homeGame,
                     isDefault: query.isDefault,
+                    category: query.category,
                     limit: query.limit,
                     offset: query.offset
                 },

@@ -83,7 +83,7 @@ describe('openapi document', () => {
         const detail = spec.paths['/v1/forms/{slug}'].get
 
         expect(list.parameters.map((p: any) => p.name).sort()).toEqual([
-            'depositable', 'gen', 'homeGame', 'isDefault', 'limit', 'offset', 'type'
+            'category', 'depositable', 'gen', 'homeGame', 'isDefault', 'limit', 'offset', 'type'
         ])
         expect(list.responses['200'].content['application/json'].schema.$ref).toBe('#/components/schemas/forms.list')
         expect(Object.keys(detail.responses).sort()).toEqual(['200', '404', '422', '429'])

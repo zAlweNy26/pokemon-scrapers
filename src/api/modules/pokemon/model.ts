@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { FORM_CATEGORIES } from '@/db/schema'
 import {
     MAX_PAGE_SIZE, booleanString, categorySchema, namesSchema, paginationMeta, spritesSchema
 } from '@/api/models'
@@ -7,6 +8,13 @@ export const formSchema = z.object({
     slug: z.string(),
     name: namesSchema,
     isDefault: z.boolean(),
+    category: z
+        .enum(FORM_CATEGORIES)
+        .describe(
+            'Why the form exists, first match wins: `battle-only` (Mega, Gigantamax, Zen Mode), `regional`, `gender` ' +
+                "(Meowstic's own female form), `switchable` (PokéAPI's flag: Rotom, Furfrou; not Silvally or Ogerpon), " +
+                '`cosmetic` (same types and stats as the default), else `variant` (Lycanroc, Urshifu)'
+        ),
     depositable: z.boolean().describe('Can this form be stored in Pokémon HOME?'),
     isShinyLocked: z.boolean().describe('No shiny can be obtained in normal play; from pokeos'),
     homeGames: z

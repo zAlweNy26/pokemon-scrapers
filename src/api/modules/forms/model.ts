@@ -1,9 +1,10 @@
 import { z } from 'zod'
 import { booleanString, namesSchema, paginationMeta } from '@/api/models'
 import { formSchema, listQuery } from '@/api/modules/pokemon/model'
+import { FORM_CATEGORIES } from '@/db/schema'
 
 const listItemSchema = formSchema
-    .pick({ slug: true, name: true, isDefault: true, depositable: true, homeGames: true, types: true, sprites: true, shinySprites: true })
+    .pick({ slug: true, name: true, isDefault: true, category: true, depositable: true, homeGames: true, types: true, sprites: true, shinySprites: true })
     .extend({ species: z.object({ ndex: z.number(), slug: z.string() }) })
 
 /** Input schemas stay values, not named models: see `listQuery`. */
@@ -15,7 +16,8 @@ export const formsQuery = listQuery.pick({ gen: true, type: true, limit: true, o
         .optional()
         .describe('Forms that can move into this game from HOME, as a PokéAPI version-group identifier')
         .meta({ examples: ['scarlet-violet'] }),
-    isDefault: booleanString.optional().describe("Filter on whether the form is its species' default")
+    isDefault: booleanString.optional().describe("Filter on whether the form is its species' default"),
+    category: z.enum(FORM_CATEGORIES).optional().describe('Forms of this category; see `category` on a form')
 })
 
 export const formParams = z.object({

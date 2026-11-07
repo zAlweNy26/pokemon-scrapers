@@ -182,6 +182,9 @@ export const pokemonOrigin = sqliteTable(
     (table) => [primaryKey({ columns: [table.ndex, table.lang] })]
 )
 
+export const FORM_CATEGORIES = ['default', 'battle-only', 'regional', 'gender', 'switchable', 'cosmetic', 'variant'] as const
+export type FormCategory = (typeof FORM_CATEGORIES)[number]
+
 export const form = sqliteTable(
     'form',
     {
@@ -225,11 +228,14 @@ export const form = sqliteTable(
         /** Object prefix in the R2 image bucket; null when no artwork is published. */
         spriteKey: text('sprite_key'),
         /** The shiny artwork's prefix (`shiny/25`), from the same picture as `spriteKey`; null when there is none. */
-        shinySpriteKey: text('shiny_sprite_key')
+        shinySpriteKey: text('shiny_sprite_key'),
+        /** Why the form exists; `categoryOf` in src/scraper/build.ts has the rules. */
+        category: text('category', { enum: FORM_CATEGORIES }).notNull().default('default')
     },
     (table) => [
         index('form_ndex_idx').on(table.ndex),
         index('form_depositable_idx').on(table.depositable),
+        index('form_category_idx').on(table.category),
         // Exactly one default per species: list and search join on it, so a second
         // default would list the species twice. Fails the load instead.
         uniqueIndex('form_one_default_idx').on(table.ndex).where(sql`is_default = 1`)

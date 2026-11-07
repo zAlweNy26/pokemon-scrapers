@@ -305,6 +305,7 @@ export const formDocuments = (
         slug: entry.slug,
         name: namesOf(entry),
         isDefault: entry.isDefault,
+        category: entry.category,
         depositable: entry.depositable,
         isShinyLocked: entry.isShinyLocked,
         homeGames: homeGames.get(entry.id) ?? [],

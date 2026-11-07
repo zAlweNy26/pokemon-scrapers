@@ -475,6 +475,7 @@ describe('forms.list', () => {
             name: expect.objectContaining({ en: 'Partner Pikachu', ja: null }),
             species: { ndex: 25, slug: 'pikachu' },
             isDefault: false,
+            category: 'variant',
             depositable: false,
             homeGames: [],
             types: ['electric'],
@@ -486,6 +487,12 @@ describe('forms.list', () => {
             }
         })
         expect(items[0]?.homeGames).toEqual(['lets-go-pikachu-lets-go-eevee', 'scarlet-violet', 'sword-shield'])
+    })
+
+    test('filters on category', async () => {
+        expect(await slugs({ category: 'switchable' })).toEqual(['rotom-wash'])
+        expect(await slugs({ category: 'battle-only' })).toEqual(['greninja-ash'])
+        expect((await formList({ category: 'default' })).total).toBe(8)
     })
 
     test("depositable is the form's own flag, so it tells Pikachu apart from its blocked form", async () => {

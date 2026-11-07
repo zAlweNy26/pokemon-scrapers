@@ -1,6 +1,7 @@
+import { regionOf } from './games'
 import { LANGUAGE_IDS, readTable } from './pokeapi'
 import type { Value } from './sql'
-import type { EvolutionConditions } from '@/db/schema'
+import type { EvolutionConditions, FormCategory } from '@/db/schema'
 
 type Row = Record<string, string>
 type Language = keyof typeof LANGUAGE_IDS
@@ -25,6 +26,25 @@ export interface FormInfo {
 }
 
 const LANGUAGES = Object.keys(LANGUAGE_IDS) as Language[]
+
+/**
+ * Why a form exists, first match wins: the default, battle-only (Mega, Gigantamax,
+ * Zen Mode), regional, a gender's own form (Meowstic), one the species can switch
+ * into (Rotom, Furfrou), one that only looks different (Unown, Vivillon), else a
+ * fixed variant with its own types or stats (Lycanroc, Urshifu).
+ */
+export const categoryOf = (
+    form: FormInfo,
+    { battleOnly, identifier, switchable }: { battleOnly: boolean; identifier: string; switchable: boolean },
+    base: FormInfo | undefined
+): FormCategory => {
+    if (form.isDefault) return 'default'
+    if (battleOnly) return 'battle-only'
+    if (regionOf(form)) return 'regional'
+    if (identifier === 'female' || identifier === 'male') return 'gender'
+    if (switchable) return 'switchable'
+    return form.signature === base?.signature ? 'cosmetic' : 'variant'
+}
 
 /** Not in PokéAPI. The year each generation's first games released in Japan. */
 const DEBUT_YEAR: Record<string, number> = {
@@ -177,11 +197,13 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
     const statsByPokemon = groupBy(pokemonStats!, 'pokemon_id')
 
     const forms: FormInfo[] = []
+    const formFacts: Parameters<typeof categoryOf>[1][] = []
+    const switchable = new Set(speciesRows!.filter((row) => row.forms_switchable === '1').map((row) => Number(row.id)))
     const form: Table = {
         columns: [
             'id', 'ndex', 'slug', ...languageColumns('name'), 'is_default', 'depositable',
             'height_m', 'weight_kg', ...STAT_COLUMNS, ...STAT_COLUMNS.map((stat) => `ev_${stat}`),
-            'base_experience', 'sprite_key', 'shiny_sprite_key'
+            'base_experience', 'sprite_key', 'shiny_sprite_key', 'category'
         ],
         rows: []
     }
@@ -255,6 +277,7 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
             ])
 
         const english = formNamesById.get(row.id!)?.get('9')
+        formFacts.push({ battleOnly: row.is_battle_only === '1', identifier: row.form_identifier ?? '', switchable: switchable.has(ndex) })
         forms.push({
             id, ndex, slug: row.identifier!, isDefault,
             pokemonName: text(english?.pokemon_name), formName: text(english?.form_name),
@@ -265,6 +288,10 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
             ])
         })
     }
+
+    // Rows and `forms` run in step; the default form's signature is only known once all are read.
+    const defaults = new Map(forms.filter((entry) => entry.isDefault).map((entry) => [entry.ndex, entry]))
+    form.rows.forEach((row, index) => row.push(categoryOf(forms[index]!, formFacts[index]!, defaults.get(forms[index]!.ndex))))
 
     // Slot- and level-range rows collapse to one per (species, game, location, method).
     const areaById = indexBy(locationAreas!, 'id')
