@@ -1,3 +1,5 @@
+-- void:allow-destructive
+-- encounter holds only build output: every data load deletes and refills it, so clearing and rebuilding it loses nothing.
 PRAGMA foreign_keys=OFF;--> statement-breakpoint
 CREATE TABLE `__new_encounter` (
 	`ndex` integer NOT NULL,
