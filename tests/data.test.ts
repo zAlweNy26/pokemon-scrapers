@@ -1,4 +1,8 @@
 import { describe, expect, test } from 'bun:test'
+import { createDb } from '@/db/client'
+import { pokemon } from '@/db/schema'
+import { speciesDepositable } from '@/api/modules/pokemon/service'
+import { asD1 } from '@/scraper/database'
 import { createSqlite, seedSql } from './support/d1'
 
 /**
@@ -39,5 +43,20 @@ describe('loading data', () => {
         expect(() =>
             sqlite.run("INSERT INTO encounter (ndex, form_id, game, location, method) VALUES (9999, 1, 'red', 'nowhere', 'walk')")
         ).toThrow(/FOREIGN KEY/)
+    })
+})
+
+describe('query plans', () => {
+    test('the any-form-depositable check finds forms by species', async () => {
+        // With an index on `depositable` SQLite searched by that instead, visiting most
+        // forms per species: ~500k rows on every `?depositable=` list, billed by D1.
+        const sqlite = await createSqlite()
+        const { sql, params } = createDb(asD1(sqlite)).select({ depositable: speciesDepositable }).from(pokemon).toSQL()
+
+        const plan = (sqlite.query(`EXPLAIN QUERY PLAN ${sql}`).all(...(params as never[])) as { detail: string }[])
+            .map((row) => row.detail)
+            .join('\n')
+
+        expect(plan).toContain('form_ndex_idx (ndex=?)')
     })
 })

@@ -245,8 +245,9 @@ export const form = sqliteTable(
         category: text('category', { enum: FORM_CATEGORIES }).notNull().default('default')
     },
     (table) => [
+        // No index on `depositable`: most forms are depositable, and without ANALYZE stats SQLite
+        // picked it over form_ndex_idx for the any-form-depositable subquery, reading ~500k rows a list.
         index('form_ndex_idx').on(table.ndex),
-        index('form_depositable_idx').on(table.depositable),
         index('form_category_idx').on(table.category),
         // Exactly one default per species: list and search join on it, so a second
         // default would list the species twice. Fails the load instead.
