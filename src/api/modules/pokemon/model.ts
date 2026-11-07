@@ -143,6 +143,12 @@ export const listQuery = z.object({
             .optional()
             .describe('Species the game can get on its own, any DLC included, as a PokéAPI version identifier (not a version group)')
             .meta({ examples: ['scarlet'] }),
+        exclusiveTo: z
+            .string()
+            .max(40)
+            .optional()
+            .describe('Species only this version of its pair can get on its own, as a PokéAPI version identifier')
+            .meta({ examples: ['scarlet'] }),
         habitat: z.string().max(40).optional().describe('PokéAPI habitat identifier').meta({ examples: ['forest'] }),
         sort: z
             .enum([...sortKeys, ...sortKeys.map((key) => `-${key}` as const)])
@@ -230,7 +236,13 @@ export const pokemonModels = {
                     game: z.string().describe('PokéAPI version identifier'),
                     dlc: z.string().nullable().meta({ examples: ['expansion-pass', 'mega-dimension'] }),
                     area: z.string().nullable().describe('Where and how, as Bulbapedia words it, form notes included'),
-                    obtainable: z.boolean().describe('False when the game cannot get it on its own; `area` then says how it gets in')
+                    obtainable: z.boolean().describe('False when the game cannot get it on its own; `area` then says how it gets in'),
+                    exclusive: z
+                        .boolean()
+                        .describe(
+                            'Obtainable in this version and in no other version of its pair (Scarlet, not Violet). ' +
+                                'Per species: form exclusives (Paldean Tauros breeds) are not told apart'
+                        )
                 })
             )
             .describe('Game locations for every main-series game and DLC, from Bulbapedia, oldest first'),

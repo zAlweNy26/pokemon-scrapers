@@ -104,6 +104,11 @@ describe('pokemon.list', () => {
         expect(await slugs({ eggGroup: 'Water1' })).toEqual(['lapras', 'greninja'])
     })
 
+    test('exclusiveTo takes a version and needs a row flagged exclusive', async () => {
+        expect(await slugs({ exclusiveTo: 'omega-ruby' })).toEqual(['gengar'])
+        expect(await slugs({ exclusiveTo: 'scarlet' })).toEqual([])
+    })
+
     test('obtainableIn takes a version and needs a row the game can obtain on its own', async () => {
         expect(await slugs({ obtainableIn: 'scarlet' })).toEqual(['pikachu'])
         // Pikachu has an XD row, but only through transfer.

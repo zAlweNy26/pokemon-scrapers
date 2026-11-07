@@ -12,7 +12,7 @@ import { buildFromPokeApi, type Table } from './build'
 import { check, counts, diff, openDatabase } from './database'
 import { fetchSpeciesPages } from './bulbapedia'
 import { originsOf } from './etymology'
-import { availabilityOf, dexEntriesOf } from './pokedex'
+import { availabilityOf, dexEntriesOf, exclusivesOf } from './pokedex'
 import { fetchGameEvidence, homeGames } from './games'
 import { matchEntry } from './match'
 import { POKEAPI_COMMIT, checkoutPokeApi, readTable } from './pokeapi'
@@ -93,7 +93,14 @@ if (bulbapedia.missing.length || bulbapedia.mismatched.length)
             `  pages for a different species: ${bulbapedia.mismatched.join(', ') || 'none'}`
     )
 
-const versions = new Set((await readTable('versions')).map((row) => row.identifier!))
+const versionRows = await readTable('versions')
+const versions = new Set(versionRows.map((row) => row.identifier!))
+const siblings = new Map(
+    versionRows.map((row) => [
+        row.identifier!,
+        versionRows.filter((other) => other.version_group_id === row.version_group_id && other.id !== row.id).map((other) => other.identifier!)
+    ])
+)
 const unknownTemplates = new Set<string>()
 const skippedGames = new Set<string>()
 const origins: Table = { columns: ['ndex', 'lang', 'note'], rows: [] }
@@ -109,6 +116,9 @@ for (const [ndex, wikitext] of bulbapedia.pages) {
         for (const label of skipped) skippedGames.add(label)
     }
 }
+const exclusive = exclusivesOf(availability.rows as [number, string, string, string | null, boolean][], siblings)
+availability.columns.push('exclusive')
+for (const row of availability.rows) row.push(row[4] === true && exclusive.has(`${row[0]}|${row[1]}`))
 const bulbapediaHash = new Bun.CryptoHasher('sha256')
     .update(JSON.stringify([origins.rows, pokedexEntry.rows, availability.rows]))
     .digest('hex')

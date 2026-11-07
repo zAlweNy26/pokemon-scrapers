@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { availabilityOf, dexEntriesOf, gamesOf } from '@/scraper/pokedex'
+import { availabilityOf, dexEntriesOf, exclusivesOf, gamesOf } from '@/scraper/pokedex'
 
 const versions = new Set(['red', 'blue', 'blue-japan', 'sun', 'lets-go-pikachu', 'sword', 'shield', 'scarlet', 'violet', 'legends-za'])
 
@@ -82,5 +82,25 @@ describe('availabilityOf', () => {
             ['violet', '', 'Route 1; Breed Raichu', true]
         ])
         expect([...skipped]).toEqual(['Shuffle'])
+    })
+})
+
+describe('exclusivesOf', () => {
+    const siblings = new Map([['scarlet', ['violet']], ['violet', ['scarlet']], ['legends-arceus', []]])
+
+    test('obtainable in one version of the pair only, DLC rows included', () => {
+        const rows = [
+            [1, 'scarlet', '', 'Area One', true],
+            [1, 'violet', '', null, false],
+            [2, 'scarlet', '', null, false],
+            [2, 'scarlet', 'the-hidden-treasure-of-area-zero', 'Kitakami', true],
+            [3, 'scarlet', '', 'Area One', true],
+            [3, 'violet', 'the-hidden-treasure-of-area-zero', 'Kitakami', true]
+        ] as const
+        expect(exclusivesOf(rows, siblings)).toEqual(new Set(['1|scarlet', '2|scarlet']))
+    })
+
+    test('a version alone in its group has no exclusives', () => {
+        expect(exclusivesOf([[1, 'legends-arceus', '', 'Fieldlands', true]], siblings)).toEqual(new Set())
     })
 })

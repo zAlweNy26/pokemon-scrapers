@@ -108,3 +108,23 @@ export const availabilityOf = (
     result.rows = [...byGame.values()]
     return result
 }
+
+/**
+ * `${ndex}|${game}` for every version exclusive: the species can be obtained in
+ * that version on its own (any DLC included) and in no other version of its group,
+ * as Scarlet against Violet. `siblings` maps a version to the rest of its group;
+ * a version alone in its group (Legends: Arceus) has no exclusives.
+ */
+export const exclusivesOf = (
+    rows: readonly (readonly [number, string, string, string | null, boolean])[],
+    siblings: Map<string, string[]>
+): Set<string> => {
+    const obtainable = new Set(rows.filter((row) => row[4]).map(([ndex, game]) => `${ndex}|${game}`))
+    return new Set(
+        [...obtainable].filter((key) => {
+            const [ndex, game] = key.split('|') as [string, string]
+            const others = siblings.get(game) ?? []
+            return others.length > 0 && others.every((other) => !obtainable.has(`${ndex}|${other}`))
+        })
+    )
+}

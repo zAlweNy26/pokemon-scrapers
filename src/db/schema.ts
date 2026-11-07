@@ -140,7 +140,9 @@ export const availability = sqliteTable(
         game: text('game').notNull(),
         dlc: text('dlc').notNull().default(''),
         area: text('area'),
-        obtainable: integer('obtainable', { mode: 'boolean' }).notNull()
+        obtainable: integer('obtainable', { mode: 'boolean' }).notNull(),
+        /** Obtainable here and in no other version of the group (Scarlet, not Violet); from `exclusivesOf`. */
+        exclusive: integer('exclusive', { mode: 'boolean' }).notNull().default(false)
     },
     (table) => [primaryKey({ columns: [table.ndex, table.game, table.dlc] })]
 )

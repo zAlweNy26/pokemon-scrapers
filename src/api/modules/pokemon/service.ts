@@ -19,6 +19,7 @@ export interface ListFilters {
     ability?: string
     eggGroup?: string
     obtainableIn?: string
+    exclusiveTo?: string
     habitat?: string
     sort?: SortKey | `-${SortKey}`
     limit: number
@@ -149,6 +150,14 @@ const filterConditions = (filters: ListFilters) => {
             exists(
                 sql`(SELECT 1 FROM ${availability} WHERE ${availability.ndex} = ${pokemon.ndex}
                      AND ${availability.game} = ${filters.obtainableIn} COLLATE NOCASE AND ${availability.obtainable} = 1)`
+            )
+        )
+
+    if (filters.exclusiveTo !== undefined)
+        conditions.push(
+            exists(
+                sql`(SELECT 1 FROM ${availability} WHERE ${availability.ndex} = ${pokemon.ndex}
+                     AND ${availability.game} = ${filters.exclusiveTo} COLLATE NOCASE AND ${availability.exclusive} = 1)`
             )
         )
 
@@ -429,7 +438,8 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
                 game: availability.game,
                 dlc: availability.dlc,
                 area: availability.area,
-                obtainable: availability.obtainable
+                obtainable: availability.obtainable,
+                exclusive: availability.exclusive
             })
             .from(availability)
             .where(eq(availability.ndex, ndex))
@@ -471,7 +481,8 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
             game: row.game,
             dlc: row.dlc || null,
             area: row.area,
-            obtainable: row.obtainable
+            obtainable: row.obtainable,
+            exclusive: row.exclusive
         })),
         encounters
     }

@@ -1,0 +1,1 @@
+ALTER TABLE `availability` ADD `exclusive` integer DEFAULT false NOT NULL;

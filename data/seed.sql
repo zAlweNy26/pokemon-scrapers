@@ -190,13 +190,15 @@ INSERT INTO pokedex_entry (ndex, form, game, text) VALUES
     (25,'','scarlet','When it is angered, it immediately discharges the energy stored in the pouches in its cheeks.'),
     (25,'','legends-za','It has small electric sacs on both its cheeks. When in a tough spot, this Pokémon discharges electricity.');
 
-INSERT INTO availability (ndex, game, dlc, area, obtainable) VALUES
-    (25,'red','','Viridian Forest, Power Plant',1),
-    (25,'xd','',NULL,0),
-    (25,'black','','Poké Transfer, Event',0),
-    (25,'scarlet','','South Province: Area Two, Area Four, Artazon; East Province: Area One; West Province: Area Three; Tera Raid Battles (2★, 3★)',1),
-    (25,'scarlet','the-hidden-treasure-of-area-zero','Kitakami Road, Apple Hills, Oni Mountain, Wistful Fields, Paradise Barrens, Kitakami Wilds, Timeless Woods',1),
-    (25,'legends-za','mega-dimension','Hyperspace Lumiose (2★ & 4★ Electric-type wild zones)',1);
+-- Gengar's Omega Ruby row is illustrative: marked exclusive so the flag and its filter have a case.
+INSERT INTO availability (ndex, game, dlc, area, obtainable, exclusive) VALUES
+    (25,'red','','Viridian Forest, Power Plant',1,0),
+    (25,'xd','',NULL,0,0),
+    (25,'black','','Poké Transfer, Event',0,0),
+    (25,'scarlet','','South Province: Area Two, Area Four, Artazon; East Province: Area One; West Province: Area Three; Tera Raid Battles (2★, 3★)',1,0),
+    (25,'scarlet','the-hidden-treasure-of-area-zero','Kitakami Road, Apple Hills, Oni Mountain, Wistful Fields, Paradise Barrens, Kitakami Wilds, Timeless Woods',1,0),
+    (25,'legends-za','mega-dimension','Hyperspace Lumiose (2★ & 4★ Electric-type wild zones)',1,0),
+    (94,'omega-ruby','','Evolve Haunter',1,1);
 
 INSERT INTO pokemon_dex_number (ndex, pokedex, number) VALUES
     (25,'kanto',25),(25,'paldea',74),(25,'kitakami',21),(25,'kalos-central',36),
