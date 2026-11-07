@@ -51,7 +51,8 @@ purpose: Workers Cache answers most revalidations first. Follow-ups found on the
 2. ~~`HEAD` returns 404~~ — done: `src/api/handler.ts` answers HEAD as the GET it mirrors, without a body.
 3. ~~D1 read replicas are unused~~ — done: `src/db/client.ts` reads through a `'first-unconstrained'`
    D1 session (Drizzle only calls `prepare()` and `batch()`, which a session has). Load data a
-   minute before deploying, so no replica serves old rows under the new `DATA_VERSION`.
+   minute before deploying, so no replica serves old rows under the new `DATA_VERSION`: CI
+   enforces it from the `data_version` and `loaded_at` rows the load writes to `meta`.
 4. **Not deployed yet:** `bun run deploy`, commit `void.lock.json`, attach the domain with `void domain`.
 
 ## Replace veekun with PokéAPI's CSV files
@@ -98,8 +99,9 @@ The main protection is needing very few requests:
 | PokéAPI | almost everything | **0** (git clone) |
 | Serebii | HOME depositability | **2 pages**: `pokemonhome/depositablepokemon.shtml`, `nondepositablepokemon.shtml` (*checked*) |
 | Bulbapedia | name etymology | **~21**: the MediaWiki API returns 50 pages per request |
+| pokeos.com | Scarlet/Violet + Z-A encounters, sub-legendary/Ultra Beast/Paradox/shiny-locked flags, pronunciations | **~85**: one bulk species list, one pronunciation list, then one request per location (owner's permission: don't spam it). Cached 30 days |
 
-About 25 requests, under 2 minutes at Bulbapedia's 5-second delay. Rules:
+About 110 requests, under 10 minutes at Bulbapedia's 5-second delay (one delay for every site). Rules:
 
 - **One request at a time**, at least 5 s apart (Bulbapedia's robots.txt: `Crawl-delay: 5`, *checked*).
 - **Identifying User-Agent** with the project URL and a contact address.

@@ -19,7 +19,8 @@ export const meta = new Elysia({ name: 'module.meta' }).use(sharedModels).get(
         // Counts are written by the data load, not computed here: any extra query
         // string misses the edge cache, and counting per request would scan
         // three tables on every miss.
-        const { generated_at, count_pokemon, count_forms, count_encounters, ...sources } =
+        // data_version and loaded_at are the deploy guard's (.github/workflows/deploy.yml), not sources.
+        const { generated_at, count_pokemon, count_forms, count_encounters, data_version, loaded_at, ...sources } =
             Object.fromEntries(rows.map((row) => [row.key, row.value]))
 
         return {

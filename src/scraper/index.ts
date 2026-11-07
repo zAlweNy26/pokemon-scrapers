@@ -1,6 +1,7 @@
 /**
  * `bun run data:build` - builds data/dataset.sql from PokéAPI's CSVs (git, no HTTP)
- * and Serebii's HOME list (one polite request), validates it in a local copy of
+ * Serebii's HOME list (one polite request), Bulbapedia's species pages and pokeos's
+ * flags, pronunciations and recent encounters (both cached), validates it in a local copy of
  * the schema, diffs it against the previous build and writes data/version.json.
  * Load it with `bun run data:load:local`, then `bun run data:load:remote`.
  *
@@ -15,6 +16,7 @@ import { availabilityOf, dexEntriesOf } from './pokedex'
 import { fetchGameEvidence, homeGames } from './games'
 import { matchEntry } from './match'
 import { POKEAPI_COMMIT, checkoutPokeApi, readTable } from './pokeapi'
+import { fetchPokeos, shinyLockedForms } from './pokeos'
 import { fetchDepositable } from './serebii'
 import { SPRITES_COMMIT, artworkKeys, checkoutArtwork } from './sprites'
 import { insert, literal } from './sql'
@@ -112,6 +114,30 @@ const bulbapediaHash = new Bun.CryptoHasher('sha256')
     .digest('hex')
     .slice(0, 12)
 
+// Species flags, pronunciations, shiny locks, and encounters for the games
+// PokéAPI has none for, from pokeos.com.
+const pokeos = await fetchPokeos()
+const speciesSlug = new Map(data.pokemon.rows.map((row) => [row[0] as number, row[1] as string]))
+data.pokemon.columns.push('is_sub_legendary', 'is_ultra_beast', 'is_paradox', 'pronunciation', 'pronunciation_ipa')
+for (const row of data.pokemon.rows) {
+    const flags = pokeos.flags.get(row[0] as number)
+    const said = pokeos.pronunciations.get(row[0] as number)
+    row.push(flags?.subLegendary ?? false, flags?.ultraBeast ?? false, flags?.paradox ?? false, said?.respelling ?? null, said?.ipa ?? null)
+}
+const shinyLocked = shinyLockedForms(pokeos.rows, data.forms, speciesSlug)
+data.form.columns.push('is_shiny_locked')
+for (const row of data.form.rows) row.push(shinyLocked.ids.has(row[0] as number))
+// Only games PokéAPI has no encounters for, so its rows take over once it has some.
+const pokeApiGames = new Set(data.encounter.rows.map((row) => row[1]))
+const pokeosEncounters = pokeos.encounters.filter(
+    ([ndex, game]) => speciesSlug.has(ndex) && versions.has(game) && !pokeApiGames.has(game)
+)
+data.encounter.rows.push(...pokeosEncounters)
+const pokeosHash = new Bun.CryptoHasher('sha256')
+    .update(JSON.stringify([[...pokeos.flags], [...pokeos.pronunciations], [...shinyLocked.ids], pokeosEncounters]))
+    .digest('hex')
+    .slice(0, 12)
+
 const tables: [string, Table][] = [
     ['generation', data.generation],
     ['type', data.type],
@@ -129,7 +155,7 @@ const tables: [string, Table][] = [
     ['form_home_game', formHomeGame],
     ['encounter', data.encounter],
     ['evolution', data.evolution],
-    ['meta', { columns: ['key', 'value'], rows: [['source_pokeapi', POKEAPI_COMMIT], ['source_sprites', SPRITES_COMMIT], ['source_serebii', serebiiHash], ['source_bulbapedia', bulbapediaHash]] }]
+    ['meta', { columns: ['key', 'value'], rows: [['source_pokeapi', POKEAPI_COMMIT], ['source_sprites', SPRITES_COMMIT], ['source_serebii', serebiiHash], ['source_bulbapedia', bulbapediaHash], ['source_pokeos', pokeosHash]] }]
 ]
 
 const body = [
@@ -146,7 +172,11 @@ const body = [
 // The version hashes the data, not the time it was built, so an unchanged rebuild keeps every ETag valid.
 const version = new Bun.CryptoHasher('sha256').update(body).digest('hex').slice(0, 12)
 const generatedAt = new Date().toISOString()
-const sql = `${body}\nINSERT INTO meta (key, value) VALUES ('generated_at', ${literal(generatedAt)});\n`
+// data_version and loaded_at (the database's clock, at load time) let CI deploy only once these rows are in.
+const sql = `${body}
+INSERT INTO meta (key, value) VALUES ('generated_at', ${literal(generatedAt)}), ('data_version', ${literal(version)}),
+    ('loaded_at', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'));
+`
 
 const next = await openDatabase(sql).catch((error) => fail(`the dataset does not load: ${error}`))
 const problems = check(next)
@@ -191,5 +221,13 @@ console.log(
 )
 console.log(`  Pokédex entries: ${pokedexEntry.rows.length}, game locations: ${availability.rows.length}`)
 console.log(`    labels that are not a main-series game, left out: ${[...skippedGames].join(', ')}`)
+console.log(
+    `  pokeos: ${pokeos.pronunciations.size} pronunciations, ${shinyLocked.ids.size} shiny-locked forms,`,
+    `${pokeosEncounters.length} encounters (${Object.entries(Object.groupBy(pokeosEncounters, ([, game]) => game)).map(([game, rows]) => `${game} ${rows!.length}`).join(', ')})`
+)
+console.log(`    shiny-locked forms homedex does not have: ${shinyLocked.unmatched.join(' ') || 'none'}`)
+const pokeosDropped = pokeos.encounters.filter(([ndex, game]) => !speciesSlug.has(ndex) || !versions.has(game))
+if (pokeosDropped.length)
+    console.log(`  ⚠ pokeos encounters for an unknown species or game, left out: ${pokeosDropped.length}`, pokeosDropped.slice(0, 5).map((row) => row.join('/')).join(' '))
 if (unknownTemplates.size)
     console.log(`  ⚠ templates rendered by guess (add them to src/scraper/wikitext.ts): ${[...unknownTemplates].join(', ')}`)

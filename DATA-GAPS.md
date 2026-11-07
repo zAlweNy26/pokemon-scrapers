@@ -15,6 +15,11 @@ acting on an old row (see *Re-checking* at the end).
   ("Alolan Form") are Bulbapedia's text, not linked to form slugs; locations are a readable
   sentence per game, not structured (location, method) rows; side games (Stadium, Pal Park,
   Pokéwalker, Dream World, Pokopia) are left out.
+- **Done (2026-11-07), from pokeos.com** (`src/scraper/pokeos.ts`, owner's permission):
+  structured encounters for Scarlet/Violet + DLC (1,726 / 1,728) and Legends Z-A (489),
+  as (location, method) with no levels; sub-legendary (44), Ultra Beast (11) and Paradox (20)
+  flags; shiny-locked forms (51); English pronunciations (all 1,025). Its Legends Z-A
+  learnsets were left out: they mix another species' moves into each list.
 - Everything else below is open.
 
 ## 1. Free — already in PokéAPI's CSVs, not read yet
@@ -49,7 +54,7 @@ cache holds it. Besides the name origin it carries what PokéAPI lacks for recen
 | Data | Template | Recent coverage (entries) | PokéAPI for comparison |
 |---|---|---|---|
 | Pokédex entries (English) | `{{Dex/Entry1\|v=…}}`, `{{Dex/Entry2\|…}}` | Scarlet 783, Sword 738, Legends Z-A 543, BDSP 338 | Scarlet/Violet 120 species, Z-A 0, BDSP 0 (other languages up to Sword/Shield) |
-| Game availability | `{{Availability/Entry1\|2[/None]\|v=…\|area=…}}` | BDSP, Legends Arceus, Scarlet/Violet + DLC, Legends Z-A | **no encounters at all** for those four games |
+| Game availability | `{{Availability/Entry1\|2[/None]\|v=…\|area=…}}` | BDSP, Legends Arceus, Scarlet/Violet + DLC, Legends Z-A | **no encounters at all** for those four games (Scarlet/Violet and Z-A now come from pokeos; BDSP and Legends Arceus are still missing) |
 
 The `/None` variants record unobtainable-in-the-wild cases (`Trade`, `Event`, …), which
 also covers part of origin restrictions. Cost: parsing. `area=` is free text with wiki
@@ -60,7 +65,7 @@ is the starting point. Licence is unchanged (Bulbapedia is already CC BY-NC-SA 2
 
 - **Legends Z-A / Mega Dimension learnsets** — first bump the pinned PokéAPI commit and
   re-count; scrape only if PokéAPI still lacks them.
-- **Shiny-locked Pokémon per game** — probably one or two pages; verify first.
+- ~~**Shiny-locked Pokémon per game**~~ — done from pokeos, per form but not per game.
 - **Origin restrictions** (Let's Go only takes back its own; BDSP's one-per-save limit) —
   listed as "not modelled" in `DATA-PLAN.md`.
 - **Pokémon Champions** — PokéAPI already has it (`champions` version group: 319 learnsets,

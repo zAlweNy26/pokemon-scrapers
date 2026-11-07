@@ -64,6 +64,13 @@ export const pokemon = sqliteTable(
         isLegendary: integer('is_legendary', { mode: 'boolean' }).notNull().default(false),
         isMythical: integer('is_mythical', { mode: 'boolean' }).notNull().default(false),
         isBaby: integer('is_baby', { mode: 'boolean' }).notNull().default(false),
+        /** From pokeos: the legendaries PokéAPI's `isLegendary` does not tell apart (Articuno, the Tapus). Both are set. */
+        isSubLegendary: integer('is_sub_legendary', { mode: 'boolean' }).notNull().default(false),
+        isUltraBeast: integer('is_ultra_beast', { mode: 'boolean' }).notNull().default(false),
+        isParadox: integer('is_paradox', { mode: 'boolean' }).notNull().default(false),
+        /** English pronunciation from pokeos: a respelling ("BULL-buh-sohr") and IPA. */
+        pronunciation: text('pronunciation'),
+        pronunciationIpa: text('pronunciation_ipa'),
         hasGenderDifferences: integer('has_gender_differences', { mode: 'boolean' }).notNull().default(false),
         formsSwitchable: integer('forms_switchable', { mode: 'boolean' }).notNull().default(false),
         growthRate: text('growth_rate').notNull(),
@@ -197,6 +204,8 @@ export const form = sqliteTable(
         isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
         /** Can this form be stored in Pokémon HOME? Which games it can then move to is `formHomeGame`. */
         depositable: integer('depositable', { mode: 'boolean' }).notNull().default(false),
+        /** From pokeos: no shiny can be obtained in normal play. */
+        isShinyLocked: integer('is_shiny_locked', { mode: 'boolean' }).notNull().default(false),
         heightM: real('height_m'),
         weightKg: real('weight_kg'),
         hp: integer('hp'),

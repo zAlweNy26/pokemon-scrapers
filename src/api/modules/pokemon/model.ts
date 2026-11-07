@@ -8,6 +8,7 @@ export const formSchema = z.object({
     name: namesSchema,
     isDefault: z.boolean(),
     depositable: z.boolean().describe('Can this form be stored in Pokémon HOME?'),
+    isShinyLocked: z.boolean().describe('No shiny can be obtained in normal play; from pokeos'),
     homeGames: z
         .array(z.string())
         .describe('Games this form can be moved into from HOME, as version-group identifiers')
@@ -172,6 +173,14 @@ export const pokemonModels = {
         isLegendary: z.boolean(),
         isMythical: z.boolean(),
         isBaby: z.boolean(),
+        isSubLegendary: z.boolean().describe('Legendary but not a box legendary (Articuno, the Tapus); `isLegendary` is also true'),
+        isUltraBeast: z.boolean(),
+        isParadox: z.boolean(),
+        pronunciation: z
+            .object({ respelling: z.string(), ipa: z.string().nullable() })
+            .nullable()
+            .describe('English pronunciation, from pokeos')
+            .meta({ examples: [{ respelling: 'BULL-buh-sohr', ipa: '/ˈbʊlbəsɔːɹ/' }] }),
         hasGenderDifferences: z.boolean(),
         formsSwitchable: z.boolean(),
         growthRate: z.string().meta({ examples: ['medium-slow'] }),

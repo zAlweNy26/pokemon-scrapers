@@ -29,6 +29,13 @@
       "when": 1793804669341,
       "tag": "20261104150429_pokedex_entries_availability",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794051895402,
+      "tag": "20261107114455_pokeos_flags_pronunciation",
+      "breakpoints": true
     }
   ]
 }

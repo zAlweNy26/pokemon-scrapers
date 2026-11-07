@@ -41,8 +41,11 @@ uploads the Worker. Data is loaded separately, **before** deploying — see belo
 
 After that first deploy, `.github/workflows/deploy.yml` tests and deploys every push
 to `main`. Set the repository secret `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit,
-D1: Edit). A push that changes `data/version.json` is held: load the data, wait a
-minute, then run the workflow by hand (Actions → Deploy → Run workflow).
+D1: Edit). Before deploying, it checks that the production database holds the
+dataset `data/version.json` names: `data:load:remote` records its version and load
+time in `meta`. So load the data first, then push `data/version.json`; the deploy
+waits out the rest of the minute after the load itself. Pushed without loading, it
+fails: load, then re-run it (Actions → Deploy → Re-run).
 
 ## Data
 
@@ -52,11 +55,11 @@ bun run data:check         # quality checks + every species through the API; wri
 bun run data:sprites       # artwork → R2 as {key}/{96,256,475}.webp; without S3_* in .env, to .cache/sprites-out/
 bun run data:load:local    # reset local D1 and load it; run `bun test` and try the API
 bun run data:load:remote   # load it into the real database (wrangler: void db execute passes the 8.6 MB file as one argument and hits E2BIG; the id is void.lock.json's D1)
-# wait a minute, then: bun run deploy
+# then commit and push data/version.json: CI deploys once the load is a minute old
 ```
 
-Reads are served by D1 read replicas near the caller. Wait a minute between
-loading and deploying: the deploy announces the new `DATA_VERSION`, and a replica
+Reads are served by D1 read replicas near the caller. CI waits a minute after the
+load before deploying: the deploy announces the new `DATA_VERSION`, and a replica
 still holding old rows at that moment would have them cached at the edge, under
 the new version, for a week.
 

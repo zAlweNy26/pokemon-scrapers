@@ -28,23 +28,6 @@ jobs:
             exit 1
           fi
 
-      # DATA_VERSION is baked into the deploy: shipping a new one before the rows are
-      # loaded caches old rows under it. CI can't load data (dataset.sql is built locally).
-      - name: Hold deploys that change the dataset
-        if: github.event_name == 'push'
-        env:
-          BEFORE: ${{ github.event.before }}
-        run: |
-          # After a force-push the previous tip is on no branch; GitHub still serves it by SHA.
-          if ! git fetch -q --no-tags --depth=1 origin "$BEFORE"; then
-            echo "::error::Can't fetch the previous main ($BEFORE) to compare data/version.json. If the data is loaded, run this workflow manually."
-            exit 1
-          fi
-          if ! git diff --quiet "$BEFORE" HEAD -- data/version.json; then
-            echo "::error::data/version.json changed. Run 'bun run data:load:remote', wait a minute, then run this workflow manually."
-            exit 1
-          fi
-
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -55,6 +38,28 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun test
       - run: bun run typecheck
+
+      # DATA_VERSION is baked into the deploy: announcing a version whose rows are not
+      # loaded caches old rows under it for a week. CI can't load data (dataset.sql is
+      # built locally), so it checks what `bun run data:load:remote` recorded: the same
+      # version, and at least a minute ago so read replicas have caught up.
+      - name: Require the dataset to be loaded
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          export CLOUDFLARE_ACCOUNT_ID=$(jq -r .resolved.account_id void.lock.json)
+          want=$(jq -r .version data/version.json)
+          # A failed query stops the step here (bash -e, pipefail), not as a false mismatch.
+          loaded=$(bunx wrangler d1 execute "$(jq -r '.resolved.d1_databases[0].database_id' void.lock.json)" --remote --json \
+            --command "SELECT (SELECT value FROM meta WHERE key = 'data_version') AS have,
+                              (SELECT unixepoch('now') - unixepoch(value) FROM meta WHERE key = 'loaded_at') AS age" \
+            | jq -r '.[0].results[0] | "\(.have) \(.age // 0)"')
+          read -r have age <<< "$loaded"
+          if [ "$have" != "$want" ]; then
+            echo "::error::Production holds dataset $have, but data/version.json is $want. Run 'bun run data:load:remote', then re-run this workflow."
+            exit 1
+          fi
+          if [ "$age" -lt 60 ]; then sleep $((60 - age)); fi
 
       # Applies pending D1 migrations, then uploads the Worker.
       - run: bun run deploy
