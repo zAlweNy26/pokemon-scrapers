@@ -1,4 +1,4 @@
-import { relations, sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 /**
@@ -412,39 +412,6 @@ export const meta = sqliteTable('meta', {
     key: text('key').primaryKey(),
     value: text('value').notNull()
 })
-
-export const generationRelations = relations(generation, ({ many }) => ({
-    pokemon: many(pokemon)
-}))
-
-export const pokemonRelations = relations(pokemon, ({ one, many }) => ({
-    generation: one(generation, { fields: [pokemon.gen], references: [generation.id] }),
-    forms: many(form),
-    eggGroups: many(pokemonEggGroup),
-    origins: many(pokemonOrigin),
-    dexNumbers: many(pokemonDexNumber),
-    encounters: many(encounter)
-}))
-
-export const formRelations = relations(form, ({ one, many }) => ({
-    pokemon: one(pokemon, { fields: [form.ndex], references: [pokemon.ndex] }),
-    types: many(formType),
-    abilities: many(formAbility),
-    homeGames: many(formHomeGame),
-    shiny: many(formShiny)
-}))
-
-export const formHomeGameRelations = relations(formHomeGame, ({ one }) => ({
-    form: one(form, { fields: [formHomeGame.formId], references: [form.id] })
-}))
-
-export const formTypeRelations = relations(formType, ({ one }) => ({
-    form: one(form, { fields: [formType.formId], references: [form.id] })
-}))
-
-export const formAbilityRelations = relations(formAbility, ({ one }) => ({
-    form: one(form, { fields: [formAbility.formId], references: [form.id] })
-}))
 
 export type Pokemon = typeof pokemon.$inferSelect
 export type Form = typeof form.$inferSelect

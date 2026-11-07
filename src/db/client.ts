@@ -1,5 +1,4 @@
 import { drizzle } from 'drizzle-orm/d1'
-import * as schema from './schema'
 
 /**
  * Wraps a D1 binding in Drizzle. Cheap to construct - one per request in
@@ -14,6 +13,6 @@ import * as schema from './schema'
  */
 export const createDb = (d1: D1Database) =>
     // Drizzle's type asks for a D1Database, but it only calls prepare() and batch(), which a session has.
-    drizzle(d1.withSession('first-unconstrained') as unknown as D1Database, { schema })
+    drizzle(d1.withSession('first-unconstrained') as unknown as D1Database)
 
 export type Db = ReturnType<typeof createDb>
