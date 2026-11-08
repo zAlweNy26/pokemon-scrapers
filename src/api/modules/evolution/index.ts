@@ -9,10 +9,10 @@ export const evolution = new Elysia({ name: 'module.evolution', prefix: '/evolut
     .use(sharedModels)
     .model(evolutionModels)
     .get(
-        '/:id',
+        '/:ndex',
         async ({ params }) => {
-            const found = await service.chain(db(), params.id, env().IMAGE_BASE_URL)
-            if (!found) throw notFound(`No evolution chain has id ${params.id}.`)
+            const found = await service.chain(db(), params.ndex, env().IMAGE_BASE_URL)
+            if (!found) throw notFound(`No species has national dex number ${params.ndex}.`)
 
             return found
         },
@@ -20,8 +20,8 @@ export const evolution = new Elysia({ name: 'module.evolution', prefix: '/evolut
             params: chainParams,
             response: { 200: 'evolution.chain', 404: 'problem', 422: 'problem', 429: 'problem' },
             detail: {
-                summary: 'Get one evolution chain',
-                description: 'Its species as /v1/pokemon list items, and its steps as /v1/pokemon/:idOrName has them.',
+                summary: "Get a species' evolution chain",
+                description: 'The chain the species with this national dex number is in. Its species as /v1/pokemon list items, and its steps as /v1/pokemon/:idOrName has them.',
                 tags: ['Pokemon']
             }
         }

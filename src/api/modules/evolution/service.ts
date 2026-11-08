@@ -3,8 +3,12 @@ import type { Db } from '@/db/client'
 import { form, pokemon } from '@/db/schema'
 import { evolutionSteps, listColumns, listItems } from '@/api/modules/pokemon/service'
 
-/** A chain's species as list items, and its steps exactly as each member's detail has them. */
-export const chain = async (db: Db, id: number, imageBaseUrl: string) => {
+/** The chain a species is in: its species as list items, and its steps exactly as each member's detail has them. */
+export const chain = async (db: Db, ndex: number, imageBaseUrl: string) => {
+    const [species] = await db.select({ id: pokemon.evolutionChain }).from(pokemon).where(eq(pokemon.ndex, ndex)).limit(1)
+    if (!species) return undefined
+
+    const { id } = species
     const [rows, steps] = await db.batch([
         db
             .select(listColumns)
@@ -14,8 +18,6 @@ export const chain = async (db: Db, id: number, imageBaseUrl: string) => {
             .orderBy(pokemon.ndex),
         evolutionSteps(db, id)
     ])
-
-    if (!rows.length) return undefined
 
     return { id, members: await listItems(db, rows, imageBaseUrl), steps }
 }

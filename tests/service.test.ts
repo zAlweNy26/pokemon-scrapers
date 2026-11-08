@@ -339,7 +339,7 @@ describe('pokemon.detail', () => {
 
 describe('evolution.chain', () => {
     test("lists the chain's species as list items, with the steps every member's detail has", async () => {
-        const result = await evolution.chain(db, 10, IMAGES)
+        const result = await evolution.chain(db, 26, IMAGES)
         const raichu = await pokemon.detail(db, (await pokemon.findSpecies(db, 'raichu'))!, IMAGES)
 
         expect(result?.id).toBe(10)
@@ -349,13 +349,13 @@ describe('evolution.chain', () => {
     })
 
     test('a chain of one species has no steps', async () => {
-        const result = await evolution.chain(db, 65, IMAGES)
+        const result = await evolution.chain(db, 131, IMAGES)
 
         expect(result?.members.map((member) => member.slug)).toEqual(['lapras'])
         expect(result?.steps).toEqual([])
     })
 
-    test('returns undefined for a chain no species is in', async () => {
+    test('returns undefined for a dex number no species has', async () => {
         expect(await evolution.chain(db, 9999, IMAGES)).toBeUndefined()
     })
 })

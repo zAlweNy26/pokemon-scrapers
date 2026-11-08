@@ -3,12 +3,12 @@ import { evolutionStepSchema, listItemSchema } from '@/api/modules/pokemon/model
 
 /** Input schemas stay values, not named models: see `listQuery`. */
 export const chainParams = z.object({
-    id: z.coerce.number().int().min(1).describe('PokéAPI evolution chain id').meta({ examples: [10] })
+    ndex: z.coerce.number().int().min(1).describe('National dex number of any species in the chain').meta({ examples: [25] })
 })
 
 export const evolutionModels = {
     'evolution.chain': z.object({
-        id: z.number(),
+        id: z.number().describe('PokéAPI evolution chain id'),
         members: z.array(listItemSchema).describe('Every species in the chain, by dex number'),
         steps: z
             .array(evolutionStepSchema)

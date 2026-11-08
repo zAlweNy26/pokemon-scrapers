@@ -31,7 +31,7 @@ describe('openapi document', () => {
             '/v1/abilities',
             '/v1/abilities/{slug}',
             '/v1/egg-groups',
-            '/v1/evolution-chains/{id}',
+            '/v1/evolution-chains/{ndex}',
             '/v1/forms',
             '/v1/forms/{slug}',
             '/v1/generations',
@@ -50,7 +50,7 @@ describe('openapi document', () => {
 
     test('documents the evolution chain, type and ability pages', () => {
         const cases = [
-            ['/v1/evolution-chains/{id}', ['path:id'], 'evolution.chain'],
+            ['/v1/evolution-chains/{ndex}', ['path:ndex'], 'evolution.chain'],
             ['/v1/types/{slug}', ['path:slug', 'query:limit', 'query:offset'], 'reference.type'],
             ['/v1/abilities/{slug}', ['path:slug', 'query:limit', 'query:offset'], 'reference.ability']
         ] as const

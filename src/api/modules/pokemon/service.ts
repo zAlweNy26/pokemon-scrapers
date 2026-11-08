@@ -404,7 +404,7 @@ const intoForm = alias(form, 'into_form')
 
 /**
  * Every evolution method in a chain, to put in a batch. The one definition of
- * `evolutionChain.steps`, so /v1/pokemon/:idOrName and /v1/evolution-chains/:id
+ * `evolutionChain.steps`, so /v1/pokemon/:idOrName and /v1/evolution-chains/:ndex
  * cannot drift apart. The slugs are renamed because D1 batches return rows keyed
  * by column name: four columns all called `slug` would collapse into one.
  */

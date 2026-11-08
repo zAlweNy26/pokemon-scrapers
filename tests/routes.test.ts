@@ -495,9 +495,9 @@ describe('GET /v1/forms/:slug', () => {
     })
 })
 
-describe('GET /v1/evolution-chains/:id', () => {
+describe('GET /v1/evolution-chains/:ndex', () => {
     test("lists the chain's species, and the steps a member's detail has", async () => {
-        const { response, body } = await json('/v1/evolution-chains/10')
+        const { response, body } = await json('/v1/evolution-chains/26')
         const { body: raichu } = await json('/v1/pokemon/raichu')
 
         expect(response.status).toBe(200)
@@ -507,7 +507,7 @@ describe('GET /v1/evolution-chains/:id', () => {
         expect(body.steps).toEqual(raichu.evolutionChain.steps)
     })
 
-    test('answers 404 as a problem for a chain no species is in, and 422 for a non-id', async () => {
+    test('answers 404 as a problem for a dex number no species has, and 422 for a non-number', async () => {
         const { response, body } = await json('/v1/evolution-chains/9999')
 
         expect(response.status).toBe(404)
