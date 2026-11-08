@@ -303,9 +303,9 @@ export const formFacts = (db: Db, where: SQL) =>
 
 type SpriteKeys = Pick<Form, 'spriteKey' | 'shinySpriteKey' | 'femaleSpriteKey' | 'femaleShinySpriteKey'>
 
-/** The looks a tracker collects for a form: one, or male and female when HOME draws them apart. */
+/** Male and female looks when HOME draws them apart; otherwise none, as the form's own sprites are its only look. */
 export const variantsOf = (keys: SpriteKeys, imageBaseUrl: string) => {
-    const look = (gender: 'male' | 'female' | null, sprite: string | null, shiny: string | null) => ({
+    const look = (gender: 'male' | 'female', sprite: string | null, shiny: string | null) => ({
         gender,
         sprites: spritesFor(imageBaseUrl, sprite),
         shinySprites: spritesFor(imageBaseUrl, shiny)
@@ -313,7 +313,7 @@ export const variantsOf = (keys: SpriteKeys, imageBaseUrl: string) => {
 
     return keys.femaleSpriteKey
         ? [look('male', keys.spriteKey, keys.shinySpriteKey), look('female', keys.femaleSpriteKey, keys.femaleShinySpriteKey)]
-        : [look(null, keys.spriteKey, keys.shinySpriteKey)]
+        : []
 }
 
 /** Form rows and their `formFacts` rows, as published forms. */

@@ -65,17 +65,15 @@ export const formSchema = z.object({
     variants: z
         .array(
             z.object({
-                gender: z
-                    .enum(['male', 'female'])
-                    .nullable()
-                    .describe('Set when males and females of this form look different; null when they look alike'),
+                gender: z.enum(['male', 'female']),
                 sprites: spritesSchema,
                 shinySprites: spritesSchema
             })
         )
         .describe(
-            'The looks to collect for this form: one, or a male and a female one (Pikachu, Hippowdon). A species whose ' +
-                'female is a form of its own (Meowstic) has it in `forms` instead, so it is never counted twice'
+            'A male and a female look to collect when HOME draws them apart (Pikachu, Hippowdon); empty when they look ' +
+                'alike, as `sprites` is then the only look. A species whose female is a form of its own (Meowstic) has it ' +
+                'in `forms` instead, so it is never counted twice'
         )
 })
 

@@ -90,8 +90,8 @@ Sprites are Pokémon HOME's renders, from a sparse checkout of
 `src/scraper/sprites.ts`. The build stores each form's render as `sprite_key`
 (`home/25`; a form without one of its own uses its variety's), the same picture's
 shiny as `shiny_sprite_key` (`home/shiny/25`), and, where HOME draws females
-differently, `female_sprite_key` and its shiny; the API publishes them per form as
-`variants`. `data:sprites` resizes
+differently, `female_sprite_key` and its shiny; the API publishes the male and female pair per form as
+`variants`, empty when the sexes look alike. `data:sprites` resizes
 each one to WebP with `Bun.Image` and uploads it with `Bun.s3` to the bucket behind
 `IMAGE_BASE_URL`. It needs an R2 API token's S3 credentials in `.env`:
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
