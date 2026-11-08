@@ -134,6 +134,25 @@ export const pokedexEntry = sqliteTable(
 )
 
 /**
+ * A Pokédex entry's earlier text, for the few games whose text changed in a later
+ * release (Ruby 1.0, FireRed 1.0): `pokedex_entry` holds the latest, this the ones
+ * before it. `revision` is the release Bulbapedia names ("1.0").
+ */
+export const pokedexEntryRevision = sqliteTable(
+    'pokedex_entry_revision',
+    {
+        ndex: integer('ndex')
+            .notNull()
+            .references(() => pokemon.ndex),
+        form: text('form').notNull().default(''),
+        game: text('game').notNull(),
+        revision: text('revision').notNull(),
+        text: text('text').notNull()
+    },
+    (table) => [primaryKey({ columns: [table.ndex, table.form, table.game, table.revision] })]
+)
+
+/**
  * Where the species can be obtained in each main-series game, from Bulbapedia's
  * "Game locations", as text a reader sees (form notes included). `dlc` is ''
  * for the base game. `obtainable` is false where the game cannot get it on its

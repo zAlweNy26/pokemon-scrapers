@@ -6,7 +6,10 @@ import {
 
 export const formSchema = z.object({
     slug: z.string(),
-    name: namesSchema,
+    name: namesSchema.describe(
+        'The form\'s name per language. Not always game text: PokéAPI\'s full names ("Active Xerneas") and ' +
+            '"Species (form name)" built from two official strings where it has none'
+    ),
     isDefault: z.boolean(),
     category: z
         .enum(FORM_CATEGORIES)
@@ -24,7 +27,7 @@ export const formSchema = z.object({
                 status: z
                     .enum(SHINY_STATUSES)
                     .describe('`obtainable` in game, `event` (distributions or transfer only), or `unobtainable`'),
-                games: z.string().nullable().describe('The games named, as Bulbapedia abbreviates them; null for the whole generation')
+                games: z.string().nullable().describe('The games named, as Bulbapedia abbreviates them (not game text); null for the whole generation')
             })
         )
         .describe(
@@ -243,7 +246,7 @@ export const pokemonModels = {
         pronunciation: z
             .object({ respelling: z.string(), ipa: z.string().nullable() })
             .nullable()
-            .describe('English pronunciation, from pokeos')
+            .describe('English pronunciation. Not game text: written by pokeos')
             .meta({ examples: [{ respelling: 'BULL-buh-sohr', ipa: '/ˈbʊlbəsɔːɹ/' }] }),
         hasGenderDifferences: z.boolean(),
         formsSwitchable: z.boolean(),
@@ -260,24 +263,28 @@ export const pokemonModels = {
             steps: z.array(evolutionStepSchema).describe('Every evolution method in the family, one per game it was recorded for')
         }),
         eggGroups: z.array(z.string()),
-        origins: z.record(z.string(), z.string()).describe('Name etymology, keyed by language'),
+        origins: z.record(z.string(), z.string()).describe('Name etymology, keyed by language. Not game text: Bulbapedia\'s own notes'),
         depositable: z.boolean().describe('True when any form can enter Pokemon HOME'),
         forms: z.array(formSchema),
         pokedexEntries: z
             .array(
                 z.object({
                     game: z.string().describe('PokéAPI version identifier'),
-                    form: z.string().nullable().describe("Bulbapedia's form label ('Alolan Form'); null for the species"),
-                    text: z.string()
+                    form: z.string().nullable().describe("Bulbapedia's form label ('Alolan Form'), not game text; null for the species"),
+                    text: z.string().describe('The game\'s own words, Generation I-III capitals included ("POKéMON"); the latest revision'),
+                    revisions: z
+                        .array(z.object({ revision: z.string().meta({ examples: ['1.0'] }), text: z.string() }))
+                        .optional()
+                        .describe('Earlier texts of this game\'s entry, oldest first; present only where a later release changed it')
                 })
             )
-            .describe('Pokédex entries in English, from Bulbapedia, oldest game first'),
+            .describe('Pokédex entries in English, as Bulbapedia transcribes them, oldest game first'),
         availability: z
             .array(
                 z.object({
                     game: z.string().describe('PokéAPI version identifier'),
                     dlc: z.string().nullable().meta({ examples: ['expansion-pass', 'mega-dimension'] }),
-                    area: z.string().nullable().describe('Where and how, as Bulbapedia words it, form notes included'),
+                    area: z.string().nullable().describe('Where and how, as Bulbapedia words it, form notes included. Not game text: place names are the game\'s, the wording Bulbapedia\'s'),
                     obtainable: z.boolean().describe('False when the game cannot get it on its own; `area` then says how it gets in'),
                     originMark: z
                         .string()

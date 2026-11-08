@@ -9,6 +9,8 @@ import { handleRequest } from '@/api/handler'
 import { setLogSink } from '@/api/log'
 import type { Env, RateLimiter } from '@/api/platform'
 import { asD1, check, openDatabase } from './database'
+import { unwrap } from './build'
+import { readTable } from './pokeapi'
 
 const DATASET = new URL('../../data/dataset.sql', import.meta.url).pathname
 const COPY = new URL('../../.cache/homedex.sqlite', import.meta.url).pathname
@@ -74,7 +76,7 @@ const texts = [
         `pokemon.name_${language}`, `pokemon.category_${language}`, `form.name_${language}`,
         `type.name_${language}`, `ability.name_${language}`, `move.name_${language}`
     ]),
-    'pokemon_origin.note', 'pokedex_entry.text', 'pokedex_entry.form', 'availability.area'
+    'pokemon_origin.note', 'pokedex_entry.text', 'pokedex_entry.form', 'pokedex_entry_revision.text', 'availability.area'
 ].flatMap((column) => {
     const [table, name] = column.split('.')
     return all<{ value: string }>(`SELECT ${name} AS value FROM ${table} WHERE ${name} IS NOT NULL`).map(({ value }) => ({ column, value }))
@@ -92,6 +94,24 @@ for (const [label, pattern] of [
         hits.length ? hits.slice(0, 3).map(({ column, value }) => `${column}: ${value.slice(0, 50)}`) : ''
     )
 }
+
+// Game text only (CLAUDE.md): Bulbapedia's dex transcriptions against the text PokéAPI extracted from the games.
+// Printed, not failed: about 80 entries differ between the two sources themselves; a jump means our rendering broke.
+const versionIds = new Map((await readTable('versions')).map((row) => [row.id!, row.identifier!]))
+const gameText = new Map(
+    (await readTable('pokemon_species_flavor_text'))
+        .filter((row) => row.language_id === '9')
+        .map((row) => [`${row.species_id}|${versionIds.get(row.version_id!)}`, row.flavor_text!])
+)
+const same = (text: string) => unwrap(text.replace(/\f/g, '\n')).replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim()
+const compared = all<{ ndex: number; game: string; text: string }>("SELECT ndex, game, text FROM pokedex_entry WHERE form = ''")
+    .map((entry) => ({ ...entry, game_text: gameText.get(`${entry.ndex}|${entry.game}`) }))
+    .filter((entry) => entry.game_text !== undefined)
+const differing = compared.filter((entry) => same(entry.text) !== same(entry.game_text!))
+console.log(
+    `  Pokédex entries differing from PokéAPI's game text: ${differing.length} of ${compared.length}`,
+    differing.slice(0, 3).map((entry) => `#${entry.ndex} ${entry.game}`).join(' ')
+)
 
 console.log('\n— Facts')
 const fact = (label: string, sql: string, want: unknown) => {
@@ -111,7 +131,7 @@ fact('Pikachu is #74 in Paldea', "SELECT number FROM pokemon_dex_number WHERE nd
 fact('Mewtwo legendary, Mew mythical, Pichu a baby', 'SELECT (SELECT is_legendary FROM pokemon WHERE ndex = 150) l, (SELECT is_mythical FROM pokemon WHERE ndex = 151) m, (SELECT is_baby FROM pokemon WHERE ndex = 172) b', { l: 1, m: 1, b: 1 })
 fact('Gengar yields 3 Sp. Atk EVs', "SELECT ev_sp_atk, base_experience FROM form WHERE slug = 'gengar'", { ev_sp_atk: 3, base_experience: 225 })
 fact('a Mega keeps its own name', "SELECT name_en, name_ja FROM form WHERE slug = 'venusaur-mega'", { name_en: 'Mega Venusaur', name_ja: 'メガフシギバナ' })
-fact("Pikachu's Red entry", "SELECT text FROM pokedex_entry WHERE ndex = 25 AND form = '' AND game = 'red'", { text: 'When several of these Pokémon gather, their electricity could build and cause lightning storms.' })
+fact("Pikachu's Red entry", "SELECT text FROM pokedex_entry WHERE ndex = 25 AND form = '' AND game = 'red'", { text: 'When several of these POKéMON gather, their electricity could build and cause lightning storms.' })
 fact('Alolan Meowth has its own Sun entry', "SELECT count(*) n FROM pokedex_entry WHERE ndex = 52 AND form = 'Alolan Form' AND game = 'sun'", { n: 1 })
 fact('Pikachu lives in Viridian Forest (Red)', "SELECT area, obtainable FROM availability WHERE ndex = 25 AND game = 'red'", { area: 'Viridian Forest, Power Plant', obtainable: 1 })
 fact('Pikachu is in Mega Dimension', "SELECT count(*) n FROM availability WHERE ndex = 25 AND game = 'legends-za' AND dlc = 'mega-dimension'", { n: 1 })

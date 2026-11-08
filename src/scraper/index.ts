@@ -28,7 +28,7 @@ const VERSION = new URL('../../data/version.json', import.meta.url).pathname
 
 /** Children first, so foreign keys hold at every step. */
 const DELETE_ORDER = [
-    'evolution', 'encounter', 'form_shiny', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'availability', 'pokedex_entry', 'pokemon_origin',
+    'evolution', 'encounter', 'form_shiny', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'availability', 'pokedex_entry_revision', 'pokedex_entry', 'pokemon_origin',
     'pokemon_egg_group', 'pokemon', 'generation', 'type', 'ability', 'move', 'meta'
 ]
 
@@ -107,11 +107,14 @@ const unknownTemplates = new Set<string>()
 const skippedGames = new Set<string>()
 const origins: Table = { columns: ['ndex', 'lang', 'note'], rows: [] }
 const pokedexEntry: Table = { columns: ['ndex', 'form', 'game', 'text'], rows: [] }
+const pokedexRevision: Table = { columns: ['ndex', 'form', 'game', 'revision', 'text'], rows: [] }
 const availability: Table = { columns: ['ndex', 'game', 'dlc', 'area', 'obtainable'], rows: [] }
 for (const [ndex, wikitext] of bulbapedia.pages) {
     for (const row of originsOf(wikitext, unknownTemplates)) origins.rows.push([ndex, ...row])
+    const dex = dexEntriesOf(wikitext, versions, unknownTemplates)
+    for (const row of dex.revisions) pokedexRevision.rows.push([ndex, ...row])
     for (const [table, { rows, skipped }] of [
-        [pokedexEntry, dexEntriesOf(wikitext, versions, unknownTemplates)],
+        [pokedexEntry, dex],
         [availability, availabilityOf(wikitext, versions, unknownTemplates)]
     ] as const) {
         for (const row of rows) table.rows.push([ndex, ...row])
@@ -138,7 +141,7 @@ const alphasZA = alphaFormsOf(zaAlphaRowsOf(await fetchWikitext(ZA_ALPHA_PAGE)),
 data.form.columns.push('alpha_legends_arceus', 'alpha_legends_za')
 for (const row of data.form.rows) row.push(alphasLA.has(row[0] as number), alphasZA.has(row[0] as number))
 const bulbapediaHash = new Bun.CryptoHasher('sha256')
-    .update(JSON.stringify([origins.rows, pokedexEntry.rows, availability.rows, formShiny.rows, [...alphasZA]]))
+    .update(JSON.stringify([origins.rows, pokedexEntry.rows, pokedexRevision.rows, availability.rows, formShiny.rows, [...alphasZA]]))
     .digest('hex')
     .slice(0, 12)
 
@@ -186,6 +189,7 @@ const tables: [string, Table][] = [
     ['pokemon_egg_group', data.eggGroup],
     ['pokemon_origin', origins],
     ['pokedex_entry', pokedexEntry],
+    ['pokedex_entry_revision', pokedexRevision],
     ['availability', availability],
     ['pokemon_dex_number', data.dexNumber],
     ['form', data.form],
@@ -261,7 +265,7 @@ const byLanguage = Object.groupBy(origins.rows, ([, language]) => language as st
 console.log(
     `  etymology: ${Object.entries(byLanguage).map(([language, rows]) => `${language} ${rows!.length}`).join(', ')}`
 )
-console.log(`  Pokédex entries: ${pokedexEntry.rows.length}, game locations: ${availability.rows.length}`)
+console.log(`  Pokédex entries: ${pokedexEntry.rows.length} (${pokedexRevision.rows.length} earlier revisions), game locations: ${availability.rows.length}`)
 console.log(`  alphas: Legends: Arceus ${alphasLA.size} forms, Legends: Z-A ${alphasZA.size} forms`)
 console.log(`  shiny availability: ${new Set(formShiny.rows.map(([id]) => id)).size} forms, ${formShiny.rows.length} generation rows`)
 console.log(`    labels that are not a main-series game, left out: ${[...skippedGames].join(', ')}`)

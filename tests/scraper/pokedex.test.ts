@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { availabilityOf, dexEntriesOf, exclusivesOf, gamesOf } from '@/scraper/pokedex'
+import { availabilityOf, dexEntriesOf, exclusivesOf, gamesOf, unfold } from '@/scraper/pokedex'
 
 const versions = new Set(['red', 'blue', 'blue-japan', 'sun', 'lets-go-pikachu', 'sword', 'shield', 'scarlet', 'violet', 'legends-za'])
 
@@ -41,13 +41,60 @@ describe('dexEntriesOf', () => {
         const { rows, skipped } = dexEntriesOf(page, versions, new Set())
 
         expect(rows).toEqual([
-            ['', 'red', 'Adores circular objects.'],
-            ['', 'blue', 'Adores circular objects.'],
+            // Small capitals are the capitals Generations I-III print.
+            ['', 'red', 'Adores CIRCULAR objects.'],
+            ['', 'blue', 'Adores CIRCULAR objects.'],
             ['', 'sun', 'It lies around all day.'],
-            ['Alolan Form', 'sun', 'This Pokémon was not originally found in Alola.'],
+            ['Alolan Form', 'sun', 'This POKéMON was not originally found in Alola.'],
             ['', 'sword', 'It loves to collect shiny things.']
         ])
         expect([...skipped]).toEqual(['Stadium'])
+    })
+
+    const versionsRS = new Set(['ruby', 'sapphire', 'sword', 'heartgold', 'soulsilver'])
+
+    test("gives each version its own word, and keeps a game's earlier revision apart", () => {
+        const { rows, revisions } = dexEntriesOf(
+            `===Pokédex entries===
+{{Dex/Gen/1|gen=III|reg1=Hoenn}}
+{{Dex/Entry2|v=Ruby|v2=Sapphire|entry=<sc>Paras</sc> feeds {{pkmn|food}} to the{{sup/3|R}}/this{{sup/3|S}} host. <small>''(Version 1.0)''</small><br><sc>Paras</sc> feeds this host. <small>''(Versions 1.1 and 1.2)''</small>}}
+{{Dex/Entry2|v=HeartGold|v2=SoulSilver|entry=Remedies for lower-back{{sup/4|HG}}/lower back{{sup/4|SS}} pain.}}`,
+            versionsRS,
+            new Set()
+        )
+        expect(rows).toEqual([
+            ['', 'ruby', 'PARAS feeds this host.'],
+            ['', 'sapphire', 'PARAS feeds this host.'],
+            ['', 'heartgold', 'Remedies for lower-back pain.'],
+            ['', 'soulsilver', 'Remedies for lower back pain.']
+        ])
+        expect(revisions).toEqual([
+            ['', 'ruby', '1.0', 'PARAS feeds food to the host.'],
+            ['', 'sapphire', '1.0', 'PARAS feeds food to this host.']
+        ])
+    })
+
+    test("drops Bulbapedia's notes and its translation of the Japanese text", () => {
+        const { rows, revisions } = dexEntriesOf(
+            `===Pokédex entries===
+{{Dex/Gen/1|gen=VIII|reg1=Galar}}
+{{Dex/Entry1|v=Sword|entry=It likes holes. <small>''(English)''</small><br>Its instinct is to bury itself. <small>''(Japanese)''</small>}}`,
+            versionsRS,
+            new Set()
+        )
+        expect(rows).toEqual([['', 'sword', 'It likes holes.']])
+        expect(revisions).toEqual([])
+    })
+
+    test('unfolds forms Bulbapedia folded into one row', () => {
+        expect(unfold('Hoenn Cap, Sinnoh Cap, and Alola Cap', 'Traveled the Hoenn/Sinnoh/Alola region.')).toEqual([
+            ['Hoenn Cap', 'Traveled the Hoenn region.'],
+            ['Sinnoh Cap', 'Traveled the Sinnoh region.'],
+            ['Alola Cap', 'Traveled the Alola region.']
+        ])
+        // One text shared by every form stays one row.
+        expect(unfold('Original Cap and Partner Cap', 'It wears a cap.')).toEqual([['Original Cap and Partner Cap', 'It wears a cap.']])
+        expect(unfold('Galarian Form/Zen Mode', 'A/B test')).toEqual([['Galarian Form/Zen Mode', 'A/B test']])
     })
 })
 
