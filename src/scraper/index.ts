@@ -21,7 +21,7 @@ import { fetchPokeos, formResolver, shinyLockedForms } from './pokeos'
 import { fetchDepositable } from './serebii'
 import { SHINY_PAGE, shinyRowsOf, shinyTableOf } from './shiny'
 import { SPRITES_COMMIT, artworkKeys, checkoutArtwork } from './sprites'
-import { insert, literal } from './sql'
+import { STAMP, insert, literal, versionOf } from './sql'
 
 const DATASET = new URL('../../data/dataset.sql', import.meta.url).pathname
 const VERSION = new URL('../../data/version.json', import.meta.url).pathname
@@ -210,11 +210,10 @@ const body = [
 ].join('\n')
 
 // The version hashes the data, not the time it was built, so an unchanged rebuild keeps every ETag valid.
-const version = new Bun.CryptoHasher('sha256').update(body).digest('hex').slice(0, 12)
+const version = versionOf(body)
 const generatedAt = new Date().toISOString()
 // data_version and loaded_at (the database's clock, at load time) let CI deploy only once these rows are in.
-const sql = `${body}
-INSERT INTO meta (key, value) VALUES ('generated_at', ${literal(generatedAt)}), ('data_version', ${literal(version)}),
+const sql = `${body}${STAMP}, ${literal(generatedAt)}), ('data_version', ${literal(version)}),
     ('loaded_at', strftime('%Y-%m-%dT%H:%M:%SZ', 'now'));
 `
 

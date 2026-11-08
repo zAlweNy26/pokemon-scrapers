@@ -1,5 +1,17 @@
 export type Value = string | number | boolean | null
 
+/** Where a dataset stops being data: the build stamps the time it ran from here on. */
+export const STAMP = "\nINSERT INTO meta (key, value) VALUES ('generated_at'"
+
+/**
+ * A dataset's version: a hash of everything before STAMP, so an unchanged rebuild keeps
+ * every ETag valid. Takes the data alone or the whole file, giving the same answer.
+ */
+export const versionOf = (sql: string) => {
+    const end = sql.indexOf(STAMP)
+    return new Bun.CryptoHasher('sha256').update(end < 0 ? sql : sql.slice(0, end)).digest('hex').slice(0, 12)
+}
+
 /** D1 rejects a statement over 100 KB; leave room for the INSERT prefix and multi-byte text. */
 const MAX_STATEMENT_BYTES = 90_000
 

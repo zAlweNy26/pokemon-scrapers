@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { Database } from 'bun:sqlite'
 import { parseCsv } from '@/scraper/csv'
-import { insert, literal } from '@/scraper/sql'
+import { STAMP, insert, literal, versionOf } from '@/scraper/sql'
 
 describe('parseCsv', () => {
     test('keeps commas, quotes and newlines inside quoted fields', () => {
@@ -42,5 +42,16 @@ describe('insert', () => {
     test('refuses values SQL cannot hold and rows of the wrong width', () => {
         expect(() => literal(Number.NaN)).toThrow()
         expect(() => insert('t', ['a', 'b'], [[1]])).toThrow(/1 values for 2 columns/)
+    })
+})
+
+describe('versionOf', () => {
+    test('ignores when the build ran, so the hook can recompute what data:build wrote', () => {
+        const body = "INSERT INTO pokemon (ndex) VALUES (1);"
+        const stamped = (at: string) => `${body}${STAMP}, '${at}'), ('data_version', 'x');\n`
+
+        expect(versionOf(stamped('2026-11-07'))).toBe(versionOf(body))
+        expect(versionOf(stamped('2026-11-08'))).toBe(versionOf(body))
+        expect(versionOf(`${body} `)).not.toBe(versionOf(body))
     })
 })
