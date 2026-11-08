@@ -38,6 +38,7 @@ describe('openapi document', () => {
             '/v1/home-games',
             '/v1/meta',
             '/v1/moves',
+            '/v1/moves/{slug}',
             '/v1/pokedexes',
             '/v1/pokedexes/{slug}',
             '/v1/pokemon',

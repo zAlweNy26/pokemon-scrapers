@@ -118,6 +118,7 @@ known facts, or any API response its schema rejects. Gaps the sources leave
 | `GET /v1/search?q=` | Cross-language name search; reports which language matched |
 | `GET /v1/generations`, `GET /v1/types` | Reference data with counts; types carry their names in every language |
 | `GET /v1/abilities`, `GET /v1/moves` | Every main-series ability and move, with its name in every language |
+| `GET /v1/moves/:slug` | One move with its names, `description` (in-game text from the latest game that has a real one) and `effect` (the mechanics); both in English only for now |
 | `GET /v1/types/:slug`, `GET /v1/abilities/:slug` | `?limit &offset`. One type or ability with its names, and a page of references (`ndex`, `slug`, `uri`) to what `/v1/pokemon?type=` or `?ability=` returns for it. An ability also has `description`, its in-game text from the latest game that has one, and `effect`, the mechanics; both in English only for now |
 | `GET /v1/egg-groups`, `GET /v1/home-games`, `GET /v1/pokedexes` | The values `eggGroup`, `homeGame` and `/v1/pokedexes/:slug` accept, each with its species count |
 | `GET /v1/pokedexes/:slug` | `?limit &offset`. Species in a regional Pokédex, in its order: references (`ndex`, `slug`, `uri`) plus their regional `number` |

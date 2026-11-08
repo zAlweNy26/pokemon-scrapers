@@ -519,7 +519,7 @@ describe('GET /v1/evolution-chains/:ndex', () => {
     })
 })
 
-describe('GET /v1/types/:slug and /v1/abilities/:slug', () => {
+describe('GET /v1/types/:slug, /v1/abilities/:slug and /v1/moves/:slug', () => {
     test('a type with its names and a page of its species, ignoring case', async () => {
         const { response, body } = await json('/v1/types/WATER')
 
@@ -571,6 +571,17 @@ describe('GET /v1/types/:slug and /v1/abilities/:slug', () => {
         expect((await json('/v1/abilities')).body[0]).not.toHaveProperty('description')
     })
 
+    test('a move with its names, English description and effect, in any case', async () => {
+        const { response, body } = await json('/v1/moves/Thunderbolt')
+
+        expect(response.status).toBe(200)
+        expect(body).toMatchObject({ slug: 'thunderbolt', name: { en: 'Thunderbolt', it: 'Fulmine' } })
+        expect(body.description).toStartWith('The user attacks the target with a strong electric blast.')
+        expect(body.effect).toStartWith('Inflicts regular damage.')
+        expect((await json('/v1/moves/volt-tackle')).body).toMatchObject({ description: null, effect: null })
+        expect((await json('/v1/moves')).body[0]).not.toHaveProperty('description')
+    })
+
     test('paginates like /v1/pokemon', async () => {
         const { body } = await json('/v1/abilities/lightning-rod?limit=1&offset=1')
 
@@ -580,8 +591,8 @@ describe('GET /v1/types/:slug and /v1/abilities/:slug', () => {
         expect((await json('/v1/abilities/static?offset=-1')).response.status).toBe(422)
     })
 
-    test('answers 404 as a problem for a type or ability that does not exist', async () => {
-        for (const path of ['/v1/types/sound', '/v1/abilities/wonder-guard']) {
+    test('answers 404 as a problem for a type, ability or move that does not exist', async () => {
+        for (const path of ['/v1/types/sound', '/v1/abilities/wonder-guard', '/v1/moves/splash']) {
             const { response, body } = await json(path)
 
             expect(response.status).toBe(404)

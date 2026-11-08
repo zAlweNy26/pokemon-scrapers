@@ -30,6 +30,14 @@ const localizedNames = () => ({
     nameZhHant: text('name_zh_hant')
 })
 
+/** English only for now: the one language PokéAPI has for (nearly) every ability and move. */
+const englishTexts = () => ({
+    /** In-game description, from the latest game that has a real one. */
+    description: text('description'),
+    /** The mechanics in detail: PokéAPI's `ability_prose` or `move_effect_prose`. */
+    effect: text('effect')
+})
+
 /**
  * Display names for the identifiers stored elsewhere: `form_type.type`,
  * `form_ability.ability`, and the moves and types in evolution conditions.
@@ -37,15 +45,8 @@ const localizedNames = () => ({
  * src/scraper/database.ts fails a build that leaves an identifier unnamed.
  */
 export const type = sqliteTable('type', { slug: text('slug').primaryKey(), ...localizedNames() })
-export const ability = sqliteTable('ability', {
-    slug: text('slug').primaryKey(),
-    ...localizedNames(),
-    /** In-game description in English, from the latest game that has one. */
-    description: text('description'),
-    /** The mechanics in detail, English only: PokéAPI's `ability_prose.effect`. */
-    effect: text('effect')
-})
-export const move = sqliteTable('move', { slug: text('slug').primaryKey(), ...localizedNames() })
+export const ability = sqliteTable('ability', { slug: text('slug').primaryKey(), ...localizedNames(), ...englishTexts() })
+export const move = sqliteTable('move', { slug: text('slug').primaryKey(), ...localizedNames(), ...englishTexts() })
 
 export const generation = sqliteTable('generation', {
     id: integer('id').primaryKey(),

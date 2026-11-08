@@ -26,7 +26,17 @@ export const abilityParams = z.object({
     slug: z.string().min(1).max(40).describe('Ability identifier').meta({ examples: ['levitate'] })
 })
 
+export const moveParams = z.object({
+    slug: z.string().min(1).max(40).describe('Move identifier').meta({ examples: ['thunderbolt'] })
+})
+
 export const pageQuery = listQuery.pick({ limit: true, offset: true })
+
+/** English only for now: the one language PokéAPI has for (nearly) every ability and move. */
+const englishTexts = (thing: string) => ({
+    description: z.string().nullable().describe('The in-game description in English, from the latest game that has one'),
+    effect: z.string().nullable().describe(`What the ${thing} does in detail, in English; null where PokéAPI has none`)
+})
 
 /** A type or ability, with a page of the species /v1/pokemon returns for it. */
 const speciesPage = (description: string) =>
@@ -53,12 +63,13 @@ export const referenceModels = {
 
     'reference.abilities': z.array(namedSchema),
 
-    'reference.ability': speciesPage('Species with a form that has this ability, hidden or not, by dex number').extend({
-        description: z.string().nullable().describe('The in-game description in English, from the latest game that has one'),
-        effect: z.string().nullable().describe('What the ability does in detail, in English')
-    }),
+    'reference.ability': speciesPage('Species with a form that has this ability, hidden or not, by dex number').extend(
+        englishTexts('ability')
+    ),
 
     'reference.moves': z.array(namedSchema),
+
+    'reference.move': namedSchema.extend(englishTexts('move')),
 
     'reference.eggGroups': counted('Species in this egg group'),
 

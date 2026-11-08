@@ -4,7 +4,7 @@ import type { Db } from '@/db/client'
 import { sharedModels } from '@/api/models'
 import { notFound } from '@/api/problem'
 import { list, pokedex, pokemonRef } from '@/api/modules/pokemon/service'
-import { abilityParams, pageQuery, pokedexParams, referenceModels, typeParams } from './model'
+import { abilityParams, moveParams, pageQuery, pokedexParams, referenceModels, typeParams } from './model'
 import * as service from './service'
 
 /** One type or ability and a page of references to the species `/v1/pokemon?<filter>=` returns for it. */
@@ -72,6 +72,20 @@ export const reference = new Elysia({ name: 'module.reference' })
         response: { 200: 'reference.moves', 429: 'problem' },
         detail: { summary: 'List moves with their names', tags: ['Reference'] }
     })
+    .get(
+        '/moves/:slug',
+        async ({ params }) => {
+            const found = await service.findMove(db(), params.slug)
+            if (!found) throw notFound(`No move matches "${params.slug}".`)
+
+            return found
+        },
+        {
+            params: moveParams,
+            response: { 200: 'reference.move', 404: 'problem', 422: 'problem', 429: 'problem' },
+            detail: { summary: 'Get one move with its names, description and effect', tags: ['Reference'] }
+        }
+    )
     .get('/egg-groups', () => service.eggGroups(db()), {
         response: { 200: 'reference.eggGroups', 429: 'problem' },
         detail: { summary: 'List egg groups with species counts', tags: ['Reference'] }

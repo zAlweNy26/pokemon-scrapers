@@ -90,6 +90,9 @@ const localized = (names: Map<string, Row> | undefined, field: string): Record<L
 export const unwrap = (value: string) =>
     value.replace(/\u00ad\n/g, '').replace(/-\n/g, '-').replace(/\n/g, ' ').replace(/\u00ad/g, '')
 
+/** What Sword/Shield onwards say for a move they dropped: not a description, so an older game's text is used. */
+export const DROPPED_MOVE = /^This move can.t be used\. It.s recommended that this move is forgotten\./
+
 const languageColumns = (prefix: string) => LANGUAGES.map((language) => `${prefix}_${language}`)
 
 /** `artwork`: the HOME renders in PokeAPI/sprites, from `artworkKeys()`. */
@@ -106,7 +109,7 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
         speciesEggGroups, eggGroups, encounters, locationAreas, locations, encounterSlots,
         encounterMethods, versions, evolutions, evolutionTriggers, versionGroups, items, moves, genders,
         natures, growthRates, colors, shapes, habitats, pokedexes, dexNumbers, typeNames, abilityNames, moveNames,
-        abilityProse, abilityFlavor
+        abilityProse, abilityFlavor, moveProse, moveFlavor
     ] = await Promise.all(
         [
             'pokemon_species', 'pokemon_species_names', 'pokemon', 'pokemon_forms', 'pokemon_form_names',
@@ -115,7 +118,8 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
             'locations', 'encounter_slots', 'encounter_methods', 'versions', 'pokemon_evolution',
             'evolution_triggers', 'version_groups', 'items', 'moves', 'genders', 'natures', 'growth_rates',
             'pokemon_colors', 'pokemon_shapes', 'pokemon_habitats', 'pokedexes', 'pokemon_dex_numbers',
-            'type_names', 'ability_names', 'move_names', 'ability_prose', 'ability_flavor_text'
+            'type_names', 'ability_names', 'move_names', 'ability_prose', 'ability_flavor_text', 'move_effect_prose',
+            'move_flavor_text'
         ].map(readTable)
     )
 
@@ -131,19 +135,33 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
     // are Colosseum/XD's shadow moves, which nothing here refers to.
     const typeTable = namesTable(types!, typeNames!, 'type_id', () => true)
     const mainAbilities = abilities!.filter((row) => row.is_main_series === '1')
+    const gameMoves = moves!.filter((row) => Number(row.id) < 10000)
     const abilityTable = namesTable(mainAbilities, abilityNames!, 'ability_id', () => true)
+    const moveTable = namesTable(gameMoves, moveNames!, 'move_id', () => true)
+
     const groupOrder = new Map(versionGroups!.map((row) => [row.id!, Number(row.order)]))
-    // English only for now: the one language PokéAPI has for every ability. Oldest game first, so the map keeps the latest text.
-    const descriptions = new Map(
-        abilityFlavor!
-            .filter((row) => row.language_id === '9')
-            .toSorted((a, b) => groupOrder.get(a.version_group_id!)! - groupOrder.get(b.version_group_id!)!)
-            .map((row) => [row.ability_id!, text(unwrap(row.flavor_text!))])
-    )
-    const effects = new Map(abilityProse!.filter((row) => row.local_language_id === '9').map((row) => [row.ability_id!, text(row.effect)]))
-    abilityTable.columns.push('description', 'effect')
-    mainAbilities.forEach((row, i) => abilityTable.rows[i]!.push(descriptions.get(row.id!) ?? null, effects.get(row.id!) ?? null))
-    const moveTable = namesTable(moves!, moveNames!, 'move_id', (row) => Number(row.id) < 10000)
+    /** `prose` in English, keyed by `key`. */
+    const englishEffects = (prose: Row[], key: string) =>
+        new Map(prose.filter((row) => row.local_language_id === '9').map((row) => [row[key]!, text(row.effect)]))
+    /**
+     * Adds `description` and `effect` in English to `table`, whose rows are `rows` in order.
+     * Oldest game first, so the map keeps the latest game's text.
+     */
+    const withTexts = (table: Table, rows: Row[], flavor: Row[], key: string, effectOf: (row: Row) => string | null | undefined) => {
+        const descriptions = new Map(
+            flavor
+                .filter((row) => row.language_id === '9')
+                .toSorted((a, b) => groupOrder.get(a.version_group_id!)! - groupOrder.get(b.version_group_id!)!)
+                .map((row) => [row[key]!, text(unwrap(row.flavor_text!))] as const)
+                .filter(([, description]) => description && !DROPPED_MOVE.test(description))
+        )
+        table.columns.push('description', 'effect')
+        rows.forEach((row, i) => table.rows[i]!.push(descriptions.get(row.id!) ?? null, effectOf(row) ?? null))
+    }
+    const abilityEffects = englishEffects(abilityProse!, 'ability_id')
+    const moveEffects = englishEffects(moveProse!, 'move_effect_id')
+    withTexts(abilityTable, mainAbilities, abilityFlavor!, 'ability_id', (row) => abilityEffects.get(row.id!))
+    withTexts(moveTable, gameMoves, moveFlavor!, 'move_id', (row) => moveEffects.get(row.effect_id!))
 
     const pokemonById = indexBy(pokemonRows!, 'id')
     const regionById = indexBy(regions!, 'id')

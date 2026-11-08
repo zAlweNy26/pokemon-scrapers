@@ -10,7 +10,8 @@ const named = (rows: ({ slug: string } & NameColumns)[]) => rows.map((row) => ({
 export const abilities = async (db: Db) =>
     named(await db.select({ slug: ability.slug, ...nameColumns(ability) }).from(ability).orderBy(ability.slug))
 
-export const moves = async (db: Db) => named(await db.select().from(move).orderBy(move.slug))
+export const moves = async (db: Db) =>
+    named(await db.select({ slug: move.slug, ...nameColumns(move) }).from(move).orderBy(move.slug))
 
 /**
  * Gen IX index numbers from Bulbapedia's "List of types" (https://bulbapedia.bulbagarden.net/wiki/Type).
@@ -28,9 +29,20 @@ export const findType = async (db: Db, slug: string) => {
     return found && { id: TYPE_IDS[found.slug] ?? null, ...found }
 }
 
+const described = (row: { slug: string; description: string | null; effect: string | null } & NameColumns) => ({
+    ...named([row])[0]!,
+    description: row.description,
+    effect: row.effect
+})
+
 export const findAbility = async (db: Db, slug: string) => {
     const [row] = await db.select().from(ability).where(eq(ability.slug, slug.toLowerCase()))
-    return row && { ...named([row])[0]!, description: row.description, effect: row.effect }
+    return row && described(row)
+}
+
+export const findMove = async (db: Db, slug: string) => {
+    const [row] = await db.select().from(move).where(eq(move.slug, slug.toLowerCase()))
+    return row && described(row)
 }
 
 export const generations = (db: Db) =>

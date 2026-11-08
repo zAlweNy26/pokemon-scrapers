@@ -68,6 +68,11 @@ INSERT INTO move (slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name
     ('thunderbolt','Thunderbolt','１０まんボルト',NULL,'Donnerblitz','Tonnerre','Fulmine','Rayo','10만볼트','十万伏特','十萬伏特'),
     ('volt-tackle','Volt Tackle','ボルテッカー',NULL,'Volttackle','Électacle','Locomovolt','Placaje Eléctrico','볼트태클','伏特攻击','伏特攻擊');
 
+UPDATE move SET
+    description = 'The user attacks the target with a strong electric blast. This may also leave the target with paralysis.',
+    effect = 'Inflicts regular damage.  Has a chance to paralyze the target.'
+WHERE slug = 'thunderbolt';
+
 INSERT INTO pokemon
     (ndex, slug, gen, catch_rate, base_friendship, gender_rate, egg_cycles,
      evolution_chain, is_legendary, is_mythical, is_baby, has_gender_differences, forms_switchable,
