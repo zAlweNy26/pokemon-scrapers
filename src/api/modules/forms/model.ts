@@ -21,7 +21,7 @@ export const formsQuery = listQuery.pick({ gen: true, type: true, limit: true, o
 })
 
 export const formParams = z.object({
-    slug: z.string().min(1).max(64).describe('Form slug').meta({ examples: ['pikachu-partner'] })
+    slug: z.string().min(1).max(64).describe('Form slug').meta({ examples: ['raichu-alola'] })
 })
 
 export const formsModels = {
