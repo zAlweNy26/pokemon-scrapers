@@ -1,21 +1,22 @@
 # Sources and attribution
 
-homedex combines a permissively licensed dataset with a narrowly scoped scrape.
-The scrape is kept as small as possible on purpose: everything already available
+homedex combines a permissively licensed dataset with narrowly scoped scrapes.
+The scrapes are kept as small as possible on purpose: everything already available
 under a permissive licence is taken from there instead.
 
 ## Data sources
 
 | Source | Licence | Used for |
 |---|---|---|
-| [PokéAPI](https://github.com/PokeAPI/pokeapi) | BSD-3-Clause | Base dataset: species, forms, localised names and categories, stats, types, abilities, breeding data, encounters. Read from the repository's CSV files at a pinned commit — no requests to PokéAPI's servers |
-| [Bulbapedia](https://bulbapedia.bulbagarden.net/) | CC BY-NC-SA 2.5 | Name etymology in every language, from each species' page. Read through its MediaWiki API, 50 pages per request (~21 requests) with `maxlag=5`, at most once a month |
+| [PokéAPI](https://github.com/PokeAPI/pokeapi) | BSD-3-Clause | Base dataset: species, forms, localised names and categories, stats, EVs, types, abilities, moves, breeding data, regional dex numbers, evolutions, encounters. Read from the repository's CSV files at a pinned commit — no requests to PokéAPI's servers |
+| [Bulbapedia](https://bulbapedia.bulbagarden.net/) | CC BY-NC-SA 2.5 | From each species' page: name etymology in every language, Pokédex entries and game locations. From two list pages: shiny availability per generation ("List of unobtainable Shiny Pokémon") and Legends: Z-A alphas. Type index numbers and origin marks are transcribed from its pages into the code. Read through its MediaWiki API, 50 pages per request (~21 requests, plus one per list page) with `maxlag=5`, at most once a month |
 | [Serebii](https://www.serebii.net/) | Used with permission — see below | Pokémon HOME depositability, and which HOME-connected games each form can move into |
-| [PokéAPI sprites](https://github.com/PokeAPI/sprites) | Repository CC0; artwork © The Pokémon Company | Official artwork, resized to WebP and served from the image bucket. Read from a git checkout at a pinned commit |
+| [pokeos](https://pokeos.com/) | Used with permission — see below | Sub-legendary, Ultra Beast and Paradox flags, English pronunciations (respelling and IPA), shiny locks, and encounters for the games PokéAPI has none for (Scarlet/Violet with DLC, Legends: Z-A) |
+| [PokéAPI sprites](https://github.com/PokeAPI/sprites) | Repository CC0; images © The Pokémon Company | Pokémon HOME renders (regular, shiny and female), resized to WebP and served from the image bucket. Read from a git checkout at a pinned commit |
 
-The artwork is not licensed by anyone who can license it: it is The Pokémon
+The renders are not licensed by anyone who can license them: they are The Pokémon
 Company's, and served here on the same non-commercial fan-use basis as PokéAPI
-serves it. It is not part of the CC BY-NC-SA dataset.
+serves them. They are not part of the CC BY-NC-SA dataset.
 
 ## Serebii
 
@@ -35,6 +36,18 @@ sends an identifying User-Agent with the project's URL.
 
 If you fork this project, that permission **does not transfer to you**. Ask them
 yourself, or drop Serebii as a source.
+
+## pokeos
+
+pokeos publishes no open licence. Its owner allowed this project to read its API
+on one condition: **do not spam it**.
+
+A full build makes about 95 requests to `api.pokeos.com` — the species list the
+site itself boots from, the pronunciation list, and encounters per location for two
+games — through the same single-flight client as Serebii (5 seconds apart, backoff,
+identifying User-Agent), with every response cached for 30 days.
+
+As with Serebii, that permission **does not transfer** to forks.
 
 ## Non-commercial
 

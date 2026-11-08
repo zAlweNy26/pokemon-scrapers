@@ -8,7 +8,7 @@ inherited from Bulbapedia, which is the most restrictive licence among its
 sources. See [`NOTICE.md`](./NOTICE.md) for the full source list.
 
 The **images** behind `sprites` URLs are not covered by this licence. They are
-official artwork © The Pokémon Company, and homedex cannot grant any rights to them.
+Pokémon HOME renders © The Pokémon Company, and homedex cannot grant any rights to them.
 
 ## What that means for you
 
@@ -21,7 +21,9 @@ You may use, copy, adapt and redistribute the data, provided you:
 
 If you need data for commercial use, build on
 [PokéAPI](https://github.com/PokeAPI/pokeapi) (BSD-3-Clause) directly. It covers
-most of what is here, minus HOME depositability and name etymology.
+most of what is here, minus HOME depositability and what comes from Bulbapedia
+and pokeos (etymology, Pokédex entries, game locations, shiny availability,
+pronunciations, recent encounters).
 
 This is a plain-language summary, not legal advice, and not a substitute for the
 licence text.
