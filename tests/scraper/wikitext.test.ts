@@ -47,7 +47,11 @@ describe('plain', () => {
         )
         expect(plain('皮卡丘{{tt|*|Games}}<br>比卡超')).toBe('皮卡丘; 比卡超')
         expect(plain('({{pkmn|Pocket Monsters}} only) {{p|Raichu}} [[Thunder Stone|stone]]')).toBe(
-            '(Pokémon Pocket Monsters only) Raichu stone'
+            '(Pocket Monsters only) Raichu stone'
+        )
+        // Link templates show their display text, not the page they link to (Template:Pkmn, Pkmn2, OBP).
+        expect(plain('its {{pkmn|Trainer}}, {{pkmn2|wild}} ones, this {{OBP|Pokémon|species}}')).toBe(
+            'its Trainer, wild ones, this Pokémon'
         )
     })
 
@@ -57,7 +61,7 @@ describe('plain', () => {
             'Black, Pokémon Red and Blue, Pokémon Black 2 and White 2'
         )
         expect(plain('{{game3|Black and White|Black 2, White 2|s 2}} and the {{Badge|Marsh}}')).toBe(
-            'Pokémon Black 2, White 2 and the Marsh Badge'
+            'Black 2, White 2 and the Marsh Badge'
         )
     })
 

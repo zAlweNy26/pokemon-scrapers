@@ -93,8 +93,8 @@ const render = (inner: string, unknown: Set<string>): string => {
     if (!KNOWN.has(name)) unknown.add(rawName.trim())
 
     switch (name) {
-        case 'rt': // {{rt|2|Alola}} → "Route 2"
-            return `Route ${positional[0] ?? ''}`
+        case 'rt': // {{rt|2|Alola}} → "Route 2", unless display text is given
+            return positional[2] ?? `Route ${positional[0] ?? ''}`
         case 'rtn': // the number alone, after "Routes"
         case 'gdis': // {{gdis|Battle Frontier|III}}: the place, not the generation
             return positional[0] ?? ''
@@ -110,8 +110,11 @@ const render = (inner: string, unknown: Set<string>): string => {
             return '♀'
         case 'tera': // {{Tera}} is the word itself
             return positional.at(-1) ?? 'Tera'
-        case 'pkmn2': // {{pkmn2|wild}} → "wild Pokémon"
-            return `${positional[0] ?? ''} Pokémon`
+        case 'pkmn': // {{pkmn|battle}} links "Pokémon battle" but shows "battle"
+        case 'pkmn2': // {{pkmn2|wild}} links "wild Pokémon" but shows "wild"
+            return positional[1] ?? positional[0] ?? ''
+        case 'obp': // {{OBP|Pokémon|species}} links "Pokémon (species)" but shows "Pokémon"
+            return positional[2] ?? positional[0] ?? ''
         case 'tm': // {{TM|97|Defog}}
             return `TM${positional[0] ?? ''}${positional[1] ? ` (${positional[1]})` : ''}`
         case 'safari': // {{safari|Johto}}: the Safari Zone of that region
@@ -123,18 +126,16 @@ const render = (inner: string, unknown: Set<string>): string => {
             return positional.at(-1) ?? rawName.trim().replace(/^./, (c) => c.toUpperCase())
         case 'tt': // tooltip: the text, unless it is a footnote marker
             return positional[0] === '*' ? '' : (positional[0] ?? '')
-        case 'pkmn': // {{pkmn|battle}} → "Pokémon battle"
-            return positional[1] ?? `Pokémon ${positional[0] ?? ''}`
         case 'ruby': // kanji with its reading: the kanji
             return positional[0] ?? ''
         case 'g': // {{g|Bank}}, {{g|Black 2 and White 2|s}} → "Pokémon Bank"; the suffix only pluralises
             return `Pokémon ${positional[0] ?? ''}`
         case 'game': // {{game|Black and White|s|Black}}: the display text, else the game
             return positional[2] ?? `Pokémon ${positional[0] ?? ''}`
-        case 'game3': // {{game3|link|display|suffix}}
-            return `Pokémon ${positional[1] ?? positional[0] ?? ''}`
+        case 'game3': // {{game3|link|display|suffix}} shows the display text
+            return positional[1] ?? positional[0] ?? ''
         case 'badge':
-            return `${positional[0] ?? ''} Badge`
+            return positional[1] ?? `${positional[0] ?? ''} Badge`
         default: // links and their kin show their last argument
             return positional.at(-1) ?? ''
     }
