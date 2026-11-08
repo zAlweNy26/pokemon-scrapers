@@ -131,6 +131,13 @@ export const encounterSchema = z.object({
     form: z.string().describe('Slug of the form found there (`vulpix-alola`)')
 })
 
+/** A species named inside another resource: follow `uri` for the rest. */
+export const pokemonRefSchema = z.object({
+    ndex: z.number(),
+    slug: z.string(),
+    uri: z.string().describe('Path of the species on this API').meta({ examples: ['/v1/pokemon/25'] })
+})
+
 export const listItemSchema = z.object({
     ndex: z.number(),
     slug: z.string(),

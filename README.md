@@ -112,15 +112,15 @@ known facts, or any API response its schema rejects. Gaps the sources leave
 |---|---|
 | `GET /v1/pokemon` | `?gen &type &region &depositable &homeGame &ability &eggGroup &obtainableIn &exclusiveTo &habitat &sort &limit &offset`. `homeGame` takes a version group (`scarlet-violet`), `obtainableIn` and `exclusiveTo` a version (`scarlet`). `sort` is `ndex` (default), `name`, `bst`, `hp`, `atk`, `def`, `spAtk`, `spDef`, `spd`, `height` or `weight` of the default form, `-` prefixed for descending (`-bst`); unknown values last, ties by dex number |
 | `GET /v1/pokemon/:idOrName` | Accepts `25`, `pikachu` or `Pikachu`; returns every form |
-| `GET /v1/evolution-chains/:ndex` | The chain of the species with that national dex number: its species as list items in `members`, and `steps` exactly as `/v1/pokemon/:idOrName` has them in `evolutionChain` |
+| `GET /v1/evolution-chains/:ndex` | The chain of the species with that national dex number: references to its species (`ndex`, `slug`, `uri`) in `members`, and `steps` exactly as `/v1/pokemon/:idOrName` has them in `evolutionChain` |
 | `GET /v1/forms` | `?gen &type &depositable &homeGame &isDefault &category &limit &offset`. Every form, where HOME depositability lives: `depositable` is the form's own, so it tells Pikachu apart from Partner Pikachu |
 | `GET /v1/forms/:slug` | One form as `/v1/pokemon/:idOrName` lists it in `forms`, plus its `species` and its own `encounters` |
 | `GET /v1/search?q=` | Cross-language name search; reports which language matched |
 | `GET /v1/generations`, `GET /v1/types` | Reference data with counts; types carry their names in every language |
 | `GET /v1/abilities`, `GET /v1/moves` | Every main-series ability and move, with its name in every language |
-| `GET /v1/types/:slug`, `GET /v1/abilities/:slug` | `?limit &offset`. One type or ability with its names, and a page of what `/v1/pokemon?type=` or `?ability=` returns for it |
+| `GET /v1/types/:slug`, `GET /v1/abilities/:slug` | `?limit &offset`. One type or ability with its names, and a page of references (`ndex`, `slug`, `uri`) to what `/v1/pokemon?type=` or `?ability=` returns for it |
 | `GET /v1/egg-groups`, `GET /v1/home-games`, `GET /v1/pokedexes` | The values `eggGroup`, `homeGame` and `/v1/pokedexes/:slug` accept, each with its species count |
-| `GET /v1/pokedexes/:slug` | `?limit &offset`. Species in a regional Pokédex, in its order: list items plus their regional `number` |
+| `GET /v1/pokedexes/:slug` | `?limit &offset`. Species in a regional Pokédex, in its order: references (`ndex`, `slug`, `uri`) plus their regional `number` |
 | `GET /v1/meta` | Dataset version, counts and provenance |
 | `GET /health` | Reads from D1; never cached |
 | `GET /docs`, `GET /openapi.json` | Scalar UI and the OpenAPI 3.0.3 document |

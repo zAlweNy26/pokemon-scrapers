@@ -215,6 +215,9 @@ export const pokedex = async (db: Db, slug: string, page: { limit: number; offse
     }
 }
 
+/** A species as other resources name it; `pokemonRefSchema` documents the shape. */
+export const pokemonRef = ({ ndex, slug }: { ndex: number; slug: string }) => ({ ndex, slug, uri: `/v1/pokemon/${ndex}` })
+
 /** Rows selected with `listColumns`, as the list items every listing returns. */
 export const listItems = async (db: Db, rows: SelectResultFields<typeof listColumns>[], imageBaseUrl: string) => {
     const types = await typesByForm(db, rows.map((row) => row.formId))

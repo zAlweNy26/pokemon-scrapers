@@ -413,15 +413,13 @@ describe('reference values for the list filters', () => {
 })
 
 describe('GET /v1/pokedexes/:slug', () => {
-    test('lists species in regional order as list items with their regional number', async () => {
+    test('lists species in regional order as references with their regional number', async () => {
         const { response, body } = await json('/v1/pokedexes/KALOS-CENTRAL')
 
         expect(response.status).toBe(200)
         expect(body.meta).toEqual({ total: 2, limit: 20, offset: 0 })
         expect(body.data.map((p: any) => [p.slug, p.number])).toEqual([['greninja', 9], ['pikachu', 36]])
-        expect(Object.keys(body.data[0]).sort()).toEqual(
-            ['depositable', 'generation', 'name', 'ndex', 'number', 'slug', 'sprites', 'types']
-        )
+        expect(body.data[0]).toEqual({ ndex: 658, slug: 'greninja', uri: '/v1/pokemon/658', number: 9 })
     })
 
     test('paginates like /v1/pokemon', async () => {
@@ -502,8 +500,12 @@ describe('GET /v1/evolution-chains/:ndex', () => {
 
         expect(response.status).toBe(200)
         expect(body.id).toBe(10)
-        const species = (await json('/v1/pokemon?limit=100')).body.data
-        expect(body.members).toEqual(species.filter((p: any) => [25, 26].includes(p.ndex)))
+        expect(body.members).toEqual([
+            { ndex: 25, slug: 'pikachu', uri: '/v1/pokemon/25' },
+            { ndex: 26, slug: 'raichu', uri: '/v1/pokemon/26' }
+        ])
+        // Every reference resolves to the species it names.
+        for (const member of body.members) expect((await json(member.uri)).body.slug).toBe(member.slug)
         expect(body.steps).toEqual(raichu.evolutionChain.steps)
     })
 
@@ -525,7 +527,8 @@ describe('GET /v1/types/:slug and /v1/abilities/:slug', () => {
         expect(body.slug).toBe('water')
         expect(body.name).toMatchObject({ en: 'Water', de: 'Wasser' })
         expect(body.meta).toEqual({ total: 2, limit: 20, offset: 0 })
-        expect(body.data).toEqual((await json('/v1/pokemon?type=water')).body.data)
+        const species = (await json('/v1/pokemon?type=water')).body.data
+        expect(body.data).toEqual(species.map((p: any) => ({ ndex: p.ndex, slug: p.slug, uri: `/v1/pokemon/${p.ndex}` })))
     })
 
     test("each type's total is the count /v1/types reports, unused types included", async () => {

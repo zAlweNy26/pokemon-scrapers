@@ -2,11 +2,11 @@ import { Elysia } from 'elysia'
 import { db, env } from '@/api/env'
 import { sharedModels } from '@/api/models'
 import { notFound } from '@/api/problem'
-import { list, pokedex } from '@/api/modules/pokemon/service'
+import { list, pokedex, pokemonRef } from '@/api/modules/pokemon/service'
 import { abilityParams, pageQuery, pokedexParams, referenceModels, typeParams } from './model'
 import * as service from './service'
 
-/** One type or ability and a page of the species `/v1/pokemon?<filter>=` returns for it. */
+/** One type or ability and a page of references to the species `/v1/pokemon?<filter>=` returns for it. */
 const speciesPage =
     (find: typeof service.findType, filter: 'type' | 'ability') =>
     async ({ params, query }: { params: { slug: string }; query: { limit: number; offset: number } }) => {
@@ -17,7 +17,7 @@ const speciesPage =
         ])
         if (!found) throw notFound(`No ${filter} matches "${params.slug}".`)
 
-        return { ...found, data: items, meta: { total, limit: query.limit, offset: query.offset } }
+        return { ...found, data: items.map(pokemonRef), meta: { total, limit: query.limit, offset: query.offset } }
     }
 
 /**
@@ -44,7 +44,7 @@ export const reference = new Elysia({ name: 'module.reference' })
             response: { 200: 'reference.type', 404: 'problem', 422: 'problem', 429: 'problem' },
             detail: {
                 summary: 'Get one type with its species',
-                description: 'The species are what /v1/pokemon?type= returns, so `meta.total` is the count /v1/types reports.',
+                description: 'References to the species /v1/pokemon?type= returns, so `meta.total` is the count /v1/types reports.',
                 tags: ['Reference']
             }
         }
@@ -62,7 +62,7 @@ export const reference = new Elysia({ name: 'module.reference' })
             response: { 200: 'reference.ability', 404: 'problem', 422: 'problem', 429: 'problem' },
             detail: {
                 summary: 'Get one ability with its species',
-                description: 'The species are what /v1/pokemon?ability= returns: any form, hidden or not.',
+                description: 'References to the species /v1/pokemon?ability= returns: any form, hidden or not.',
                 tags: ['Reference']
             }
         }
@@ -93,7 +93,10 @@ export const reference = new Elysia({ name: 'module.reference' })
             const { total, items } = await pokedex(db(), params.slug, query, env().IMAGE_BASE_URL)
             if (!total) throw notFound(`No Pokédex matches "${params.slug}".`)
 
-            return { data: items, meta: { total, limit: query.limit, offset: query.offset } }
+            return {
+                data: items.map((item) => ({ ...pokemonRef(item), number: item.number })),
+                meta: { total, limit: query.limit, offset: query.offset }
+            }
         },
         {
             params: pokedexParams,
@@ -101,7 +104,7 @@ export const reference = new Elysia({ name: 'module.reference' })
             response: { 200: 'reference.pokedex', 404: 'problem', 422: 'problem', 429: 'problem' },
             detail: {
                 summary: 'List the species in a regional Pokédex',
-                description: 'In regional order, each with its regional number.',
+                description: 'References to its species in regional order, each with its regional number.',
                 tags: ['Reference']
             }
         }

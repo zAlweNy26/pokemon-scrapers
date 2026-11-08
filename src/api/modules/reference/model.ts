@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { namesSchema, paginationMeta } from '@/api/models'
-import { listItemSchema, listQuery } from '@/api/modules/pokemon/model'
+import { listQuery, pokemonRefSchema } from '@/api/modules/pokemon/model'
 
 /** An identifier other endpoints return, with its display name per language. */
 const namedSchema = z.object({
@@ -28,7 +28,7 @@ export const pageQuery = listQuery.pick({ limit: true, offset: true })
 
 /** A type or ability, with a page of the species /v1/pokemon returns for it. */
 const speciesPage = (description: string) =>
-    namedSchema.extend({ data: z.array(listItemSchema).describe(description), meta: paginationMeta })
+    namedSchema.extend({ data: z.array(pokemonRefSchema).describe(description), meta: paginationMeta })
 
 export const referenceModels = {
     'reference.generations': z.array(
@@ -61,7 +61,7 @@ export const referenceModels = {
     'reference.pokedexes': counted('Species in this regional Pokédex'),
 
     'reference.pokedex': z.object({
-        data: z.array(listItemSchema.extend({ number: z.number().describe('Number in this regional Pokédex') })),
+        data: z.array(pokemonRefSchema.extend({ number: z.number().describe('Number in this regional Pokédex') })),
         meta: paginationMeta
     })
 }
