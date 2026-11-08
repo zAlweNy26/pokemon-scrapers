@@ -86,6 +86,31 @@ describe('dexEntriesOf', () => {
         expect(revisions).toEqual([])
     })
 
+    test("keeps a misspelling a later release corrected as the earlier revision (Mawile's Ruby 1.0)", () => {
+        const { rows, revisions } = dexEntriesOf(
+            `===Pokédex entries===
+{{Dex/Gen/1|gen=III|reg1=Hoenn}}
+{{Dex/Entry1|v=Ruby|entry={{tt|<sc>Mawile</sc>|Misspelled as “Mawhile” in version 1.0, corrected in newer revisions}}'s jaws.}}`,
+            versionsRS,
+            new Set()
+        )
+        expect(rows).toEqual([['', 'ruby', "MAWILE's jaws."]])
+        expect(revisions).toEqual([['', 'ruby', '1.0', "MAWHILE's jaws."]])
+    })
+
+    test("prints each form's type where the game does (Silvally)", () => {
+        const page = `===Pokédex entries===
+{{Dex/Gen/1|gen=VIII|reg1=Galar}}
+{{Dex/Form|''All other forms''}}
+{{Dex/Entry1|v=Sword|entry=This is its {{tt|<Type>|matches the type of the form}}-type form.}}`
+        const { rows } = dexEntriesOf(page, versionsRS, new Set(), [['Type: Fire', 'Fire'], ['Type: Water', 'Water']])
+        expect(rows).toEqual([
+            ['Type: Fire', 'sword', 'This is its Fire-type form.'],
+            ['Type: Water', 'sword', 'This is its Water-type form.']
+        ])
+        expect(() => dexEntriesOf(page, versionsRS, new Set())).toThrow()
+    })
+
     test('unfolds forms Bulbapedia folded into one row', () => {
         expect(unfold('Hoenn Cap, Sinnoh Cap, and Alola Cap', 'Traveled the Hoenn/Sinnoh/Alola region.')).toEqual([
             ['Hoenn Cap', 'Traveled the Hoenn region.'],

@@ -28,7 +28,7 @@ Some are explained in the note column; the rest need a third source.
 | 152 Chikorita | firered | Its pleasantly aromatic leaf has the ability to check the humidity and temperature. | Its pleasantly aromatic leaves have the ability to check the humidity and temperature. | PokéAPI has 1.0 (kept in `revisions`); main text is 1.1. Expected |
 | 215 Sneasel | legends-arceus | This Pokémon shares roots with the Sneasel of Hisui, but unlike that species, this one is spiteful in personality. I hypothesize that water and earth can affect Sneasel's mind and body. | Its sturdy, curved claws are ideal for traversing precipitous cliffs. From the tips of these claws drips a venom that infiltrates the nerves of any prey caught in Sneasel's grasp. | completely different texts: Bulbapedia's is about Sneasel vs Hisuian Sneasel. Check which form Legends: Arceus shows it for |
 | 248 Tyranitar | firered | It has an impudent nature. Having great strength, it can even change surrounding landforms. | Its body can't be harmed by any sort of attack, so it is very eager to make challenges against enemies. | PokéAPI has 1.0 (kept in `revisions`); main text is 1.1. Expected |
-| 303 Mawile | ruby | MAWILE's huge jaws are actually steel horns that have been transformed. Its docile-looking face serves to lull its foe into letting down its guard. When the foe least expects it, MAWILE chomps it with its gaping jaws. | MAWHILE's huge jaws are actually steel horns that have been transformed. Its docile-looking face serves to lull its foe into letting down its guard. When the foe least expects it, MAWHILE chomps it with its gaping jaws. | Expected: "MAWHILE" is Ruby 1.0's misspelling, fixed in later revisions; we ship the latest. See section 4 for the missing 1.0 revision |
+| 303 Mawile | ruby | MAWILE's huge jaws are actually steel horns that have been transformed. Its docile-looking face serves to lull its foe into letting down its guard. When the foe least expects it, MAWILE chomps it with its gaping jaws. | MAWHILE's huge jaws are actually steel horns that have been transformed. Its docile-looking face serves to lull its foe into letting down its guard. When the foe least expects it, MAWHILE chomps it with its gaping jaws. | Expected: "MAWHILE" is Ruby 1.0's misspelling, fixed in later revisions; we ship the latest, and the 1.0 text is in `revisions`, matching PokéAPI |
 | 303 Mawile | sapphire | Don't be taken by this POKéMON's cute face - it's very dangerous. MAWILE fools the foe into letting down its guard then chomps down with its massive jaws. The steel jaws are really horns that have been transformed. | Don't be taken in by this POKéMON's cute face - it's very dangerous. MAWILE fools the foe into letting down its guard, then chomps down with its massive jaws. The steel jaws are really horns that have been transformed. |  |
 | 319 Sharpedo | sword | As soon as it catches the scent of its prey, Sharpedo will jet seawater from its backside, hurtling toward the target to attack at 75 mph. | As soon as it catches the scent of prey, Sharpedo will jet seawater from its backside, hurtling toward the target to attack at 75 mph. |  |
 | 449 Hippopotas | shield | This Pokémon is active during the day and passes the cold desert nights burrowed snuggly into the sand. | This Pokémon is active during the day and passes the cold desert nights burrowed snugly into the sand. |  |
@@ -117,13 +117,9 @@ Same letters, different punctuation ("hot-headed" / "hotheaded", "nest - this" /
 ## 4. Marked by Bulbapedia's tooltips, shipped without the mark
 
 Bulbapedia flags these inside the entry with `{{tt|...}}`; the build drops the
-tooltip, so nothing in the data says so.
+tooltip, so nothing in the data says so. (Settled 2026-11-08: Silvally's `<Type>` is
+filled in per form, and a "Misspelled as ... in version 1.0" tooltip becomes a revision.)
 
-- **Silvally's `<Type>` placeholder is lost (our bug).** Sword and Shield, form
-  "All other forms": `{{tt|<Type>|matches the type of the form}}` is stripped as if it
-  were an HTML tag, so we ship "This is its -type form." and "change to the type to
-  match". The game prints the form's type there. Options: one entry per Silvally form
-  with its type filled in, or keep the placeholder text.
 - **Texts the game never shows** ("Unused in the final release of the game"): Frillish
   Female (Shield), Jellicent Female (Sword, Shield), Unfezant Female (Sword), Koraidon
   Limited Build (Scarlet, Violet), Miraidon Low-Power Mode (Scarlet, Violet). They are
@@ -134,9 +130,6 @@ tooltip, so nothing in the data says so.
   Litten, Torracat, Incineroar, Popplio, Brionne, Primarina, Cosmog, Cosmoem, Solgaleo,
   Lunala, Necrozma, Marshadow, Zeraora, Meltan, Melmetal (27 species, 54 rows). Official
   text, but not shown in the game they are listed under.
-- **Mawile's Ruby 1.0 revision is missing.** `{{tt|<sc>Mawile</sc>|Misspelled as
-  "Mawhile" in version 1.0 ...}}`: the 1.0 text ("MAWHILE") belongs in
-  `pokedex_entry_revision` but only `<small>` notes are read as revisions.
 
 Unit conversions in tooltips ("-150 degrees Fahrenheit" / "-100 degrees Celsius") are
 Bulbapedia's own; the English game text is the first part, which is what we ship.

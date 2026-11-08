@@ -103,6 +103,14 @@ const siblings = new Map(
         versionRows.filter((other) => other.version_group_id === row.version_group_id && other.id !== row.id).map((other) => other.identifier!)
     ])
 )
+// The forms an entry printing the form's type stands for (Silvally's "This is its <Type>-type form."):
+// every form but the default, with its form name and its first type's English name.
+const typeNames = new Map(data.type.rows.map((row) => [row[0] as string, row[1] as string]))
+const firstTypes = new Map(data.formType.rows.filter((row) => row[1] === 1).map((row) => [row[0] as number, row[2] as string]))
+const typeFormsOf = (ndex: number) =>
+    data.forms
+        .filter((form) => form.ndex === ndex && !form.isDefault && form.formName)
+        .map((form): [string, string] => [form.formName!, typeNames.get(firstTypes.get(form.id)!)!])
 const unknownTemplates = new Set<string>()
 const skippedGames = new Set<string>()
 const origins: Table = { columns: ['ndex', 'lang', 'note'], rows: [] }
@@ -111,7 +119,7 @@ const pokedexRevision: Table = { columns: ['ndex', 'form', 'game', 'revision', '
 const availability: Table = { columns: ['ndex', 'game', 'dlc', 'area', 'obtainable'], rows: [] }
 for (const [ndex, wikitext] of bulbapedia.pages) {
     for (const row of originsOf(wikitext, unknownTemplates)) origins.rows.push([ndex, ...row])
-    const dex = dexEntriesOf(wikitext, versions, unknownTemplates)
+    const dex = dexEntriesOf(wikitext, versions, unknownTemplates, typeFormsOf(ndex))
     for (const row of dex.revisions) pokedexRevision.rows.push([ndex, ...row])
     for (const [table, { rows, skipped }] of [
         [pokedexEntry, dex],

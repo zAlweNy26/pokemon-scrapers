@@ -53,6 +53,21 @@ export interface Parsed<Row> {
 /** Generations I-III print names in capitals, which Bulbapedia marks `<sc>`; "é" stays small ("POKéMON"). */
 const capitals = (text: string) => text.toUpperCase().replace(/É/g, 'é')
 
+/** Where the game prints the form's type into the entry (Silvally's `{{tt|<Type>|...}}`), until the forms are known. */
+const TYPE_MARK = '\uE000'
+
+/**
+ * A word a later release corrected, which Bulbapedia keeps in a tooltip:
+ * `{{tt|<sc>Mawile</sc>|Misspelled as “Mawhile” in version 1.0, corrected in newer revisions}}`.
+ * `latest` is the entry with the corrected word, `earlier` the release before, when there is one.
+ */
+export const corrections = (entry: string) => {
+    const pattern = /\{\{tt\|(<sc>)?([^|{}<]*)(?:<\/sc>)?\|Misspelled as [“"]([^”"]+)[”"] in version (\d+\.\d+)[^{}]*\}\}/g
+    const revision = [...entry.matchAll(pattern)][0]?.[4]
+    const as = (word: 2 | 3) => entry.replace(pattern, (...match: string[]) => (match[1] ? `<sc>${match[word]}</sc>` : match[word]!))
+    return { latest: as(2), earlier: revision ? { revision, entry: as(3) } : null }
+}
+
 /**
  * An entry's wikitext as `label`'s game prints it: of a word the versions sharing
  * the row print differently (`the{{sup/3|R}}/this{{sup/3|S}}`), that version's;
@@ -68,6 +83,7 @@ const forVersion = (entry: string, label: string, unknown: Set<string>) => {
                 if (y === abbreviation) return b
                 throw new Error(`Pokédex entry: no ${label} text among "${a}" (${x}) and "${b}" (${y})`)
             })
+            .replace(/\{\{tt\|<Type>\|[^{}]*\}\}/g, TYPE_MARK)
             .replace(/\{\{ScPkmn\}\}/gi, '<sc>Pok</sc>é<sc>mon</sc>')
             .replace(/\{\{ScBall\}\}/gi, '<sc>Pok</sc>é <sc>Ball</sc>')
             .replace(/<sc>([\s\S]*?)<\/sc>/g, (_, inner: string) => capitals(plain(inner, unknown)))
@@ -101,13 +117,28 @@ export const unfold = (form: string, text: string): [string, string][] => {
     return forms.map((one, index) => [one, text.replace(run!, words[index]!)])
 }
 
+/** `unfold`, and an entry that prints the form's type becomes one row per form, with its type ("Type: Fire", "This is its Fire-type form."). */
+const rowsOf = (form: string, text: string, typeForms: [string, string][]): [string, string][] => {
+    if (!text.includes(TYPE_MARK)) return unfold(form, text)
+    if (!typeForms.length) throw new Error(`Pokédex entry prints a form's type, but the species has no other forms: "${text}"`)
+    return typeForms.map(([name, type]) => [name, text.replace(TYPE_MARK, type)])
+}
+
 export interface DexEntries extends Parsed<[string, string, string]> {
     /** `[form, game, revision, text]`: a game's texts before its latest revision ("1.0"). */
     revisions: [string, string, string, string][]
 }
 
-/** `[form, game, text]`: the species' Pokédex entries, in each game's own words; form is '' for the species itself. */
-export const dexEntriesOf = (wikitext: string, versions: Set<string>, unknown: Set<string>): DexEntries => {
+/**
+ * `[form, game, text]`: the species' Pokédex entries, in each game's own words; form is '' for the species itself.
+ * `typeForms` are `[form name, type name]` of the forms an entry printing the form's type stands for (Silvally's but Normal).
+ */
+export const dexEntriesOf = (
+    wikitext: string,
+    versions: Set<string>,
+    unknown: Set<string>,
+    typeForms: [string, string][] = []
+): DexEntries => {
     const result: DexEntries = { rows: [], skipped: new Set(), revisions: [] }
     const body = section(wikitext, 'Pokédex entries')
     if (!body) return result
@@ -121,13 +152,15 @@ export const dexEntriesOf = (wikitext: string, versions: Set<string>, unknown: S
             for (const label of labelsOf(named)) {
                 const games = gamesOf(label, named.ex, versions)
                 if (!games.length) result.skipped.add(label)
+                const { latest, earlier } = corrections(named.entry)
                 for (const { game } of games) {
-                    const texts = textsOf(forVersion(named.entry, label, unknown), unknown)
-                    for (const [one, text] of unfold(form, texts.at(-1)!.text)) result.rows.push([one, game, text])
+                    const texts = textsOf(forVersion(latest, label, unknown), unknown)
+                    for (const [one, text] of rowsOf(form, texts.at(-1)!.text, typeForms)) result.rows.push([one, game, text])
                     for (const { revision, text } of texts.slice(0, -1)) {
                         if (!revision) throw new Error(`Pokédex entry: ${label} has a second text with no version note: "${text}"`)
                         result.revisions.push([form, game, revision, text])
                     }
+                    if (earlier) result.revisions.push([form, game, earlier.revision, textsOf(forVersion(earlier.entry, label, unknown), unknown).at(-1)!.text])
                 }
             }
     }
