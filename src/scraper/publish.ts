@@ -34,7 +34,8 @@ const want: string = JSON.parse(await $`git show ${pushed}:data/version.json`.te
 const rows = await $`bunx wrangler d1 execute ${database.database_id} --remote --json --command ${"SELECT value FROM meta WHERE key = 'data_version'"}`
     .nothrow()
     .quiet()
-if (rows.exitCode !== 0) fail(`could not ask production for its dataset:\n${rows.stderr.toString().trim()}`)
+// With --json, wrangler reports its errors on stdout, not stderr.
+if (rows.exitCode !== 0) fail(`could not ask production for its dataset:\n${`${rows.stderr}${rows.stdout}`.trim()}`)
 const have: string = JSON.parse(rows.stdout.toString())[0]?.results[0]?.value ?? 'none'
 if (have === want) process.exit(0)
 

@@ -7,6 +7,8 @@
 # Bash, not sh: nvm cannot resolve its default alias under dash.
 PATH="${BUN_INSTALL:-$HOME/.bun}/bin:$PATH"
 if ! command -v node >/dev/null && [ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
+    # GitHub Desktop sets PREFIX for its bundled git, and nvm refuses to load while it is set.
+    unset PREFIX
     . "${NVM_DIR:-$HOME/.nvm}/nvm.sh"
 fi
 if ! command -v bun >/dev/null; then
