@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Loads the data a push to main names into production first: see src/scraper/publish.ts.
+# Turned on by `bun install` (package.json "prepare" sets core.hooksPath).
+
+# Editors and git GUIs run hooks without your shell profile, which is what puts bun
+# (and nvm's node, which Void needs for a load) on PATH. Find them where they install.
+# Bash, not sh: nvm cannot resolve its default alias under dash.
+PATH="${BUN_INSTALL:-$HOME/.bun}/bin:$PATH"
+if ! command -v node >/dev/null && [ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
+    . "${NVM_DIR:-$HOME/.nvm}/nvm.sh"
+fi
+if ! command -v bun >/dev/null; then
+    echo "pre-push: bun not found (looked on PATH and in ~/.bun/bin). Install it, or push with --no-verify." >&2
+    exit 1
+fi
+exec bun src/scraper/publish.ts

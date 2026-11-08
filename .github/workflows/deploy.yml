@@ -15,6 +15,10 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Explicit, so steps get pipefail: without it a failed wrangler query piped into jq passes.
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
 
@@ -41,7 +45,8 @@ jobs:
 
       # DATA_VERSION is baked into the deploy: announcing a version whose rows are not
       # loaded caches old rows under it for a week. CI can't load data (dataset.sql is
-      # built locally), so it checks what `bun run data:load:remote` recorded: the same
+      # built locally and never committed: the repo is public), so it checks what
+      # the pre-push hook (or `data:load:remote`) recorded: the same
       # version, and at least a minute ago so read replicas have caught up.
       - name: Require the dataset to be loaded
         env:
@@ -56,7 +61,7 @@ jobs:
             | jq -r '.[0].results[0] | "\(.have) \(.age // 0)"')
           read -r have age <<< "$loaded"
           if [ "$have" != "$want" ]; then
-            echo "::error::Production holds dataset $have, but data/version.json is $want. Run 'bun run data:load:remote', then re-run this workflow."
+            echo "::error::Production holds dataset $have, but data/version.json is $want. Push with the pre-push hook on (bun install sets it), or run 'bun run data:load:remote' and re-run this workflow."
             exit 1
           fi
           if [ "$age" -lt 60 ]; then sleep $((60 - age)); fi

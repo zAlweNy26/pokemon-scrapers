@@ -37,15 +37,19 @@ bun run deploy       # void deploy --platform cloudflare (skips the "link existi
 
 The first run signs in to Cloudflare in the browser, creates the D1 database and
 records its id in `void.lock.json` (commit it), applies pending migrations, and
-uploads the Worker. Data is loaded separately, **before** deploying — see below.
+uploads the Worker. Data is loaded from this machine, **before** deploying — see below.
 
 After that first deploy, `.github/workflows/deploy.yml` tests and deploys every push
 to `main`. Set the repository secret `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit,
 D1: Edit). Before deploying, it checks that the production database holds the
-dataset `data/version.json` names: `data:load:remote` records its version and load
-time in `meta`. So load the data first, then push `data/version.json`; the deploy
-waits out the rest of the minute after the load itself. Pushed without loading, it
-fails: load, then re-run it (Actions → Deploy → Re-run).
+dataset `data/version.json` names (a load records its version and time in `meta`),
+and waits out the rest of the minute after the load. The dataset itself is never
+committed — the repository is public — so a pre-push hook loads it from here:
+`bun install` turns it on (`core.hooksPath` = `.githooks`). When a push to `main`
+names another dataset than production holds, the hook uploads the sprites R2 lacks,
+applies migrations and loads `data/dataset.sql` before git pushes; any failure stops
+the push. Pushed with `--no-verify`, new data fails the deploy: run
+`bun run data:load:remote`, then re-run it (Actions → Deploy → Re-run).
 
 ## Data
 
@@ -54,9 +58,15 @@ bun run data:build         # → data/dataset.sql + data/version.json, validated
 bun run data:check         # quality checks + every species through the API; writes .cache/homedex.sqlite
 bun run data:sprites       # artwork → R2 as {key}/{96,256,512}.webp; without S3_* in .env, to .cache/sprites-out/
 bun run data:load:local    # reset local D1 and load it; run `bun test` and try the API
-bun run data:load:remote   # apply pending migrations, then load it into the real database (the new rows may need new columns; wrangler: void db execute passes the 8.6 MB file as one argument and hits E2BIG; the id is void.lock.json's D1)
-# then commit and push data/version.json: CI deploys once the load is a minute old
+git commit -m 'chore: ship dataset' data/version.json
+git push                   # the hook: sprites, migrations, the load into production; then CI deploys
 ```
+
+The hook (`src/scraper/publish.ts`) loads through `data:load:remote`, which also works alone: pending
+migrations (the new rows may need new columns), then the file into the real database
+(wrangler: `void db execute` passes the 9.6 MB file as one argument and hits E2BIG;
+the id is `void.lock.json`'s D1). It prints a D1 Time Travel bookmark first, for
+`wrangler d1 time-travel restore` if a migration or load goes wrong.
 
 Reads are served by D1 read replicas near the caller. CI waits a minute after the
 load before deploying: the deploy announces the new `DATA_VERSION`, and a replica
@@ -86,7 +96,9 @@ each one to WebP with `Bun.Image` and uploads it with `Bun.s3` to the bucket beh
 `IMAGE_BASE_URL`. It needs an R2 API token's S3 credentials in `.env`:
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
 `S3_ENDPOINT=https://<account id>.r2.cloudflarestorage.com` and `S3_BUCKET`.
-Rerun it whenever a build changes the sprite keys.
+It writes only the sprites the bucket lacks, and all of them when `SPRITES_COMMIT`
+differs from the one the bucket's `sprites-commit.txt` records; the pre-push hook runs it
+before every data load.
 
 `data:check` exits non-zero on malformed data: broken references, values out of
 range, mojibake or leftover wiki markup in any of ~42,000 texts, a handful of
