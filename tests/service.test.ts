@@ -469,7 +469,7 @@ describe('reference', () => {
 
     test('finds a type or ability by slug, ignoring case', async () => {
         expect(await reference.findType(db, 'WATER')).toEqual({
-            slug: 'water', name: expect.objectContaining({ en: 'Water', de: 'Wasser' })
+            id: 10, slug: 'water', name: expect.objectContaining({ en: 'Water', de: 'Wasser' })
         })
         expect((await reference.findAbility(db, 'Levitate'))?.slug).toBe('levitate')
         expect(await reference.findType(db, 'sound')).toBeUndefined()

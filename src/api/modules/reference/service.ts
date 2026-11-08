@@ -11,9 +11,21 @@ export const abilities = async (db: Db) => named(await db.select().from(ability)
 
 export const moves = async (db: Db) => named(await db.select().from(move).orderBy(move.slug))
 
+/**
+ * Gen IX index numbers from Bulbapedia's "List of types" (https://bulbapedia.bulbagarden.net/wiki/Type).
+ * ??? (`unknown`) and Shadow have none there, so they stay unnumbered.
+ */
+const TYPE_IDS: Record<string, number> = {
+    normal: 0, fighting: 1, flying: 2, poison: 3, ground: 4, rock: 5, bug: 6, ghost: 7, steel: 8,
+    fire: 9, water: 10, grass: 11, electric: 12, psychic: 13, ice: 14, dragon: 15, dark: 16, fairy: 17,
+    stellar: 99
+}
+
 // Slugs are stored lowercase, so lowering the input matches any case and keeps the primary key usable.
-export const findType = async (db: Db, slug: string) =>
-    named(await db.select().from(type).where(eq(type.slug, slug.toLowerCase())))[0]
+export const findType = async (db: Db, slug: string) => {
+    const found = named(await db.select().from(type).where(eq(type.slug, slug.toLowerCase())))[0]
+    return found && { id: TYPE_IDS[found.slug] ?? null, ...found }
+}
 
 export const findAbility = async (db: Db, slug: string) =>
     named(await db.select().from(ability).where(eq(ability.slug, slug.toLowerCase())))[0]
@@ -42,7 +54,7 @@ export const types = async (db: Db) => {
         .groupBy(type.slug)
         .orderBy(type.slug)
 
-    return rows.map((row) => ({ slug: row.slug, name: namesOf(row), count: row.count }))
+    return rows.map((row) => ({ id: TYPE_IDS[row.slug] ?? null, slug: row.slug, name: namesOf(row), count: row.count }))
 }
 
 export const eggGroups = (db: Db) =>

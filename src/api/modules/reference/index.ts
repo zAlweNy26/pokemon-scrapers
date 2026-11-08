@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia'
 import { db, env } from '@/api/env'
+import type { Db } from '@/db/client'
 import { sharedModels } from '@/api/models'
 import { notFound } from '@/api/problem'
 import { list, pokedex, pokemonRef } from '@/api/modules/pokemon/service'
@@ -8,7 +9,7 @@ import * as service from './service'
 
 /** One type or ability and a page of references to the species `/v1/pokemon?<filter>=` returns for it. */
 const speciesPage =
-    (find: typeof service.findType, filter: 'type' | 'ability') =>
+    <Found extends { slug: string }>(find: (db: Db, slug: string) => Promise<Found | undefined>, filter: 'type' | 'ability') =>
     async ({ params, query }: { params: { slug: string }; query: { limit: number; offset: number } }) => {
         const database = db()
         const [found, { total, items }] = await Promise.all([

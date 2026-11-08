@@ -8,6 +8,8 @@ const namedSchema = z.object({
     name: namesSchema
 })
 
+const typeId = z.number().nullable().describe("Gen IX index number, as Bulbapedia lists it; null for ??? and Shadow, which have none")
+
 /** A value a /v1/pokemon filter accepts, with how many species it matches there. */
 const counted = (count: string) => z.array(z.object({ slug: z.string(), count: z.number().describe(count) }))
 
@@ -42,11 +44,12 @@ export const referenceModels = {
 
     'reference.types': z.array(
         namedSchema.extend({
+            id: typeId,
             count: z.number().describe('Species whose default form has this type')
         })
     ),
 
-    'reference.type': speciesPage('Species whose default form has this type, by dex number'),
+    'reference.type': speciesPage('Species whose default form has this type, by dex number').extend({ id: typeId }),
 
     'reference.abilities': z.array(namedSchema),
 

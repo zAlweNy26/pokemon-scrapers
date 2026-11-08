@@ -524,11 +524,18 @@ describe('GET /v1/types/:slug and /v1/abilities/:slug', () => {
         const { response, body } = await json('/v1/types/WATER')
 
         expect(response.status).toBe(200)
+        expect(body.id).toBe(10)
         expect(body.slug).toBe('water')
         expect(body.name).toMatchObject({ en: 'Water', de: 'Wasser' })
         expect(body.meta).toEqual({ total: 2, limit: 20, offset: 0 })
         const species = (await json('/v1/pokemon?type=water')).body.data
         expect(body.data).toEqual(species.map((p: any) => ({ ndex: p.ndex, slug: p.slug, uri: `/v1/pokemon/${p.ndex}` })))
+    })
+
+    test("numbers each type by Bulbapedia's Gen IX index", async () => {
+        const ids = Object.fromEntries((await json('/v1/types')).body.map((t: any) => [t.slug, t.id]))
+
+        expect(ids).toMatchObject({ fighting: 1, ghost: 7, fire: 9, water: 10, dark: 16 })
     })
 
     test("each type's total is the count /v1/types reports, unused types included", async () => {
