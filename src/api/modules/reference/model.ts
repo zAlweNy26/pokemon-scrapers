@@ -53,7 +53,10 @@ export const referenceModels = {
 
     'reference.abilities': z.array(namedSchema),
 
-    'reference.ability': speciesPage('Species with a form that has this ability, hidden or not, by dex number'),
+    'reference.ability': speciesPage('Species with a form that has this ability, hidden or not, by dex number').extend({
+        description: z.string().nullable().describe('The in-game description in English, from the latest game that has one'),
+        effect: z.string().nullable().describe('What the ability does in detail, in English')
+    }),
 
     'reference.moves': z.array(namedSchema),
 

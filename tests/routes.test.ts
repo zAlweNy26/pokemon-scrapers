@@ -559,6 +559,18 @@ describe('GET /v1/types/:slug and /v1/abilities/:slug', () => {
         expect((await json('/v1/abilities/battle-bond')).body.data.map((p: any) => p.slug)).toEqual(['greninja'])
     })
 
+    test('an ability with its English description and effect', async () => {
+        const { body } = await json('/v1/abilities/lightning-rod')
+
+        expect(body.description).toStartWith('The Pokémon draws in all Electric-type moves.')
+        expect(body.effect).toStartWith("All other Pokémon's single-target Electric-type moves")
+
+        const { body: bare } = await json('/v1/abilities/static')
+        expect(bare.description).toBeNull()
+        expect(bare.effect).toBeNull()
+        expect((await json('/v1/abilities')).body[0]).not.toHaveProperty('description')
+    })
+
     test('paginates like /v1/pokemon', async () => {
         const { body } = await json('/v1/abilities/lightning-rod?limit=1&offset=1')
 

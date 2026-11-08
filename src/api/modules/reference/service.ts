@@ -7,7 +7,8 @@ import { nameColumns, namesOf, type NameColumns } from '@/api/names'
 
 const named = (rows: ({ slug: string } & NameColumns)[]) => rows.map((row) => ({ slug: row.slug, name: namesOf(row) }))
 
-export const abilities = async (db: Db) => named(await db.select().from(ability).orderBy(ability.slug))
+export const abilities = async (db: Db) =>
+    named(await db.select({ slug: ability.slug, ...nameColumns(ability) }).from(ability).orderBy(ability.slug))
 
 export const moves = async (db: Db) => named(await db.select().from(move).orderBy(move.slug))
 
@@ -27,8 +28,10 @@ export const findType = async (db: Db, slug: string) => {
     return found && { id: TYPE_IDS[found.slug] ?? null, ...found }
 }
 
-export const findAbility = async (db: Db, slug: string) =>
-    named(await db.select().from(ability).where(eq(ability.slug, slug.toLowerCase())))[0]
+export const findAbility = async (db: Db, slug: string) => {
+    const [row] = await db.select().from(ability).where(eq(ability.slug, slug.toLowerCase()))
+    return row && { ...named([row])[0]!, description: row.description, effect: row.effect }
+}
 
 export const generations = (db: Db) =>
     db

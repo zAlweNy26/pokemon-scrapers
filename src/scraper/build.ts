@@ -86,6 +86,10 @@ const localized = (names: Map<string, Row> | undefined, field: string): Record<L
         ])
     ) as Record<Language, string | null>
 
+/** Game text joined back into one paragraph: it wraps at the text box, and a line ending in "Fire-" or a soft hyphen continues the word. */
+export const unwrap = (value: string) =>
+    value.replace(/\u00ad\n/g, '').replace(/-\n/g, '-').replace(/\n/g, ' ').replace(/\u00ad/g, '')
+
 const languageColumns = (prefix: string) => LANGUAGES.map((language) => `${prefix}_${language}`)
 
 /** `artwork`: the HOME renders in PokeAPI/sprites, from `artworkKeys()`. */
@@ -101,7 +105,8 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
         pokemonTypes, formTypes, types, pokemonAbilities, abilities, pokemonStats,
         speciesEggGroups, eggGroups, encounters, locationAreas, locations, encounterSlots,
         encounterMethods, versions, evolutions, evolutionTriggers, versionGroups, items, moves, genders,
-        natures, growthRates, colors, shapes, habitats, pokedexes, dexNumbers, typeNames, abilityNames, moveNames
+        natures, growthRates, colors, shapes, habitats, pokedexes, dexNumbers, typeNames, abilityNames, moveNames,
+        abilityProse, abilityFlavor
     ] = await Promise.all(
         [
             'pokemon_species', 'pokemon_species_names', 'pokemon', 'pokemon_forms', 'pokemon_form_names',
@@ -110,7 +115,7 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
             'locations', 'encounter_slots', 'encounter_methods', 'versions', 'pokemon_evolution',
             'evolution_triggers', 'version_groups', 'items', 'moves', 'genders', 'natures', 'growth_rates',
             'pokemon_colors', 'pokemon_shapes', 'pokemon_habitats', 'pokedexes', 'pokemon_dex_numbers',
-            'type_names', 'ability_names', 'move_names'
+            'type_names', 'ability_names', 'move_names', 'ability_prose', 'ability_flavor_text'
         ].map(readTable)
     )
 
@@ -125,7 +130,19 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
     // Every type, `unknown` included: Arceus's ??? form has it. Move ids from 10000
     // are Colosseum/XD's shadow moves, which nothing here refers to.
     const typeTable = namesTable(types!, typeNames!, 'type_id', () => true)
-    const abilityTable = namesTable(abilities!, abilityNames!, 'ability_id', (row) => row.is_main_series === '1')
+    const mainAbilities = abilities!.filter((row) => row.is_main_series === '1')
+    const abilityTable = namesTable(mainAbilities, abilityNames!, 'ability_id', () => true)
+    const groupOrder = new Map(versionGroups!.map((row) => [row.id!, Number(row.order)]))
+    // English only for now: the one language PokéAPI has for every ability. Oldest game first, so the map keeps the latest text.
+    const descriptions = new Map(
+        abilityFlavor!
+            .filter((row) => row.language_id === '9')
+            .toSorted((a, b) => groupOrder.get(a.version_group_id!)! - groupOrder.get(b.version_group_id!)!)
+            .map((row) => [row.ability_id!, text(unwrap(row.flavor_text!))])
+    )
+    const effects = new Map(abilityProse!.filter((row) => row.local_language_id === '9').map((row) => [row.ability_id!, text(row.effect)]))
+    abilityTable.columns.push('description', 'effect')
+    mainAbilities.forEach((row, i) => abilityTable.rows[i]!.push(descriptions.get(row.id!) ?? null, effects.get(row.id!) ?? null))
     const moveTable = namesTable(moves!, moveNames!, 'move_id', (row) => Number(row.id) < 10000)
 
     const pokemonById = indexBy(pokemonRows!, 'id')

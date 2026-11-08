@@ -37,7 +37,14 @@ const localizedNames = () => ({
  * src/scraper/database.ts fails a build that leaves an identifier unnamed.
  */
 export const type = sqliteTable('type', { slug: text('slug').primaryKey(), ...localizedNames() })
-export const ability = sqliteTable('ability', { slug: text('slug').primaryKey(), ...localizedNames() })
+export const ability = sqliteTable('ability', {
+    slug: text('slug').primaryKey(),
+    ...localizedNames(),
+    /** In-game description in English, from the latest game that has one. */
+    description: text('description'),
+    /** The mechanics in detail, English only: PokéAPI's `ability_prose.effect`. */
+    effect: text('effect')
+})
 export const move = sqliteTable('move', { slug: text('slug').primaryKey(), ...localizedNames() })
 
 export const generation = sqliteTable('generation', {

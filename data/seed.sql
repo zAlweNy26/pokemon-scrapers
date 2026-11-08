@@ -58,6 +58,12 @@ INSERT INTO ability (slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, n
     ('unseen-fist','Unseen Fist','ふかしのこぶし',NULL,'Verborgene Faust','Poing Invisible','Pugni Invisibili','Puño Invisible','보이지않는주먹','无形拳','無形拳'),
     ('water-absorb','Water Absorb','ちょすい',NULL,'H2O-Absorber','Absorbe-Eau','Assorbacqua','Absorbe Agua','저수','储水','儲水');
 
+-- One ability with a description and effect, the others without.
+UPDATE ability SET
+    description = 'The Pokémon draws in all Electric-type moves. Instead of taking damage from them, its Sp. Atk stat is boosted.',
+    effect = 'All other Pokémon''s single-target Electric-type moves are redirected to this Pokémon if it is an eligible target.'
+WHERE slug = 'lightning-rod';
+
 INSERT INTO move (slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
     ('thunderbolt','Thunderbolt','１０まんボルト',NULL,'Donnerblitz','Tonnerre','Fulmine','Rayo','10만볼트','十万伏特','十萬伏特'),
     ('volt-tackle','Volt Tackle','ボルテッカー',NULL,'Volttackle','Électacle','Locomovolt','Placaje Eléctrico','볼트태클','伏特攻击','伏特攻擊');

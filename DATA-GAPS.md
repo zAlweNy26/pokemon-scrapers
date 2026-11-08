@@ -37,7 +37,7 @@ The build reads 21 of PokéAPI's 188 CSVs. No new requests are needed for any of
 | ~~Localized names for types, abilities, moves~~ | `type_names`, `ability_names`, `move_names` | done: `/v1/types`, `/v1/abilities`, `/v1/moves`, and named abilities in the detail. No romaji anywhere; Eelevate, Fire Mane and Aura Guard (Z-A) are English-only |
 | Localized labels for natures, egg groups, versions, items, growth rates | `*_names`, `*_prose` | all our languages; still returned as slugs |
 | Localized location names | `location_names` | only partial: en/ja/fr ~1,070; de/es/it/ko/zh 286; zh-Hans/ja-Hrkt 89 |
-| Ability descriptions | `ability_prose` (en effect), `ability_flavor_text` (per game, all languages) | 810 / 16,450 rows |
+| ~~Ability descriptions~~ | `ability_prose` (en effect), `ability_flavor_text` (per game, all languages) | English done: `description` and `effect` on `/v1/abilities/:slug`, all 314. Other languages left out for now: flavor text covers ja 311, fr 307, the rest 267 (nothing after Gen 8); prose only fr and de, partially |
 | Earlier-generation stats, types, abilities | `pokemon_stats_past`, `pokemon_types_past`, `pokemon_abilities_past` | 235 / 36 / 569 rows (e.g. Clefairy was Normal before Gen 6) |
 | Type chart, for per-form weaknesses | `type_efficacy`, `type_efficacy_past` | complete |
 | Learnsets | `pokemon_moves`, `moves`, `move_names`, `machines` | 638k rows (142k collapsed across games). Up to Scarlet/Violet, Legends Arceus, Champions. **No Legends Z-A or Mega Dimension.** Several times today's 3.5 MB dataset: decide the shape (latest game only? per game?) before adding |

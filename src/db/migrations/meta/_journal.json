@@ -99,6 +99,13 @@
       "when": 1794095249337,
       "tag": "20261107234729_drop_form_depositable_idx",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1794101209788,
+      "tag": "20261108012649_ability_descriptions",
+      "breakpoints": true
     }
   ]
 }
