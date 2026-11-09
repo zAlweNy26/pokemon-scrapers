@@ -11,7 +11,7 @@
 import { alphaFormsOf, legendsArceusAlphas, ZA_ALPHA_PAGE, zaAlphaRowsOf } from './alpha'
 import { GENERATION_PAGE, buildFromPokeApi, debutYearsOf, type Table } from './build'
 import { TABLES, check, counts, diff, openDatabase } from './database'
-import { fetchSpeciesPages, fetchWikitext } from './bulbapedia'
+import { fetchGameColors, fetchSpeciesPages, fetchWikitext } from './bulbapedia'
 import { originsOf } from './etymology'
 import { ORIGIN_MARKS, availabilityOf, dexEntriesOf, exclusivesOf } from './pokedex'
 import { fetchGameEvidence, homeGames } from './games'
@@ -33,6 +33,11 @@ const fail = (message: string): never => {
 await checkoutPokeApi()
 await checkoutArtwork()
 const data = await buildFromPokeApi(await artworkKeys(), debutYearsOf(await fetchWikitext(GENERATION_PAGE)))
+
+// Each game's colour, from Bulbapedia's colour templates.
+const gameColors = await fetchGameColors(data.game.rows.map((row) => row[data.game.columns.indexOf('name_en')] as string))
+data.game.columns.push('color')
+data.game.rows.forEach((row, i) => row.push(gameColors[i]!))
 
 // HOME: which forms can be stored, from Serebii's box list.
 const { entries } = await fetchDepositable()
@@ -142,7 +147,7 @@ const alphasZA = alphaFormsOf(zaAlphaRowsOf(await fetchWikitext(ZA_ALPHA_PAGE)),
 data.form.columns.push('alpha_legends_arceus', 'alpha_legends_za')
 for (const row of data.form.rows) row.push(alphasLA.has(row[0] as number), alphasZA.has(row[0] as number))
 const bulbapediaHash = new Bun.CryptoHasher('sha256')
-    .update(JSON.stringify([origins.rows, pokedexEntry.rows, pokedexRevision.rows, availability.rows, formShiny.rows, [...alphasZA]]))
+    .update(JSON.stringify([origins.rows, pokedexEntry.rows, pokedexRevision.rows, availability.rows, formShiny.rows, [...alphasZA], gameColors]))
     .digest('hex')
     .slice(0, 12)
 

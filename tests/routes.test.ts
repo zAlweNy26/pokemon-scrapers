@@ -623,7 +623,8 @@ describe('GET /v1/games and /v1/games/:slug', () => {
             slug: 'scarlet',
             versionGroup: 'scarlet-violet',
             baseGame: null,
-            dlcs: ['the-teal-mask-scarlet', 'the-indigo-disk-scarlet']
+            dlcs: ['the-teal-mask-scarlet', 'the-indigo-disk-scarlet'],
+            color: '#F34134'
         })
         expect((await json('/v1/games/the-teal-mask-scarlet')).body.name.en).toBe('Scarlet: The Teal Mask')
     })

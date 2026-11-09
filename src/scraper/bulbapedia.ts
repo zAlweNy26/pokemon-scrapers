@@ -97,3 +97,30 @@ export const fetchWikitext = async (title: string): Promise<string> => {
     if (!page || page.missing || !page.revisions) throw new Error(`Bulbapedia has no page "${title}"`)
     return page.revisions[0].slots.main.content
 }
+
+/**
+ * Bulbapedia's colour template for a game, from its English name: `Scarlet color`,
+ * `Teal Mask color` for "Scarlet: The Teal Mask", `Let's Go Pikachu color` for
+ * "Let’s Go, Pikachu!". "Legends: Arceus" and "Colosseum" are redirects the wiki follows. Pure, for tests.
+ */
+export const colorTemplateOf = (name: string) => `${(name.split(': The ')[1] ?? name).replace('’', "'").replace(/[,!]/g, '')} color`
+
+/** Each game's colour (`#F34134`), in the order of `names`, from one request expanding every template. Throws for a game without one. */
+export const fetchGameColors = async (names: string[]): Promise<string[]> => {
+    const params = new URLSearchParams({
+        action: 'expandtemplates',
+        prop: 'wikitext',
+        text: names.map((name) => `{{${colorTemplateOf(name)}}}`).join('\n'),
+        format: 'json',
+        formatversion: '2',
+        maxlag: '5'
+    })
+    const json = JSON.parse((await fetchPage(`${API}?${params}`, { maxAgeDays: 30 })).body)
+    if (json.error) throw new Error(`Bulbapedia: ${json.error.code} - ${json.error.info}`)
+    const colors: string[] = json.expandtemplates.wikitext.split('\n')
+    return names.map((name, i) => {
+        // A missing template expands to a red link, not a colour.
+        if (!/^[0-9A-F]{6}$/i.test(colors[i] ?? '')) throw new Error(`Bulbapedia has no "Template:${colorTemplateOf(name)}" for ${name}: got ${colors[i]}`)
+        return `#${colors[i]}`
+    })
+}

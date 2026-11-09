@@ -54,7 +54,8 @@ const gameSchema = z.object({
     generation: z.number(),
     versionGroup: z.string().describe('PokéAPI version group, as the `game` of evolutions and HOME games'),
     baseGame: z.string().nullable().describe('The game this DLC extends; null for a game sold on its own'),
-    dlcs: z.array(z.string()).describe('The DLCs that extend this game, in release order')
+    dlcs: z.array(z.string()).describe('The DLCs that extend this game, in release order'),
+    color: z.string().describe("Bulbapedia's colour for the game, as hex (`#F34134`); each DLC has its own")
 })
 
 export const referenceModels = {

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import type { FormInfo } from '@/scraper/build'
 import { availabilityPages, homeGames, parseGameCodes, type GameEvidence } from '@/scraper/games'
+import { colorTemplateOf } from '@/scraper/bulbapedia'
 
 const SAME = 'same-types-and-stats'
 
@@ -157,5 +158,16 @@ describe('availabilityPages', () => {
             <a href="/brilliantdiamondshiningpearl/otherpokemon.shtml">Other Available Pokémon</a>`
 
         expect(availabilityPages(html, 'brilliantdiamondshiningpearl')).toEqual(['sinnohpokedex', 'otherpokemon'])
+    })
+})
+
+describe('colorTemplateOf', () => {
+    test("names a game's Bulbapedia colour template, a DLC's by the DLC alone", () => {
+        expect(['Scarlet', 'Scarlet: The Teal Mask', 'Let’s Go, Pikachu!', 'Black 2'].map(colorTemplateOf)).toEqual([
+            'Scarlet color',
+            'Teal Mask color',
+            "Let's Go Pikachu color",
+            'Black 2 color'
+        ])
     })
 })

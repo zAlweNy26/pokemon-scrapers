@@ -83,6 +83,7 @@ export const games = async (db: Db) => {
         generation: row.generation,
         versionGroup: row.versionGroup,
         baseGame: row.baseGame,
+        color: row.color,
         dlcs: dlcs.get(row.slug) ?? []
     }))
 }

@@ -70,6 +70,8 @@ export const game = sqliteTable('game', {
     baseGame: text('base_game'),
     /** Release order: PokéAPI's version-group order, then version id. */
     sort: integer('sort').notNull(),
+    /** Bulbapedia's colour for the game (`F34134`), from its `{{Scarlet color}}` template; a DLC has its own. */
+    color: text('color').notNull(),
     ...localizedNames()
 })
 

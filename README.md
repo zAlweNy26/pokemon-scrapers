@@ -118,7 +118,7 @@ known facts, or any API response its schema rejects. Gaps the sources leave
 | `GET /v1/search?q=` | Cross-language name search; reports which language matched |
 | `GET /v1/generations`, `GET /v1/types` | Reference data with counts; types carry their names in every language |
 | `GET /v1/generations` | Also each generation's games: version groups in release order, DLCs as their own groups, each with its version slugs |
-| `GET /v1/games`, `GET /v1/games/:slug` | Every game the other endpoints return (PokéAPI versions, DLCs included), with its names in every language, generation, version group, the game a DLC extends (`baseGame`) and a game's `dlcs` |
+| `GET /v1/games`, `GET /v1/games/:slug` | Every game the other endpoints return (PokéAPI versions, DLCs included), with its names in every language, generation, version group, the game a DLC extends (`baseGame`), a game's `dlcs`, and its colour (`color`, Bulbapedia's) |
 | `GET /v1/abilities`, `GET /v1/moves` | Every main-series ability and move, with its name in every language |
 | `GET /v1/moves/:slug` | One move with its names, `description` (in-game text from the latest game that has a real one) and `effect` (the mechanics); both in English only for now |
 | `GET /v1/types/:slug`, `GET /v1/abilities/:slug` | `?limit &offset`. One type or ability with its names, and a page of references (`ndex`, `slug`, `uri`) to what `/v1/pokemon?type=` or `?ability=` returns for it. An ability also has `description`, its in-game text from the latest game that has one, and `effect`, the mechanics; both in English only for now |
