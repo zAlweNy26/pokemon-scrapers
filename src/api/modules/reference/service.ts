@@ -1,9 +1,10 @@
 import { and, count, countDistinct, eq } from 'drizzle-orm'
 import type { Db } from '@/db/client'
 import {
-    ability, form, formHomeGame, formType, generation, move, pokemon, pokemonDexNumber, pokemonEggGroup, type
+    ability, form, formHomeGame, formType, game, generation, move, pokemon, pokemonDexNumber, pokemonEggGroup, type
 } from '@/db/schema'
 import { nameColumns, namesOf, type NameColumns } from '@/api/names'
+import { groupBy } from '@/api/modules/pokemon/service'
 
 const named = (rows: ({ slug: string } & NameColumns)[]) => rows.map((row) => ({ slug: row.slug, name: namesOf(row) }))
 
@@ -45,18 +46,49 @@ export const findMove = async (db: Db, slug: string) => {
     return row && described(row)
 }
 
-export const generations = (db: Db) =>
-    db
-        .select({
-            id: generation.id,
-            region: generation.region,
-            debut: generation.debut,
-            count: count(pokemon.ndex)
-        })
-        .from(generation)
-        .leftJoin(pokemon, eq(pokemon.gen, generation.id))
-        .groupBy(generation.id, generation.region, generation.debut)
-        .orderBy(generation.id)
+export const generations = async (db: Db) => {
+    const [rows, games] = await Promise.all([
+        db
+            .select({
+                id: generation.id,
+                region: generation.region,
+                debut: generation.debut,
+                count: count(pokemon.ndex)
+            })
+            .from(generation)
+            .leftJoin(pokemon, eq(pokemon.gen, generation.id))
+            .groupBy(generation.id, generation.region, generation.debut)
+            .orderBy(generation.id),
+        db.select({ generation: game.generation, versionGroup: game.versionGroup, slug: game.slug }).from(game).orderBy(game.sort)
+    ])
+    const byGeneration = groupBy(games, (row) => row.generation, (row) => row)
+
+    // A version group's versions are adjacent in `sort`, so grouping keeps release order.
+    return rows.map((row) => ({
+        ...row,
+        games: Array.from(
+            groupBy(byGeneration.get(row.id) ?? [], (g) => g.versionGroup, (g) => g.slug),
+            ([versionGroup, versions]) => ({ versionGroup, versions })
+        )
+    }))
+}
+
+export const games = async (db: Db) => {
+    const rows = await db.select().from(game).orderBy(game.sort)
+    const dlcs = groupBy(rows.filter((row) => row.baseGame), (row) => row.baseGame, (row) => row.slug)
+
+    return rows.map((row) => ({
+        slug: row.slug,
+        name: namesOf(row),
+        generation: row.generation,
+        versionGroup: row.versionGroup,
+        baseGame: row.baseGame,
+        dlcs: dlcs.get(row.slug) ?? []
+    }))
+}
+
+// shortcut: reads all ~50 games to reuse games()' DLC lookup; query one row if the table grows large.
+export const findGame = async (db: Db, slug: string) => (await games(db)).find((g) => g.slug === slug.toLowerCase())
 
 export const types = async (db: Db) => {
     // Every type, unused ones (Stellar) at 0. Counted over default forms only, so a

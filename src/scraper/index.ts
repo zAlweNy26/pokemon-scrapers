@@ -29,7 +29,7 @@ const VERSION = new URL('../../data/version.json', import.meta.url).pathname
 /** Children first, so foreign keys hold at every step. */
 const DELETE_ORDER = [
     'evolution', 'encounter', 'form_shiny', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'availability', 'pokedex_entry_revision', 'pokedex_entry', 'pokemon_origin',
-    'pokemon_egg_group', 'pokemon', 'generation', 'type', 'ability', 'move', 'meta'
+    'pokemon_egg_group', 'pokemon', 'game', 'generation', 'type', 'ability', 'move', 'meta'
 ]
 
 const fail = (message: string): never => {
@@ -190,6 +190,7 @@ const pokeosHash = new Bun.CryptoHasher('sha256')
 
 const tables: [string, Table][] = [
     ['generation', data.generation],
+    ['game', data.game],
     ['type', data.type],
     ['ability', data.ability],
     ['move', data.move],

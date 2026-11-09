@@ -602,6 +602,40 @@ describe('GET /v1/types/:slug, /v1/abilities/:slug and /v1/moves/:slug', () => {
     })
 })
 
+describe('GET /v1/games and /v1/games/:slug', () => {
+    test('lists every game other endpoints return, with its names', async () => {
+        const { response, body } = await json('/v1/games')
+
+        expect(response.status).toBe(200)
+        expect(body.find((g: any) => g.slug === 'violet')).toEqual(
+            expect.objectContaining({ name: expect.objectContaining({ en: 'Violet', de: 'Purpur' }), generation: 9 })
+        )
+        const slugs = new Set(body.map((g: any) => g.slug))
+        const versions = (await json('/v1/generations')).body.flatMap((g: any) => g.games.flatMap((v: any) => v.versions))
+        expect(versions.filter((slug: string) => !slugs.has(slug))).toEqual([])
+    })
+
+    test('one game in any case, with its DLCs', async () => {
+        const { response, body } = await json('/v1/games/Scarlet')
+
+        expect(response.status).toBe(200)
+        expect(body).toMatchObject({
+            slug: 'scarlet',
+            versionGroup: 'scarlet-violet',
+            baseGame: null,
+            dlcs: ['the-teal-mask-scarlet', 'the-indigo-disk-scarlet']
+        })
+        expect((await json('/v1/games/the-teal-mask-scarlet')).body.name.en).toBe('Scarlet: The Teal Mask')
+    })
+
+    test('answers 404 as a problem for a game that does not exist', async () => {
+        const { response, body } = await json('/v1/games/scarlet-violet')
+
+        expect(response.status).toBe(404)
+        expect(body).toMatchObject({ status: 404, instance: '/v1/games/scarlet-violet' })
+    })
+})
+
 describe('GET /v1/meta', () => {
     test('exposes dataset version, counts and provenance', async () => {
         const { body } = await json('/v1/meta')

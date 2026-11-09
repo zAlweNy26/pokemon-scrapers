@@ -73,7 +73,7 @@ export const asD1 = (sqlite: Database): D1Database => {
 }
 
 const TABLES = [
-    'generation', 'pokemon', 'pokemon_egg_group', 'pokemon_origin', 'form', 'form_type',
+    'generation', 'game', 'pokemon', 'pokemon_egg_group', 'pokemon_origin', 'form', 'form_type',
     'form_ability', 'form_home_game', 'form_shiny', 'encounter', 'evolution', 'pokemon_dex_number', 'pokedex_entry', 'pokedex_entry_revision', 'availability', 'type', 'ability', 'move', 'meta'
 ] as const
 
@@ -115,6 +115,16 @@ export const check = (sqlite: Database): string[] => {
             WHERE (c.key IN ('knownMove', 'usedMove') AND c.value NOT IN (SELECT slug FROM move))
                OR (c.key IN ('knownMoveType', 'partyType') AND c.value NOT IN (SELECT slug FROM type)))`)
     if (unnamed) problems.push(`${unnamed} type, ability or move identifiers have no name row`)
+
+    // /v1/games promises to resolve every game another endpoint returns.
+    const unlisted = scalar(`SELECT
+        (SELECT count(*) FROM pokedex_entry WHERE game NOT IN (SELECT slug FROM game)) +
+        (SELECT count(*) FROM pokedex_entry_revision WHERE game NOT IN (SELECT slug FROM game)) +
+        (SELECT count(*) FROM availability WHERE game NOT IN (SELECT slug FROM game)) +
+        (SELECT count(*) FROM encounter WHERE game NOT IN (SELECT slug FROM game)) +
+        (SELECT count(*) FROM evolution WHERE game NOT IN (SELECT version_group FROM game)) +
+        (SELECT count(*) FROM form_home_game WHERE game NOT IN (SELECT version_group FROM game))`)
+    if (unlisted) problems.push(`${unlisted} rows name a game or version group the game table does not list`)
 
     if (!scalar("SELECT count(*) FROM meta WHERE key = 'count_pokemon'"))
         problems.push('meta has no stored counts; /v1/meta would report 0')

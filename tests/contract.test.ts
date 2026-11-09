@@ -34,6 +34,8 @@ describe('openapi document', () => {
             '/v1/evolution-chains/{ndex}',
             '/v1/forms',
             '/v1/forms/{slug}',
+            '/v1/games',
+            '/v1/games/{slug}',
             '/v1/generations',
             '/v1/home-games',
             '/v1/meta',

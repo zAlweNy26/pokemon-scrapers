@@ -51,6 +51,18 @@ const DEBUT_YEAR: Record<string, number> = {
     '1': 1996, '2': 1999, '3': 2002, '4': 2006, '5': 2010, '6': 2013, '7': 2016, '8': 2019, '9': 2022
 }
 
+/**
+ * Not in PokéAPI, which lists DLCs as versions of their own. The version each
+ * extends. shortcut: hand-kept, so a DLC a PokéAPI bump adds has no base game until listed here.
+ */
+const DLC_BASE: Record<string, string> = {
+    'the-isle-of-armor-sword': 'sword', 'the-isle-of-armor-shield': 'shield',
+    'the-crown-tundra-sword': 'sword', 'the-crown-tundra-shield': 'shield',
+    'the-teal-mask-scarlet': 'scarlet', 'the-teal-mask-violet': 'violet',
+    'the-indigo-disk-scarlet': 'scarlet', 'the-indigo-disk-violet': 'violet',
+    'mega-dimension': 'legends-za'
+}
+
 /** PokéAPI `stats.id` → our column, in schema order. */
 const STAT_COLUMNS = ['hp', 'atk', 'def', 'sp_atk', 'sp_def', 'spd'] as const
 
@@ -109,7 +121,7 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
         speciesEggGroups, eggGroups, encounters, locationAreas, locations, encounterSlots,
         encounterMethods, versions, evolutions, evolutionTriggers, versionGroups, items, moves, genders,
         natures, growthRates, colors, shapes, habitats, pokedexes, dexNumbers, typeNames, abilityNames, moveNames,
-        abilityProse, abilityFlavor, moveProse, moveFlavor
+        abilityProse, abilityFlavor, moveProse, moveFlavor, versionNames
     ] = await Promise.all(
         [
             'pokemon_species', 'pokemon_species_names', 'pokemon', 'pokemon_forms', 'pokemon_form_names',
@@ -119,7 +131,7 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
             'evolution_triggers', 'version_groups', 'items', 'moves', 'genders', 'natures', 'growth_rates',
             'pokemon_colors', 'pokemon_shapes', 'pokemon_habitats', 'pokedexes', 'pokemon_dex_numbers',
             'type_names', 'ability_names', 'move_names', 'ability_prose', 'ability_flavor_text', 'move_effect_prose',
-            'move_flavor_text'
+            'move_flavor_text', 'version_names'
         ].map(readTable)
     )
 
@@ -140,6 +152,24 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
     const moveTable = namesTable(gameMoves, moveNames!, 'move_id', () => true)
 
     const groupOrder = new Map(versionGroups!.map((row) => [row.id!, Number(row.order)]))
+
+    const groupById = indexBy(versionGroups!, 'id')
+    const versionNamesById = byLanguage(versionNames!, 'version_id')
+    const gameTable: Table = {
+        columns: ['slug', 'version_group', 'generation', 'base_game', 'sort', ...languageColumns('name')],
+        rows: versions!
+            .toSorted(
+                (a, b) =>
+                    groupOrder.get(a.version_group_id!)! - groupOrder.get(b.version_group_id!)! || Number(a.id) - Number(b.id)
+            )
+            .map((row, sort) => {
+                const group = groupById.get(row.version_group_id!)!
+                return [
+                    row.identifier!, group.identifier!, Number(group.generation_id), DLC_BASE[row.identifier!] ?? null, sort,
+                    ...Object.values(localized(versionNamesById.get(row.id!), 'name'))
+                ]
+            })
+    }
     /** `prose` in English, keyed by `key`. */
     const englishEffects = (prose: Row[], key: string) =>
         new Map(prose.filter((row) => row.local_language_id === '9').map((row) => [row[key]!, text(row.effect)]))
@@ -405,7 +435,7 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
 
     return {
         generation, pokemon, eggGroup, dexNumber, form, formType, formAbility, encounter, evolution, forms,
-        type: typeTable, ability: abilityTable, move: moveTable
+        type: typeTable, ability: abilityTable, move: moveTable, game: gameTable
     }
 }
 

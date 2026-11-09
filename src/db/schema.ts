@@ -54,6 +54,25 @@ export const generation = sqliteTable('generation', {
     debut: integer('debut').notNull()
 })
 
+/**
+ * Every PokéAPI version (`scarlet`), DLC versions included (`the-teal-mask-scarlet`):
+ * the `game` that pokedex_entry, availability and encounter store. evolution and
+ * form_home_game store `versionGroup` instead. Not foreign keys, like the name
+ * tables; `check()` in src/scraper/database.ts fails a build that uses one not here.
+ */
+export const game = sqliteTable('game', {
+    slug: text('slug').primaryKey(),
+    versionGroup: text('version_group').notNull(),
+    generation: integer('generation')
+        .notNull()
+        .references(() => generation.id),
+    /** The version a DLC extends (`scarlet`); null for a game sold on its own. */
+    baseGame: text('base_game'),
+    /** Release order: PokéAPI's version-group order, then version id. */
+    sort: integer('sort').notNull(),
+    ...localizedNames()
+})
+
 export const pokemon = sqliteTable(
     'pokemon',
     {

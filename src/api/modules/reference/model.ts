@@ -30,6 +30,10 @@ export const moveParams = z.object({
     slug: z.string().min(1).max(40).describe('Move identifier').meta({ examples: ['thunderbolt'] })
 })
 
+export const gameParams = z.object({
+    slug: z.string().min(1).max(40).describe('PokéAPI version identifier').meta({ examples: ['scarlet'] })
+})
+
 export const pageQuery = listQuery.pick({ limit: true, offset: true })
 
 /** English only for now: the one language PokéAPI has for (nearly) every ability and move. */
@@ -42,15 +46,39 @@ const englishTexts = (thing: string) => ({
 const speciesPage = (description: string) =>
     namedSchema.extend({ data: z.array(pokemonRefSchema).describe(description), meta: paginationMeta })
 
+const gameSchema = z.object({
+    slug: z.string().describe('PokéAPI version identifier, as the `game` of Pokédex entries, availability and encounters'),
+    name: namesSchema.describe(
+        'Not game text: PokéAPI\'s version names, without "Pokémon"; a DLC is named after its game ("Scarlet: The Teal Mask")'
+    ),
+    generation: z.number(),
+    versionGroup: z.string().describe('PokéAPI version group, as the `game` of evolutions and HOME games'),
+    baseGame: z.string().nullable().describe('The game this DLC extends; null for a game sold on its own'),
+    dlcs: z.array(z.string()).describe('The DLCs that extend this game, in release order')
+})
+
 export const referenceModels = {
     'reference.generations': z.array(
         z.object({
             id: z.number(),
             region: z.string(),
             debut: z.number().describe('Year the generation first released'),
-            count: z.number()
+            count: z.number(),
+            games: z
+                .array(
+                    z.object({
+                        versionGroup: z.string(),
+                        versions: z.array(z.string()).describe('Slugs /v1/games/{slug} takes')
+                    })
+                )
+                .describe('Version groups in release order, DLCs as their own groups')
+                .meta({ examples: [[{ versionGroup: 'scarlet-violet', versions: ['scarlet', 'violet'] }]] })
         })
     ),
+
+    'reference.games': z.array(gameSchema),
+
+    'reference.game': gameSchema,
 
     'reference.types': z.array(
         namedSchema.extend({

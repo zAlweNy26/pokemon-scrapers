@@ -4,7 +4,7 @@ import type { Db } from '@/db/client'
 import { sharedModels } from '@/api/models'
 import { notFound } from '@/api/problem'
 import { list, pokedex, pokemonRef } from '@/api/modules/pokemon/service'
-import { abilityParams, moveParams, pageQuery, pokedexParams, referenceModels, typeParams } from './model'
+import { abilityParams, gameParams, moveParams, pageQuery, pokedexParams, referenceModels, typeParams } from './model'
 import * as service from './service'
 
 /** One type or ability and a page of references to the species `/v1/pokemon?<filter>=` returns for it. */
@@ -30,8 +30,30 @@ export const reference = new Elysia({ name: 'module.reference' })
     .model(referenceModels)
     .get('/generations', () => service.generations(db()), {
         response: { 200: 'reference.generations', 429: 'problem' },
-        detail: { summary: 'List generations', tags: ['Reference'] }
+        detail: { summary: 'List generations with their games', tags: ['Reference'] }
     })
+    .get('/games', () => service.games(db()), {
+        response: { 200: 'reference.games', 429: 'problem' },
+        detail: {
+            summary: 'List games with their names, DLCs included',
+            description: 'Every game other endpoints return, in release order.',
+            tags: ['Reference']
+        }
+    })
+    .get(
+        '/games/:slug',
+        async ({ params }) => {
+            const found = await service.findGame(db(), params.slug)
+            if (!found) throw notFound(`No game matches "${params.slug}".`)
+
+            return found
+        },
+        {
+            params: gameParams,
+            response: { 200: 'reference.game', 404: 'problem', 422: 'problem', 429: 'problem' },
+            detail: { summary: 'Get one game with its names, generation and DLCs', tags: ['Reference'] }
+        }
+    )
     .get('/types', () => service.types(db()), {
         response: { 200: 'reference.types', 429: 'problem' },
         detail: { summary: 'List types with their names and species counts', tags: ['Reference'] }

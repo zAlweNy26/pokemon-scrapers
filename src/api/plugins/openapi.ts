@@ -66,7 +66,7 @@ export const documentation = new Elysia({ name: 'documentation' }).use(
             tags: [
                 { name: 'Pokemon', description: 'Species and their forms' },
                 { name: 'Search', description: 'Cross-language name search' },
-                { name: 'Reference', description: 'Generations and types' },
+                { name: 'Reference', description: 'Generations, games and types' },
                 { name: 'Meta', description: 'Dataset provenance and versioning' }
             ]
         }

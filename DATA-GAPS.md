@@ -35,7 +35,8 @@ The build reads 21 of PokéAPI's 188 CSVs. No new requests are needed for any of
 | ~~Base experience~~ | `pokemon.base_experience` | null for 49 of 1351 varieties |
 | Form flags: battle-only, Mega, introducing game | `pokemon_forms` | complete; `src/scraper/index.ts` reads `is_battle_only` only to validate. 97 Megas, 34 Gigantamax |
 | ~~Localized names for types, abilities, moves~~ | `type_names`, `ability_names`, `move_names` | done: `/v1/types`, `/v1/abilities`, `/v1/moves`, and named abilities in the detail. No romaji anywhere; Eelevate, Fire Mane and Aura Guard (Z-A) are English-only |
-| Localized labels for natures, egg groups, versions, items, growth rates | `*_names`, `*_prose` | all our languages; still returned as slugs |
+| Localized labels for natures, egg groups, items, growth rates | `*_names`, `*_prose` | all our languages; still returned as slugs |
+| ~~Localized version names~~ | `version_names` | done: `/v1/games`. Romaji for one game only; no Korean for The Teal Mask, The Indigo Disk or Champions |
 | Localized location names | `location_names` | only partial: en/ja/fr ~1,070; de/es/it/ko/zh 286; zh-Hans/ja-Hrkt 89 |
 | ~~Ability descriptions~~ | `ability_prose` (en effect), `ability_flavor_text` (per game, all languages) | English done: `description` and `effect` on `/v1/abilities/:slug`, all 314. Other languages left out for now: flavor text covers ja 311, fr 307, the rest 267 (nothing after Gen 8); prose only fr and de, partially |
 | ~~Move descriptions~~ | `move_flavor_text`, `move_effect_prose` via `moves.effect_id` | English done: `description` and `effect` on `/v1/moves/:slug`. Descriptions 914 of 919 (not the five Starmobile torque moves); effects 826: the 93 newest moves (Legends Arceus, Gen 9) have no `effect_id`. Sword/Shield's "This move can't be used" notice is skipped for the last real text |

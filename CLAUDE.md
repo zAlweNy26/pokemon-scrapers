@@ -124,6 +124,7 @@ Non-game text Dany approved keeping (2026-11-08):
 | `pokemon_origin.note` (etymology) | Bulbapedia |
 | `availability.area` | Bulbapedia's wording around the game's place names |
 | `pokemon.pronunciation`, `pronunciation_ipa` | pokeos |
+| `game.name_*` | PokéAPI's version names ("Scarlet: The Teal Mask" for a DLC); approved 2026-11-09 |
 | `form.name_*` | PokéAPI's full names ("Active Xerneas"), or ours: "Species (form name)" from two official strings |
 | `pokedex_entry.form` | Bulbapedia's form label |
 | `form_shiny.games` | Bulbapedia's game abbreviations |

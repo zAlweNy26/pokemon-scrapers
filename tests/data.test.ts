@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { createDb } from '@/db/client'
 import { pokemon } from '@/db/schema'
 import { speciesDepositable } from '@/api/modules/pokemon/service'
-import { asD1 } from '@/scraper/database'
+import { asD1, check } from '@/scraper/database'
 import { createSqlite, seedSql } from './support/d1'
 
 /**
@@ -34,6 +34,16 @@ describe('loading data', () => {
                 "INSERT INTO form (ndex, slug, name_en, is_default) VALUES (25, 'pikachu-dup', 'Dup', 1)"
             )
         ).toThrow(/UNIQUE/)
+    })
+
+    test('the build refuses a game the game table does not list', async () => {
+        // /v1/games must resolve every `game` another endpoint returns.
+        const sqlite = await createSqlite()
+        const unlisted = () => check(sqlite).filter((problem) => problem.includes('game table'))
+
+        expect(unlisted()).toEqual([])
+        sqlite.run("UPDATE evolution SET game = 'stadium' WHERE id = (SELECT min(id) FROM evolution)")
+        expect(unlisted()).toHaveLength(1)
     })
 
     test('refuses a row that points at a missing species', async () => {

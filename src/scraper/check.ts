@@ -144,7 +144,7 @@ const paths = [
     ...Array.from({ length: scalar('SELECT count(*) FROM pokemon') as number }, (_, i) => `/v1/pokemon/${i + 1}`),
     ...Array.from({ length: 11 }, (_, i) => `/v1/pokemon?limit=100&offset=${i * 100}`),
     ...['pika', 'Quaj', 'ゲンガ', '皮卡', 'Mr. M', 'farfetch', 'flabé', 'nidoran', 'ピカ', '이상'].map((q) => `/v1/search?q=${encodeURIComponent(q)}`),
-    '/v1/types', '/v1/abilities', '/v1/moves', '/v1/generations', '/v1/meta', '/openapi.json'
+    '/v1/types', '/v1/abilities', '/v1/moves', '/v1/generations', '/v1/games', '/v1/games/the-indigo-disk-violet', '/v1/meta', '/openapi.json'
 ]
 const failed: string[] = []
 for (const path of paths) {

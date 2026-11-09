@@ -407,11 +407,37 @@ describe('reference', () => {
 
         expect(generations.map((g) => [g.id, g.count])).toEqual([
             [1, 4],
+            [2, 0],
+            [3, 0],
             [4, 1],
+            [5, 0],
             [6, 1],
+            [7, 0],
             [8, 1],
             [9, 1]
         ])
+    })
+
+    test("nests each generation's games by version group, DLCs as their own groups, in release order", async () => {
+        const generations = await reference.generations(db)
+        const paldea = generations.find((g) => g.id === 9)!.games
+
+        expect(paldea.slice(0, 3)).toEqual([
+            { versionGroup: 'scarlet-violet', versions: ['scarlet', 'violet'] },
+            { versionGroup: 'the-teal-mask', versions: ['the-teal-mask-scarlet', 'the-teal-mask-violet'] },
+            { versionGroup: 'the-indigo-disk', versions: ['the-indigo-disk-scarlet', 'the-indigo-disk-violet'] }
+        ])
+        expect(generations[0]!.games[0]).toEqual({ versionGroup: 'red-green-japan', versions: ['red-japan', 'green-japan'] })
+    })
+
+    test('links each DLC to the game it extends, both ways', async () => {
+        const games = await reference.games(db)
+        const bySlug = Object.fromEntries(games.map((g) => [g.slug, g]))
+
+        expect(bySlug['the-isle-of-armor-shield']).toMatchObject({ baseGame: 'shield', versionGroup: 'the-isle-of-armor', generation: 8 })
+        expect(bySlug.shield!.dlcs).toEqual(['the-isle-of-armor-shield', 'the-crown-tundra-shield'])
+        expect(bySlug['legends-za']!.dlcs).toEqual(['mega-dimension'])
+        expect(bySlug.scarlet!.baseGame).toBeNull()
     })
 
     test('counts types over default forms only', async () => {
