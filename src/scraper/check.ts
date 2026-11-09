@@ -7,14 +7,14 @@
  */
 import { handleRequest } from '@/api/handler'
 import { setLogSink } from '@/api/log'
+import { MAX_PAGE_SIZE } from '@/api/models'
 import type { Env, RateLimiter } from '@/api/platform'
 import { asD1, check, openDatabase } from './database'
 import { unwrap } from './build'
-import { readTable } from './pokeapi'
+import { LANGUAGES, readTable } from './pokeapi'
+import { DATASET } from './sql'
 
-const DATASET = new URL('../../data/dataset.sql', import.meta.url).pathname
 const COPY = new URL('../../.cache/homedex.sqlite', import.meta.url).pathname
-const LANGUAGES = ['en', 'ja', 'ja_romaji', 'de', 'fr', 'it', 'es', 'ko', 'zh_hans', 'zh_hant']
 
 const file = Bun.file(DATASET)
 if (!(await file.exists())) {
@@ -140,9 +140,10 @@ console.log('\n— Through the API, response schemas included')
 setLogSink(() => {})
 const allow: RateLimiter = { limit: async () => ({ success: true }) }
 const env: Env = { DB: asD1(db), RL_GLOBAL: allow, RL_SEARCH: allow, DATA_VERSION: 'check', IMAGE_BASE_URL: 'https://images.test' }
+const species = scalar('SELECT count(*) FROM pokemon') as number
 const paths = [
-    ...Array.from({ length: scalar('SELECT count(*) FROM pokemon') as number }, (_, i) => `/v1/pokemon/${i + 1}`),
-    ...Array.from({ length: 11 }, (_, i) => `/v1/pokemon?limit=100&offset=${i * 100}`),
+    ...Array.from({ length: species }, (_, i) => `/v1/pokemon/${i + 1}`),
+    ...Array.from({ length: Math.ceil(species / MAX_PAGE_SIZE) }, (_, i) => `/v1/pokemon?limit=${MAX_PAGE_SIZE}&offset=${i * MAX_PAGE_SIZE}`),
     ...['pika', 'Quaj', 'ゲンガ', '皮卡', 'Mr. M', 'farfetch', 'flabé', 'nidoran', 'ピカ', '이상'].map((q) => `/v1/search?q=${encodeURIComponent(q)}`),
     '/v1/types', '/v1/abilities', '/v1/moves', '/v1/generations', '/v1/games', '/v1/games/the-indigo-disk-violet', '/v1/meta', '/openapi.json'
 ]

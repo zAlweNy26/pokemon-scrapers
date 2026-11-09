@@ -1,5 +1,8 @@
 export type Value = string | number | boolean | null
 
+/** The built dataset: written by `data:build`, read by check, sprite upload and publish. */
+export const DATASET = new URL('../../data/dataset.sql', import.meta.url).pathname
+
 /** Where a dataset stops being data: the build stamps the time it ran from here on. */
 export const STAMP = "\nINSERT INTO meta (key, value) VALUES ('generated_at'"
 

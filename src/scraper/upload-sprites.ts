@@ -18,8 +18,8 @@ import { mkdir } from 'node:fs/promises'
 import { SPRITE_SIZES } from '@/api/sprites'
 import { openDatabase } from './database'
 import { ARTWORK_DIR, SPRITES_COMMIT, checkoutArtwork } from './sprites'
+import { DATASET } from './sql'
 
-const DATASET = new URL('../../data/dataset.sql', import.meta.url).pathname
 const OUT = new URL('../../.cache/sprites-out/', import.meta.url).pathname
 const MARKER = 'sprites-commit.txt'
 const CONCURRENCY = 8

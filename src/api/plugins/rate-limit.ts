@@ -1,10 +1,7 @@
 import { Elysia } from 'elysia'
 import { env } from '@/api/env'
 import { rateLimited } from '@/api/problem'
-import type { Env, RateLimiter } from '@/api/platform'
-
-/** Cloudflare's binding only permits a 10s or 60s window; the limits live in void.config.ts. */
-const WINDOW_SECONDS = 60
+import { RATE_LIMITS, type Env, type RateLimiter } from '@/api/platform'
 
 /**
  * Behind Cloudflare every request originates from a Cloudflare address, so the
@@ -25,7 +22,7 @@ const clientKey = (request: Request) => request.headers.get('CF-Connecting-IP') 
 const limiter = (name: string, pick: (bindings: Env) => RateLimiter) =>
     new Elysia({ name }).onBeforeHandle({ as: 'scoped' }, async ({ request }) => {
         const { success } = await pick(env()).limit({ key: clientKey(request) })
-        if (!success) throw rateLimited(WINDOW_SECONDS)
+        if (!success) throw rateLimited(RATE_LIMITS.windowSeconds)
     })
 
 /** Applies to everything under /v1. Generous enough that normal use never notices. */

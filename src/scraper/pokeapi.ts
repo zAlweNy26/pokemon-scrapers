@@ -40,3 +40,7 @@ export const LANGUAGE_IDS = {
     zh_hans: ['12'],
     zh_hant: ['4']
 } as const
+
+export type Language = keyof typeof LANGUAGE_IDS
+
+export const LANGUAGES = Object.keys(LANGUAGE_IDS) as Language[]

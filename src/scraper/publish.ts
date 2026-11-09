@@ -11,9 +11,8 @@
  */
 import { $ } from 'bun'
 import lock from '../../void.lock.json'
-import { versionOf } from './sql'
+import { DATASET, versionOf } from './sql'
 
-const DATASET = new URL('../../data/dataset.sql', import.meta.url).pathname
 const [database] = lock.resolved.d1_databases
 
 const fail = (message: string): never => {

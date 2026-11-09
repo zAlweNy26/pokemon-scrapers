@@ -8,6 +8,12 @@ export interface RateLimiter {
     limit(options: { key: string }): Promise<{ success: boolean }>
 }
 
+/**
+ * Requests per IP per window, for the RL_* bindings in void.config.ts and the API docs.
+ * Cloudflare permits only a 10s or 60s window. Keep this file import-free: void.config.ts loads it.
+ */
+export const RATE_LIMITS = { windowSeconds: 60, global: 120, search: 20 } as const
+
 /** Bindings declared in void.config.ts. */
 export interface Env {
     /** Raw D1 binding. Wrapped in Drizzle once per request by src/api/handler.ts. */

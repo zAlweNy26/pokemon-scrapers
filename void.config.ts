@@ -1,5 +1,6 @@
 import { defineConfig } from 'void/config'
 import dataset from './data/version.json'
+import { RATE_LIMITS } from './src/api/platform'
 
 export default defineConfig({
     // Void's conventions live under src/: routes in src/routes, the Drizzle schema
@@ -41,11 +42,11 @@ export default defineConfig({
                 migrations_dir: 'src/db/migrations'
             }
         ],
-        // `period` may only be 10 or 60. Limits are enforced per Cloudflare location,
-        // not globally - this is abuse control, not a hard quota.
+        // Limits are enforced per Cloudflare location, not globally - this is abuse
+        // control, not a hard quota.
         ratelimits: [
-            { name: 'RL_GLOBAL', namespace_id: '1001', simple: { limit: 120, period: 60 } },
-            { name: 'RL_SEARCH', namespace_id: '1002', simple: { limit: 20, period: 60 } }
+            { name: 'RL_GLOBAL', namespace_id: '1001', simple: { limit: RATE_LIMITS.global, period: RATE_LIMITS.windowSeconds } },
+            { name: 'RL_SEARCH', namespace_id: '1002', simple: { limit: RATE_LIMITS.search, period: RATE_LIMITS.windowSeconds } }
         ]
     }
 })

@@ -1,10 +1,9 @@
 import { regionOf } from './games'
-import { LANGUAGE_IDS, readTable } from './pokeapi'
+import { LANGUAGE_IDS, LANGUAGES, readTable, type Language } from './pokeapi'
 import type { Value } from './sql'
 import type { EvolutionConditions, FormCategory } from '@/db/schema'
 
 type Row = Record<string, string>
-type Language = keyof typeof LANGUAGE_IDS
 
 export interface Table {
     columns: string[]
@@ -24,8 +23,6 @@ export interface FormInfo {
     /** Types in slot order and base stats: equal to the default form's means a cosmetic form. */
     signature: string
 }
-
-const LANGUAGES = Object.keys(LANGUAGE_IDS) as Language[]
 
 /**
  * Why a form exists, first match wins: the default, battle-only (Mega, Gigantamax,

@@ -72,9 +72,10 @@ export const asD1 = (sqlite: Database): D1Database => {
     return client as unknown as D1Database
 }
 
-const TABLES = [
-    'generation', 'game', 'pokemon', 'pokemon_egg_group', 'pokemon_origin', 'form', 'form_type',
-    'form_ability', 'form_home_game', 'form_shiny', 'encounter', 'evolution', 'pokemon_dex_number', 'pokedex_entry', 'pokedex_entry_revision', 'availability', 'type', 'ability', 'move', 'meta'
+/** Every dataset table, children first so the build's DELETEs hold foreign keys at every step. The order is in dataset.sql, so it is part of the version hash. */
+export const TABLES = [
+    'evolution', 'encounter', 'form_shiny', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'availability', 'pokedex_entry_revision', 'pokedex_entry', 'pokemon_origin',
+    'pokemon_egg_group', 'pokemon', 'game', 'generation', 'type', 'ability', 'move', 'meta'
 ] as const
 
 export const counts = (sqlite: Database) =>

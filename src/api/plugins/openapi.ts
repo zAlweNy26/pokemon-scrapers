@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { openapi } from '@elysiajs/openapi'
 import { z } from 'zod'
+import { RATE_LIMITS } from '@/api/platform'
 
 // Inline so the Worker serves no static asset. A house, not a Poke Ball: the API
 // is unaffiliated. The pink matches the sidebar accent in Elysia's Scalar theme.
@@ -48,7 +49,7 @@ export const documentation = new Elysia({ name: 'documentation' }).use(
                     'Pokemon HOME depositability, names in all nine game languages,',
                     'real form handling, per-game encounter locations and name etymology.',
                     '',
-                    '**Rate limits.** 120 requests/minute per IP overall, 20/minute for',
+                    `**Rate limits.** ${RATE_LIMITS.global} requests per ${RATE_LIMITS.windowSeconds}s per IP overall, ${RATE_LIMITS.search} per ${RATE_LIMITS.windowSeconds}s for`,
                     '`/v1/search`. Limits are enforced per Cloudflare location.',
                     '',
                     '**Caching.** Responses carry strong ETags derived from the dataset',
