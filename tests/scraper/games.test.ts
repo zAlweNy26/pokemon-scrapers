@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import type { FormInfo } from '@/scraper/build'
-import { homeGames, parseGameCodes, type GameEvidence } from '@/scraper/games'
+import { availabilityPages, homeGames, parseGameCodes, type GameEvidence } from '@/scraper/games'
 
 const SAME = 'same-types-and-stats'
 
@@ -129,5 +129,33 @@ describe('parseGameCodes', () => {
             <img src="/pokedex-bw/type/fire.png"><img src="/scarletviolet/items/potion.png">`
 
         expect([...parseGameCodes(html)].sort()).toEqual(['128-p', '251', '52'])
+    })
+})
+
+describe('availabilityPages', () => {
+    // Link texts as Serebii's game indexes print them.
+    test('takes the Pokédex, available and transfer lists of its own folder', () => {
+        const html = `
+            <a href="/swordshield/pokemon.shtml">New Pokémon</a>
+            <a href="/swordshield/galarpokedex.shtml">Available Pokémon</a>
+            <a href="/swordshield/galarpokedex.shtml">-Galar Pokédex</a>
+            <a href="/swordshield/isleofarmordex.shtml">-Isle of Armor Pokédex</a>
+            <a href="/swordshield/pokemonnotindex.shtml">-Other Available Pokémon</a>
+            <a href="/swordshield/transferonly.shtml">Transfer Only Pokémon</a>
+            <a href="/swordshield/unobtainable.shtml">Unavailable Pokémon</a>
+            <a href="/swordshield/expansionreturning.shtml">Expansion Pass Returning Pokémon</a>
+            <a href="/scarletviolet/paldeapokedex.shtml">Paldea Pokédex</a>`
+
+        expect(availabilityPages(html, 'swordshield')).toEqual(['galarpokedex', 'isleofarmordex', 'pokemonnotindex', 'transferonly'])
+    })
+
+    test('skips the National Pokédex and Pokédex rank pages', () => {
+        const html = `
+            <a href="/brilliantdiamondshiningpearl/sinnohpokedex.shtml">Sinnoh Pokédex</a>
+            <a href="/brilliantdiamondshiningpearl/nationalpokedex.shtml">National Pokédex</a>
+            <a href="/brilliantdiamondshiningpearl/pokedexrank.shtml">Pokédex Ranks</a>
+            <a href="/brilliantdiamondshiningpearl/otherpokemon.shtml">Other Available Pokémon</a>`
+
+        expect(availabilityPages(html, 'brilliantdiamondshiningpearl')).toEqual(['sinnohpokedex', 'otherpokemon'])
     })
 })

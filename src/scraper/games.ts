@@ -2,12 +2,12 @@ import type { FormInfo } from './build'
 import { fetchPage } from './http'
 
 /**
- * Serebii's availability pages for each HOME-connected game, keyed by PokéAPI
- * version-group identifier. Together they list every Pokémon the game's data
- * holds - regional Pokédexes, DLC Pokédexes, "other available" and "transfer only".
+ * Each HOME-connected game's Serebii folder, keyed by PokéAPI version-group
+ * identifier. The availability pages are read from the folder's index (see
+ * `availabilityPages`); what stays here corrects what those pages leave out.
  */
 interface GameSource {
-    pages: string[]
+    folder: string
     /** Species up to this national dex number are in the game even when no page shows them. */
     nationalDexUpTo?: number
     /** Regional forms that the game holds whenever it holds the species' default form. */
@@ -18,34 +18,38 @@ interface GameSource {
 
 const GAMES: Record<string, GameSource> = {
     'lets-go-pikachu-lets-go-eevee': {
-        pages: ['letsgopikachueevee/kantopokedex'],
+        folder: 'letsgopikachueevee',
         // The game holds the Alolan forms of Kanto Pokémon (in-game trades), but its
         // Kanto Pokédex page shows only the Kanto icons.
         regionsFollowSpecies: ['alola']
     },
     'sword-shield': {
-        pages: ['galarpokedex', 'isleofarmordex', 'thecrowntundradex', 'pokemonnotindex', 'transferonly'].map(
-            (page) => `swordshield/${page}`
-        ),
+        folder: 'swordshield',
         // Its pages show only the Galarian icon for all 19 species that have one, though
         // the game holds the regular forms too (Kantonian Meowth, Unovan Yamask).
         speciesFollowsRegions: ['galar']
     },
     'brilliant-diamond-shining-pearl': {
-        pages: ['sinnohpokedex', 'otherpokemon', 'transferonly'].map((page) => `brilliantdiamondshiningpearl/${page}`),
+        folder: 'brilliantdiamondshiningpearl',
         // Darkrai, Shaymin and Arceus are save-data and event gifts that no list shows;
         // Serebii's National Pokédex page states it runs "from Bulbasaur up to Arceus".
         nationalDexUpTo: 493
     },
-    'legends-arceus': { pages: ['legendsarceus/hisuipokedex'] },
-    'scarlet-violet': {
-        pages: ['paldeapokedex', 'kitakamipokedex', 'blueberrypokedex', 'pokemonnotindex', 'transferonly'].map(
-            (page) => `scarletviolet/${page}`
-        )
-    },
-    'legends-za': {
-        pages: ['availablepokemon', 'hyperspacepokedex', 'transferonly'].map((page) => `legendsz-a/${page}`)
-    }
+    'legends-arceus': { folder: 'legendsarceus' },
+    'scarlet-violet': { folder: 'scarletviolet' },
+    'legends-za': { folder: 'legendsz-a' }
+}
+
+/**
+ * The pages a game's Serebii index links as its Pokémon lists: every regional and
+ * DLC Pokédex ("Kitakami Pokédex"), "Other Available Pokémon", "Available Pokémon
+ * not in Pokédex" and "Transfer Only Pokémon". BDSP's "National Pokédex" is not a
+ * list of what the game holds. Pure, for tests.
+ */
+export const availabilityPages = (html: string, folder: string): string[] => {
+    const links = html.matchAll(new RegExp(`href="/${folder}/([\\w-]+)\\.shtml"[^>]*>-*([^<]*)<`, 'g'))
+    const lists = /^(?!National\b).*\bPok.dex$|^(Other )?Available Pok.mon\b|^Transfer Only Pok.mon$/
+    return [...new Set(Array.from(links).filter(([, , text]) => lists.test(text!.trim())).map(([, page]) => page!))]
 }
 
 /**
@@ -61,20 +65,24 @@ export const parseGameCodes = (html: string): Set<string> =>
         )
     )
 
-export interface GameEvidence extends Omit<GameSource, 'pages'> {
+export interface GameEvidence extends Omit<GameSource, 'folder'> {
     codes: Set<string>
 }
 
-/** One polite request per page; ~18 pages, reused from the cache for 24 hours. */
+const serebii = async (path: string) =>
+    (await fetchPage(`https://www.serebii.net/${path}`, { charset: 'windows-1252' })).body
+
+/** One polite request per page; ~24 pages with the indexes, reused from the cache for 24 hours. */
 export const fetchGameEvidence = async (): Promise<Map<string, GameEvidence>> => {
     const evidence = new Map<string, GameEvidence>()
 
-    for (const [game, { pages, ...rules }] of Object.entries(GAMES)) {
+    for (const [game, { folder, ...rules }] of Object.entries(GAMES)) {
+        const pages = availabilityPages(await serebii(`${folder}/`), folder)
+        if (!pages.length) throw new Error(`Serebii ${folder}/: no Pokémon list linked - layout changed?`)
         const codes = new Set<string>()
         for (const page of pages) {
-            const { body } = await fetchPage(`https://www.serebii.net/${page}.shtml`, { charset: 'windows-1252' })
-            const found = parseGameCodes(body)
-            if (!found.size) throw new Error(`Serebii ${page}: no Pokémon found - layout changed?`)
+            const found = parseGameCodes(await serebii(`${folder}/${page}.shtml`))
+            if (!found.size) throw new Error(`Serebii ${folder}/${page}: no Pokémon found - layout changed?`)
             for (const code of found) codes.add(code)
         }
         evidence.set(game, { codes, ...rules })

@@ -9,7 +9,7 @@
  * or a dataset that does not pass `check`.
  */
 import { alphaFormsOf, legendsArceusAlphas, ZA_ALPHA_PAGE, zaAlphaRowsOf } from './alpha'
-import { buildFromPokeApi, type Table } from './build'
+import { GENERATION_PAGE, buildFromPokeApi, debutYearsOf, type Table } from './build'
 import { TABLES, check, counts, diff, openDatabase } from './database'
 import { fetchSpeciesPages, fetchWikitext } from './bulbapedia'
 import { originsOf } from './etymology'
@@ -32,7 +32,7 @@ const fail = (message: string): never => {
 
 await checkoutPokeApi()
 await checkoutArtwork()
-const data = await buildFromPokeApi(await artworkKeys())
+const data = await buildFromPokeApi(await artworkKeys(), debutYearsOf(await fetchWikitext(GENERATION_PAGE)))
 
 // HOME: which forms can be stored, from Serebii's box list.
 const { entries } = await fetchDepositable()

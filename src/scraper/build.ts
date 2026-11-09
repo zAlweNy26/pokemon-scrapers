@@ -43,9 +43,22 @@ export const categoryOf = (
     return form.signature === base?.signature ? 'cosmetic' : 'variant'
 }
 
-/** Not in PokéAPI. The year each generation's first games released in Japan. */
-const DEBUT_YEAR: Record<string, number> = {
-    '1': 1996, '2': 1999, '3': 2002, '4': 2006, '5': 2010, '6': 2013, '7': 2016, '8': 2019, '9': 2022
+export const GENERATION_PAGE = 'Generation'
+
+/**
+ * Not in PokéAPI. The year each generation's first games released in Japan, keyed
+ * by PokéAPI generation identifier, from Bulbapedia's Generation table: a row opens
+ * with `{{color2|000|Generation IV|IV}}`, and its first "(2006/2007)" is the
+ * main-series column's first release (Japan/West). Pure, for tests.
+ */
+export const debutYearsOf = (wikitext: string): Map<string, number> => {
+    const rows = [...wikitext.matchAll(/\{\{color2\|[^|]*\|Generation ([IVX]+)\|/g)]
+    const years = new Map<string, number>()
+    rows.forEach((row, i) => {
+        const year = /\((\d{4})/.exec(wikitext.slice(row.index, rows[i + 1]?.index))?.[1]
+        if (year) years.set(`generation-${row[1]!.toLowerCase()}`, Number(year))
+    })
+    return years
 }
 
 /**
@@ -111,7 +124,7 @@ const shinyOf = (key: string | null, artwork: Set<string>) => {
     return shiny && artwork.has(shiny) ? shiny : null
 }
 
-export const buildFromPokeApi = async (artwork: Set<string>) => {
+export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<string, number>) => {
     const [
         speciesRows, speciesNames, pokemonRows, formRows, formNames, generations, regions,
         pokemonTypes, formTypes, types, pokemonAbilities, abilities, pokemonStats,
@@ -200,11 +213,11 @@ export const buildFromPokeApi = async (artwork: Set<string>) => {
 
     const generation: Table = {
         columns: ['id', 'region', 'debut'],
-        rows: generations!.map((row) => [
-            Number(row.id),
-            regionById.get(row.main_region_id!)!.identifier!,
-            DEBUT_YEAR[row.id!] ?? null
-        ])
+        rows: generations!.map((row) => {
+            const debut = debutYears.get(row.identifier!)
+            if (!debut) throw new Error(`Bulbapedia's "${GENERATION_PAGE}" page gives no debut year for ${row.identifier} - layout changed?`)
+            return [Number(row.id), regionById.get(row.main_region_id!)!.identifier!, debut]
+        })
     }
 
     const growthRate = identifiers(growthRates!)
