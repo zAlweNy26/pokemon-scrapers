@@ -48,6 +48,10 @@ export const meta = new Elysia({ name: 'module.meta' }).use(sharedModels).get(
             }),
             429: 'problem'
         },
-        detail: { summary: 'Dataset version, provenance and counts', tags: ['Meta'] }
+        detail: {
+            summary: 'Get dataset info',
+            description: 'Dataset version, provenance and counts.',
+            tags: ['Meta']
+        }
     }
 )

@@ -30,14 +30,18 @@ export const reference = new Elysia({ name: 'module.reference' })
     .model(referenceModels)
     .get('/generations', () => service.generations(db()), {
         response: { 200: 'reference.generations', 429: 'problem' },
-        detail: { summary: 'List generations with their games', tags: ['Reference'] }
+        detail: {
+            summary: 'List generations',
+            description: 'Every generation with its games.',
+            tags: ['Games']
+        }
     })
     .get('/games', () => service.games(db()), {
         response: { 200: 'reference.games', 429: 'problem' },
         detail: {
-            summary: 'List games with their names, DLCs included',
-            description: 'Every game other endpoints return, in release order.',
-            tags: ['Reference']
+            summary: 'List games',
+            description: 'Every game other endpoints return, DLCs included, with their names, in release order.',
+            tags: ['Games']
         }
     })
     .get(
@@ -51,12 +55,20 @@ export const reference = new Elysia({ name: 'module.reference' })
         {
             params: gameParams,
             response: { 200: 'reference.game', 404: 'problem', 422: 'problem', 429: 'problem' },
-            detail: { summary: 'Get one game with its names, generation and DLCs', tags: ['Reference'] }
+            detail: {
+                summary: 'Get a game',
+                description: 'The game with its names, generation and DLCs.',
+                tags: ['Games']
+            }
         }
     )
     .get('/types', () => service.types(db()), {
         response: { 200: 'reference.types', 429: 'problem' },
-        detail: { summary: 'List types with their names and species counts', tags: ['Reference'] }
+        detail: {
+            summary: 'List types',
+            description: 'Every type with its names and species count.',
+            tags: ['Traits']
+        }
     })
     .get(
         '/types/:slug',
@@ -66,15 +78,19 @@ export const reference = new Elysia({ name: 'module.reference' })
             query: pageQuery,
             response: { 200: 'reference.type', 404: 'problem', 422: 'problem', 429: 'problem' },
             detail: {
-                summary: 'Get one type with its species',
-                description: 'References to the species /v1/pokemon?type= returns, so `meta.total` is the count /v1/types reports.',
-                tags: ['Reference']
+                summary: 'Get a type',
+                description: 'The type with references to the species /v1/pokemon?type= returns, so `meta.total` is the count /v1/types reports.',
+                tags: ['Traits']
             }
         }
     )
     .get('/abilities', () => service.abilities(db()), {
         response: { 200: 'reference.abilities', 429: 'problem' },
-        detail: { summary: 'List abilities with their names', tags: ['Reference'] }
+        detail: {
+            summary: 'List abilities',
+            description: 'Every ability with its names.',
+            tags: ['Traits']
+        }
     })
     .get(
         '/abilities/:slug',
@@ -84,15 +100,19 @@ export const reference = new Elysia({ name: 'module.reference' })
             query: pageQuery,
             response: { 200: 'reference.ability', 404: 'problem', 422: 'problem', 429: 'problem' },
             detail: {
-                summary: 'Get one ability with its species',
-                description: 'References to the species /v1/pokemon?ability= returns: any form, hidden or not.',
-                tags: ['Reference']
+                summary: 'Get an ability',
+                description: 'The ability with references to the species /v1/pokemon?ability= returns: any form, hidden or not.',
+                tags: ['Traits']
             }
         }
     )
     .get('/moves', () => service.moves(db()), {
         response: { 200: 'reference.moves', 429: 'problem' },
-        detail: { summary: 'List moves with their names', tags: ['Reference'] }
+        detail: {
+            summary: 'List moves',
+            description: 'Every move with its names.',
+            tags: ['Traits']
+        }
     })
     .get(
         '/moves/:slug',
@@ -105,24 +125,36 @@ export const reference = new Elysia({ name: 'module.reference' })
         {
             params: moveParams,
             response: { 200: 'reference.move', 404: 'problem', 422: 'problem', 429: 'problem' },
-            detail: { summary: 'Get one move with its names, description and effect', tags: ['Reference'] }
+            detail: {
+                summary: 'Get a move',
+                description: 'The move with its names, description and effect.',
+                tags: ['Traits']
+            }
         }
     )
     .get('/egg-groups', () => service.eggGroups(db()), {
         response: { 200: 'reference.eggGroups', 429: 'problem' },
-        detail: { summary: 'List egg groups with species counts', tags: ['Reference'] }
+        detail: {
+            summary: 'List egg groups',
+            description: 'Every egg group with its species count.',
+            tags: ['Traits']
+        }
     })
     .get('/home-games', () => service.homeGames(db()), {
         response: { 200: 'reference.homeGames', 429: 'problem' },
         detail: {
-            summary: 'List the games HOME moves species into, with species counts',
-            description: 'PokéAPI version-group identifiers, as the `homeGame` filter on /v1/pokemon takes them.',
-            tags: ['Reference']
+            summary: 'List HOME games',
+            description: 'The games HOME moves species into, with species counts. PokéAPI version-group identifiers, as the `homeGame` filter on /v1/pokemon takes them.',
+            tags: ['Games']
         }
     })
     .get('/pokedexes', () => service.pokedexes(db()), {
         response: { 200: 'reference.pokedexes', 429: 'problem' },
-        detail: { summary: 'List regional Pokédexes with species counts', tags: ['Reference'] }
+        detail: {
+            summary: 'List Pokédexes',
+            description: 'Every regional Pokédex with its species count.',
+            tags: ['Games']
+        }
     })
     .get(
         '/pokedexes/:slug',
@@ -140,9 +172,9 @@ export const reference = new Elysia({ name: 'module.reference' })
             query: pageQuery,
             response: { 200: 'reference.pokedex', 404: 'problem', 422: 'problem', 429: 'problem' },
             detail: {
-                summary: 'List the species in a regional Pokédex',
-                description: 'References to its species in regional order, each with its regional number.',
-                tags: ['Reference']
+                summary: 'Get a Pokédex',
+                description: 'References to the species in this regional Pokédex in regional order, each with its regional number.',
+                tags: ['Games']
             }
         }
     )

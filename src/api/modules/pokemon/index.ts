@@ -21,12 +21,12 @@ export const pokemon = new Elysia({ name: 'module.pokemon', prefix: '/pokemon' }
             query: listQuery,
             response: { 200: 'pokemon.list', 422: 'problem', 429: 'problem' },
             detail: {
-                summary: 'List species',
+                summary: 'List Pokémon',
                 description:
                     'Slim records for browsing. Filterable by generation, type, region, HOME depositability and HOME game, ' +
                     'ability, egg group, game availability, species flags, color, shape, habitat, growth rate and dex numbers, ' +
                     'and sortable by name, stats and size.',
-                tags: ['Pokemon']
+                tags: ['Pokémon']
             }
         }
     )
@@ -45,9 +45,9 @@ export const pokemon = new Elysia({ name: 'module.pokemon', prefix: '/pokemon' }
             params: idOrNameParams,
             response: { 200: 'pokemon.detail', 404: 'problem', 422: 'problem', 429: 'problem' },
             detail: {
-                summary: 'Get one species in full',
+                summary: 'Get a Pokémon',
                 description: 'Every form, all nine names, etymology and encounter locations in a single document.',
-                tags: ['Pokemon']
+                tags: ['Pokémon']
             }
         }
     )

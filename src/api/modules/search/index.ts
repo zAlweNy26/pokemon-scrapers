@@ -28,10 +28,10 @@ export const search = new Elysia({ name: 'module.search', prefix: '/search' })
             query: searchQuery,
             response: { 200: 'search.results', 422: 'problem', 429: 'problem' },
             detail: {
-                summary: 'Search names across all nine languages',
+                summary: 'Search names',
                 description:
-                    'Finds a species by any of its localised names. `matchedIn` reports which language matched, so a German query for "Quaj" explains why it returned Greninja.',
-                tags: ['Search']
+                    'Finds a species by any of its names in all nine languages. `matchedIn` reports which language matched, so a German query for "Quaj" explains why it returned Greninja.',
+                tags: ['Pokémon']
             }
         }
     )

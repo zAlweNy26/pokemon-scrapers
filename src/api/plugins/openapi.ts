@@ -64,11 +64,12 @@ export const documentation = new Elysia({ name: 'documentation' }).use(
                     url: 'https://creativecommons.org/licenses/by-nc-sa/2.5/'
                 }
             },
+            // This order is the sidebar's.
             tags: [
-                { name: 'Pokemon', description: 'Species and their forms' },
-                { name: 'Search', description: 'Cross-language name search' },
-                { name: 'Reference', description: 'Generations, games and types' },
-                { name: 'Meta', description: 'Dataset provenance and versioning' }
+                { name: 'Pokémon', description: 'Species, their forms and evolution chains, and name search' },
+                { name: 'Traits', description: 'Types, abilities, moves and egg groups' },
+                { name: 'Games', description: 'Generations, games, the games HOME connects to, and regional Pokédexes' },
+                { name: 'Meta', description: 'Dataset version, provenance and counts' }
             ]
         }
     })

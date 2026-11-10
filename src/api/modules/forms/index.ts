@@ -36,7 +36,7 @@ export const forms = new Elysia({ name: 'module.forms', prefix: '/forms' })
                 description:
                     'Every form of every species, where HOME depositability actually lives: `depositable` here is the ' +
                     "form's own, so it tells Pikachu apart from forms that cannot enter HOME.",
-                tags: ['Pokemon']
+                tags: ['Pokémon']
             }
         }
     )
@@ -52,9 +52,9 @@ export const forms = new Elysia({ name: 'module.forms', prefix: '/forms' })
             params: formParams,
             response: { 200: 'forms.detail', 404: 'problem', 422: 'problem', 429: 'problem' },
             detail: {
-                summary: 'Get one form in full',
+                summary: 'Get a form',
                 description: 'The form as /v1/pokemon/:idOrName lists it in `forms`, plus its species.',
-                tags: ['Pokemon']
+                tags: ['Pokémon']
             }
         }
     )
