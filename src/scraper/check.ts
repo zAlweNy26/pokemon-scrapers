@@ -68,6 +68,7 @@ none('species shown twice in one regional dex', 'SELECT count(*) FROM (SELECT po
 none('species without Scarlet, Violet or Legends Z-A locations', "SELECT count(*) FROM pokemon p WHERE (SELECT count(*) FROM availability a WHERE a.ndex = p.ndex AND a.dlc = '' AND a.game IN ('scarlet', 'violet', 'legends-za')) != 3")
 none('species without a Pokédex entry', 'SELECT count(*) FROM pokemon p WHERE NOT EXISTS (SELECT 1 FROM pokedex_entry e WHERE e.ndex = p.ndex)')
 none('Pokédex entries or locations for a game before the species existed', 'SELECT count(*) FROM (SELECT ndex, game FROM pokedex_entry UNION SELECT ndex, game FROM availability) x JOIN pokemon p USING (ndex) WHERE x.game IN (\'red\', \'blue\', \'yellow\') AND p.gen > 1')
+none('Pokédexes missing a name in some language', `SELECT count(*) FROM pokedex WHERE ${LANGUAGES.map((language) => `name_${language} IS NULL`).join(' OR ')}`)
 none('species HOME cannot store at all', 'SELECT count(*) FROM pokemon p WHERE NOT EXISTS (SELECT 1 FROM form f WHERE f.ndex = p.ndex AND f.depositable = 1)')
 
 console.log('\n— Text')

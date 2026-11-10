@@ -293,11 +293,11 @@ INSERT INTO pokemon_dex_number (ndex, pokedex, number) VALUES
 
 -- Champions is a spin-off's Pokédex of no region, and no species here.
 INSERT INTO pokedex (slug, region, main_series, name_en, name_ja, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
-    ('kanto', 'kanto', 1, 'Kanto', NULL, 'Kanto', 'Kanto', NULL, 'Kanto', NULL, NULL, NULL),
-    ('kalos-central', 'kalos', 1, 'Central Kalos', NULL, 'Kalos-Zentral', 'Kalos : Centre', NULL, 'Kalos Centro', NULL, NULL, NULL),
-    ('paldea', 'paldea', 1, 'Paldea', NULL, 'Paldea', 'Paldea', NULL, 'Paldea', NULL, NULL, NULL),
-    ('kitakami', 'paldea', 1, 'Kitakami', NULL, NULL, 'Septentria', NULL, 'Kitakami', NULL, NULL, NULL),
-    ('champions', NULL, 0, 'Champions', NULL, NULL, 'Champions', NULL, NULL, NULL, NULL, NULL);
+    ('kanto', 'kanto', 1, 'Kanto Pokédex', 'カントー図鑑', 'Kanto-Pokédex', 'Pokédex de Kanto', 'Pokédex di Kanto', 'Pokédex de Kanto', '관동도감', '关都图鉴', '關都圖鑑'),
+    ('kalos-central', 'kalos', 1, 'Central Kalos Pokédex', 'セントラルカロス図鑑', 'Kalos-Zentral-Pokédex', 'Pokédex Kalos : Centre', 'Pokédex Kalos Centrale', 'Pokédex Kalos Centro', '센트럴칼로스도감', '中央卡洛斯图鉴', '中央卡洛斯圖鑑'),
+    ('paldea', 'paldea', 1, 'Paldea Pokédex', 'パルデア地方図鑑', 'Paldea-Pokédex', 'Pokédex de Paldea', 'Pokédex di Paldea', 'Pokédex de Paldea', '팔데아도감', '帕底亚地区图鉴', '帕底亞地區圖鑑'),
+    ('kitakami', 'paldea', 1, 'Kitakami Pokédex', 'キタカミ図鑑', 'Kitakami-Pokédex', 'Pokédex de Septentria', 'Pokédex di Nordivia', 'Pokédex de Noroteo', '북신도감', '北上图鉴', '北上圖鑑'),
+    ('champions', NULL, 0, 'Champions Pokédex', 'Champions図鑑', 'Champions-Pokédex', 'Pokédex de Champions', 'Pokédex di Champions', 'Pokédex de Champions', 'Champions도감', 'Champions图鉴', 'Champions圖鑑');
 
 INSERT INTO pokedex_game (pokedex, version_group) VALUES
     ('kanto','red-blue'),('kanto','yellow'),('kanto','firered-leafgreen'),('kanto','red-green-japan'),('kanto','blue-japan'),

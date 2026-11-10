@@ -492,7 +492,7 @@ describe('reference', () => {
 
         expect(kitakami).toEqual({
             slug: 'kitakami',
-            name: expect.objectContaining({ en: 'Kitakami', fr: 'Septentria', de: null }),
+            name: expect.objectContaining({ en: 'Kitakami Pokédex', fr: 'Pokédex de Septentria', de: 'Kitakami-Pokédex' }),
             region: 'paldea',
             mainSeries: true,
             games: ['scarlet', 'violet', 'the-teal-mask-scarlet', 'the-teal-mask-violet'],

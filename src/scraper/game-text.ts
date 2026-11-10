@@ -1,4 +1,4 @@
-import { readCorpus, render, renderTexts, type CorpusFile, type CorpusGame, type Texts } from './corpus'
+import { readCorpus, render, renderTexts, type CorpusFile, type Texts } from './corpus'
 
 /**
  * Names and categories as the games show them, from Poké Corpus (CLAUDE.md, "Game text only").
@@ -21,44 +21,6 @@ export interface GameText {
     /** The in-game description, rendered, from the latest game that has a real one. */
     abilityDescription(english: string): Texts | undefined
     moveDescription(english: string): Texts | undefined
-    /** The label the game gives a regional Pokédex, by PokéAPI identifier; undefined where no game names it. */
-    pokedex(slug: string): Texts | undefined
-}
-
-/**
- * Where a game names each regional Pokédex, by PokéAPI identifier. Picked by hand and read in
- * every language: some labels saying "Central Kalos Pokédex" in English are a rating prompt in
- * Japanese, so a label is only listed once its other languages name the Pokédex too. Kanto,
- * both Johtos, Platinum's Sinnoh, Let's Go Kanto, Hisui and Champions are never named on their own.
- */
-const POKEDEX_LABELS: Record<string, [CorpusGame, string, string]> = {
-    hoenn: ['RubySapphire', 'msg', 'rs.common.strings.DexText_HoennDex'],
-    'original-sinnoh': ['BrilliantDiamondShiningPearl', 'message', 'bdsp.ss_pokedex.SS_pokedex_183'],
-    'original-unova': ['BlackWhite', 'common', 'bw.common.276.0'],
-    'updated-unova': ['Black2White2', 'common', 'b2w2.common.478.0'],
-    'kalos-central': ['XY', 'common', 'xy.common.3.81'],
-    'kalos-coastal': ['XY', 'common', 'xy.common.3.82'],
-    'kalos-mountain': ['XY', 'common', 'xy.common.3.83'],
-    'updated-hoenn': ['OmegaRubyAlphaSapphire', 'common', 'oras.common.3.90'],
-    'original-alola': ['SunMoon', 'common', 'sm.common.118.4'],
-    'original-melemele': ['SunMoon', 'common', 'sm.common.118.5'],
-    'original-akala': ['SunMoon', 'common', 'sm.common.118.6'],
-    'original-ulaula': ['SunMoon', 'common', 'sm.common.118.7'],
-    'original-poni': ['SunMoon', 'common', 'sm.common.118.8'],
-    'updated-alola': ['UltraSunUltraMoon', 'common', 'usum.common.123.4'],
-    'updated-melemele': ['UltraSunUltraMoon', 'common', 'usum.common.123.5'],
-    'updated-akala': ['UltraSunUltraMoon', 'common', 'usum.common.123.6'],
-    'updated-ulaula': ['UltraSunUltraMoon', 'common', 'usum.common.123.7'],
-    'updated-poni': ['UltraSunUltraMoon', 'common', 'usum.common.123.8'],
-    // Sword/Shield calls its Galar Pokédex just "Pokédex".
-    galar: ['SwordShield', 'common', 'swsh.pokedex.msg_ui_pokedex_place_00'],
-    'isle-of-armor': ['SwordShield', 'common', 'swsh.pokedex.msg_ui_pokedex_place_01'],
-    'crown-tundra': ['SwordShield', 'common', 'swsh.pokedex.msg_ui_pokedex_place_02'],
-    paldea: ['ScarletViolet', 'common', 'sv.leaguecard.leaguecard_02_02'],
-    kitakami: ['ScarletViolet', 'common', 'sv.pokedex.pokedex_16_00'],
-    blueberry: ['ScarletViolet', 'common', 'sv.pokedex.pokedex_19_00'],
-    'lumiose-city': ['LegendsZA', 'common', 'za.pokedex.pokedex_30_01'],
-    hyperspace: ['LegendsZA', 'common', 'za.pokedex.pokedex_30_02']
 }
 
 /** What Sword/Shield onwards say for a move they dropped: not a description, so an older game's text is used. */
@@ -182,16 +144,6 @@ export const loadGameText = async (): Promise<GameText> => {
         described(championsMoveNames, [[champions, 'cmp.wazainfo_syn.']])
     )
 
-    const pokedexes = new Map<string, Texts>()
-    const files = new Map<string, Promise<CorpusFile>>([['ScarletViolet/common', Promise.resolve(sv)]])
-    for (const [slug, [game, file, label]] of Object.entries(POKEDEX_LABELS)) {
-        const key = `${game}/${file}`
-        if (!files.has(key)) files.set(key, readCorpus(game, file))
-        const texts = (await files.get(key)!).get(label)
-        if (!texts?.en) throw new Error(`Poké Corpus has no ${label} for the ${slug} Pokédex`)
-        pokedexes.set(slug, texts)
-    }
-
     return {
         species: (ndex) => species.get(ndex),
         category: (ndex) => categories.get(ndex),
@@ -204,7 +156,6 @@ export const loadGameText = async (): Promise<GameText> => {
         move: (english) => moves.get(englishKey(english)),
         type: (english) => types.get(englishKey(english)),
         abilityDescription: (english) => abilityDescriptions.get(englishKey(english)),
-        moveDescription: (english) => moveDescriptions.get(englishKey(english)),
-        pokedex: (slug) => pokedexes.get(slug)
+        moveDescription: (english) => moveDescriptions.get(englishKey(english))
     }
 }

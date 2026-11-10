@@ -420,7 +420,7 @@ describe('GET /v1/pokedexes/:slug', () => {
         expect(response.status).toBe(200)
         expect(body).toMatchObject({
             slug: 'kalos-central',
-            name: { en: 'Central Kalos', de: 'Kalos-Zentral' },
+            name: { en: 'Central Kalos Pokédex', de: 'Kalos-Zentral-Pokédex', zh_hans: '中央卡洛斯图鉴' },
             region: 'kalos',
             mainSeries: true,
             games: ['x', 'y']

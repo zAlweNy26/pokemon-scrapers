@@ -15,9 +15,6 @@ What is left to review with Dany is below; remove a section or row once it is se
 - **Two forms HOME labels alike** in one game: Zygarde's two "10% Forme", Urshifu's two
   "Gigantamax", Darmanitan's two "Zen Mode", Genesect's drives in Legends Z-A. The first one's
   entry is kept, the others are printed by the build.
-- **Pokédex names no game shows on their own**: Kanto, Original/Updated Johto, Platinum's Sinnoh,
-  Let's Go Kanto, Hisui, Champions. Only `en` is filled, with PokéAPI's name (awaiting Dany's OK,
-  see CLAUDE.md). Sword/Shield labels its Galar Pokédex just "Pokédex", which is what we ship.
 - **Game names** (`game.name_*`, PokéAPI's, non-game) still lack Chinese for the games never sold
   in Chinese, Korean for The Teal Mask/The Indigo Disk, Japanese for Mega Dimension, and every
   language but English for Champions. The games write "Pokémon Champions" in Latin letters everywhere.

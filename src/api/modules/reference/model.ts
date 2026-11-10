@@ -63,8 +63,9 @@ const gameSchema = z.object({
 const pokedexSchema = z.object({
     slug: z.string().describe('PokéAPI pokedex identifier, as /v1/pokedexes/{slug} and the `pokedex` filter on /v1/pokemon take it'),
     name: namesSchema.describe(
-        'The label a game gives this Pokédex ("Kitakami Pokédex"). Where no game names it on its own (Kanto, Johto, ' +
-            "Hisui...), every language is null but `en`, which is PokéAPI's name for it and not game text"
+        'Not game text: our names, in one style across Pokédexes and languages: a game\'s label where it has one, ' +
+            'evened out ("Unova Pokédex"), else built from the region\'s name as the games write it ("Johto Pokédex"). ' +
+            'Pokédexes of the same region share a name; `games` tells them apart'
     ),
     region: z.string().nullable().describe("PokéAPI region identifier, as a generation's `region`; null for a Pokédex of no region"),
     mainSeries: z.boolean().describe("False for a spin-off's Pokédex (`champions`)"),

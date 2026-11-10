@@ -2,6 +2,7 @@ import { regionOf } from './games'
 import { LANGUAGE_IDS, LANGUAGES, readTable, type Language } from './pokeapi'
 import type { Texts } from './corpus'
 import type { GameText } from './game-text'
+import { POKEDEX_NAMES } from './pokedex-names'
 import type { Value } from './sql'
 import type { EvolutionConditions, FormCategory } from '@/db/schema'
 
@@ -115,6 +116,10 @@ export const unwrap = (value: string) =>
     value.replace(/\u00ad\n/g, '').replace(/-\n/g, '-').replace(/\n/g, ' ').replace(/\u00ad/g, '')
 
 
+const fail = (message: string): never => {
+    throw new Error(message)
+}
+
 /** Every language missing, in LANGUAGES order. */
 const noTexts = () => Object.fromEntries(LANGUAGES.map((language) => [language, null])) as Texts
 
@@ -134,7 +139,7 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
         speciesEggGroups, eggGroups, encounters, locationAreas, locations, encounterSlots,
         encounterMethods, versions, evolutions, evolutionTriggers, versionGroups, items, moves, genders,
         natures, growthRates, colors, shapes, habitats, pokedexes, dexNumbers, typeNames, abilityNames, moveNames,
-        abilityProse, moveProse, versionNames, pokedexProse, pokedexVersionGroups
+        abilityProse, moveProse, versionNames, pokedexVersionGroups
     ] = await Promise.all(
         [
             'pokemon_species', 'pokemon_species_names', 'pokemon', 'pokemon_forms', 'pokemon_form_names',
@@ -144,7 +149,7 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
             'evolution_triggers', 'version_groups', 'items', 'moves', 'genders', 'natures', 'growth_rates',
             'pokemon_colors', 'pokemon_shapes', 'pokemon_habitats', 'pokedexes', 'pokemon_dex_numbers',
             'type_names', 'ability_names', 'move_names', 'ability_prose', 'move_effect_prose',
-            'version_names', 'pokedex_prose', 'pokedex_version_groups'
+            'version_names', 'pokedex_version_groups'
         ].map(readTable)
     )
 
@@ -265,19 +270,16 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
     // National is the species' own ndex; the Conquest gallery is a spin-off's.
     const regional = (slug: string) => slug !== 'national' && slug !== 'conquest-gallery'
     const pokedex = identifiers(pokedexes!)
-    const pokedexNames = byLanguage(pokedexProse!, 'pokedex_id')
     const pokedexTable: Table = {
         columns: ['slug', 'region', 'main_series', ...languageColumns('name')],
         rows: pokedexes!
             .filter((row) => regional(row.identifier!))
             .map((row) => [
                 row.identifier!, regionById.get(row.region_id!)?.identifier ?? null, row.is_main_series === '1',
-                // The games' label; a Pokédex no game names keeps PokéAPI's English name (required) and nothing else.
+                // Ours, in one style (src/scraper/pokedex-names.ts); a Pokédex without one stops the build.
                 ...Object.values(
-                    gameText.pokedex(row.identifier!) ?? {
-                        ...noTexts(),
-                        en: localized(pokedexNames.get(row.id!), 'name').en
-                    }
+                    POKEDEX_NAMES[row.identifier!] ??
+                        fail(`Pokédex "${row.identifier}" has no name in src/scraper/pokedex-names.ts`)
                 )
             ])
     }
