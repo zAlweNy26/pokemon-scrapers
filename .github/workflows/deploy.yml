@@ -54,11 +54,13 @@ jobs:
         run: |
           export CLOUDFLARE_ACCOUNT_ID=$(jq -r .resolved.account_id void.lock.json)
           want=$(jq -r .version data/version.json)
-          # A failed query stops the step here (bash -e, pipefail), not as a false mismatch.
-          loaded=$(bunx wrangler d1 execute "$(jq -r '.resolved.d1_databases[0].database_id' void.lock.json)" --remote --json \
+          # A failed query stops the step here, not as a false mismatch. With --json,
+          # wrangler prints its error on stdout, so show it instead of piping it to jq.
+          out=$(bunx wrangler d1 execute "$(jq -r '.resolved.d1_databases[0].database_id' void.lock.json)" --remote --json \
             --command "SELECT (SELECT value FROM meta WHERE key = 'data_version') AS have,
-                              (SELECT unixepoch('now') - unixepoch(value) FROM meta WHERE key = 'loaded_at') AS age" \
-            | jq -r '.[0].results[0] | "\(.have) \(.age // 0)"')
+                              (SELECT unixepoch('now') - unixepoch(value) FROM meta WHERE key = 'loaded_at') AS age") \
+            || { echo "::error::Could not read the dataset version from D1:"; echo "$out"; exit 1; }
+          loaded=$(jq -r '.[0].results[0] | "\(.have) \(.age // 0)"' <<< "$out")
           read -r have age <<< "$loaded"
           if [ "$have" != "$want" ]; then
             echo "::error::Production holds dataset $have, but data/version.json is $want. Push with the pre-push hook on (bun install sets it), or run 'bun run data:load:remote' and re-run this workflow."
