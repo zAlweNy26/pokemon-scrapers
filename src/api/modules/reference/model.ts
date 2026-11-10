@@ -58,6 +58,17 @@ const gameSchema = z.object({
     color: z.string().describe("Bulbapedia's colour for the game, as hex (`#F34134`); each DLC has its own")
 })
 
+const pokedexSchema = z.object({
+    slug: z.string().describe('PokéAPI pokedex identifier, as /v1/pokedexes/{slug} and the `pokedex` filter on /v1/pokemon take it'),
+    name: namesSchema.describe('Not game text: PokéAPI\'s names for its Pokédexes ("Original Johto", "Updated Unova")'),
+    region: z.string().nullable().describe("PokéAPI region identifier, as a generation's `region`; null for a Pokédex of no region"),
+    mainSeries: z.boolean().describe("False for a spin-off's Pokédex (`champions`)"),
+    games: z
+        .array(z.string())
+        .describe('Versions that use this Pokédex, DLCs included, in release order, as /v1/games/{slug} takes them')
+        .meta({ examples: [['scarlet', 'violet']] })
+})
+
 export const referenceModels = {
     'Generations': z.array(
         z.object({
@@ -104,9 +115,9 @@ export const referenceModels = {
 
     'HomeGames': counted('Species with a form that can move into this version group from HOME'),
 
-    'Pokedexes': counted('Species in this regional Pokédex'),
+    'Pokedexes': z.array(pokedexSchema.extend({ count: z.number().describe('Species in this regional Pokédex') })),
 
-    'Pokedex': z.object({
+    'Pokedex': pokedexSchema.extend({
         data: z.array(pokemonRefSchema.extend({ number: z.number().describe('Number in this regional Pokédex') })),
         meta: paginationMeta
     })

@@ -1,7 +1,8 @@
-import { and, count, countDistinct, eq } from 'drizzle-orm'
+import { and, count, countDistinct, eq, sql } from 'drizzle-orm'
 import type { Db } from '@/db/client'
 import {
-    ability, form, formHomeGame, formType, game, generation, move, pokemon, pokemonDexNumber, pokemonEggGroup, type
+    ability, form, formHomeGame, formType, game, generation, move, pokedex, pokedexGame, pokemon, pokemonDexNumber,
+    pokemonEggGroup, type
 } from '@/db/schema'
 import { nameColumns, namesOf, type NameColumns } from '@/api/names'
 import { groupBy } from '@/api/modules/pokemon/service'
@@ -121,9 +122,37 @@ export const homeGames = (db: Db) =>
         .groupBy(formHomeGame.game)
         .orderBy(formHomeGame.game)
 
-export const pokedexes = (db: Db) =>
-    db
-        .select({ slug: pokemonDexNumber.pokedex, count: count() })
-        .from(pokemonDexNumber)
-        .groupBy(pokemonDexNumber.pokedex)
-        .orderBy(pokemonDexNumber.pokedex)
+/** Every regional Pokédex, or the one `slug` names, with its games in release order and its species count. */
+export const pokedexes = async (db: Db, slug?: string) => {
+    const where = slug === undefined ? undefined : sql`${pokedex.slug} = ${slug} COLLATE NOCASE`
+    const [rows, games] = await Promise.all([
+        db
+            .select({
+                slug: pokedex.slug,
+                region: pokedex.region,
+                mainSeries: pokedex.mainSeries,
+                ...nameColumns(pokedex),
+                count: count(pokemonDexNumber.ndex)
+            })
+            .from(pokedex)
+            .leftJoin(pokemonDexNumber, eq(pokemonDexNumber.pokedex, pokedex.slug))
+            .where(where)
+            .groupBy(pokedex.slug)
+            .orderBy(pokedex.slug),
+        db
+            .select({ pokedex: pokedexGame.pokedex, slug: game.slug })
+            .from(pokedexGame)
+            .innerJoin(game, eq(game.versionGroup, pokedexGame.versionGroup))
+            .orderBy(game.sort)
+    ])
+    const gamesOf = groupBy(games, (row) => row.pokedex, (row) => row.slug)
+
+    return rows.map((row) => ({
+        slug: row.slug,
+        name: namesOf(row),
+        region: row.region,
+        mainSeries: row.mainSeries,
+        games: gamesOf.get(row.slug) ?? [],
+        count: row.count
+    }))
+}

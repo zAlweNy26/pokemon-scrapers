@@ -134,6 +134,13 @@
       "when": 1794218925871,
       "tag": "20261109100845_game_colors",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1794316514377,
+      "tag": "20261110131514_pokedexes",
+      "breakpoints": true
     }
   ]
 }

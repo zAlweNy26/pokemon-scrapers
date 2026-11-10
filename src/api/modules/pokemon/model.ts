@@ -195,6 +195,12 @@ export const listQuery = z.object({
             .describe('Species only this version of its pair can get on its own, as a PokéAPI version identifier')
             .meta({ examples: ['scarlet'] }),
         habitat: z.string().max(40).optional().describe('PokéAPI habitat identifier').meta({ examples: ['forest'] }),
+        pokedex: z
+            .string()
+            .max(40)
+            .optional()
+            .describe('Species in this regional Pokédex, as a PokéAPI pokedex identifier (/v1/pokedexes lists them)')
+            .meta({ examples: ['paldea'] }),
         sort: z
             .enum([...sortKeys, ...sortKeys.map((key) => `-${key}` as const)])
             .default('ndex')

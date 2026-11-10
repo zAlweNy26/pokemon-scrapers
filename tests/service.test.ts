@@ -476,10 +476,29 @@ describe('reference', () => {
             { slug: 'lets-go-pikachu-lets-go-eevee', count: 1 }, { slug: 'scarlet-violet', count: 6 },
             { slug: 'sword-shield', count: 6 }
         ])
-        expect(await reference.pokedexes(db)).toEqual([
-            { slug: 'kalos-central', count: 2 }, { slug: 'kanto', count: 2 }, { slug: 'kitakami', count: 2 },
-            { slug: 'paldea', count: 2 }
+        expect((await reference.pokedexes(db)).map(({ slug, count }) => [slug, count])).toEqual([
+            ['champions', 0], ['kalos-central', 2], ['kanto', 2], ['kitakami', 2], ['paldea', 2]
         ])
+    })
+
+    test('describes each Pokédex with its region and its games in release order, DLCs included', async () => {
+        const [kitakami] = await reference.pokedexes(db, 'KITAKAMI')
+
+        expect(kitakami).toEqual({
+            slug: 'kitakami',
+            name: expect.objectContaining({ en: 'Kitakami', fr: 'Septentria', de: null }),
+            region: 'paldea',
+            mainSeries: true,
+            games: ['scarlet', 'violet', 'the-teal-mask-scarlet', 'the-teal-mask-violet'],
+            count: 2
+        })
+        expect((await reference.pokedexes(db, 'kanto'))[0]!.games).toEqual([
+            'red-japan', 'green-japan', 'blue-japan', 'red', 'blue', 'yellow', 'firered', 'leafgreen'
+        ])
+        expect(await reference.pokedexes(db, 'champions')).toEqual([
+            expect.objectContaining({ region: null, mainSeries: false, games: ['champions'] })
+        ])
+        expect(await reference.pokedexes(db, 'johto')).toEqual([])
     })
 
     test('every count is the total the matching filter returns', async () => {
@@ -487,8 +506,10 @@ describe('reference', () => {
             expect((await list({ eggGroup: slug })).total, slug).toBe(count)
         for (const { slug, count } of await reference.homeGames(db))
             expect((await list({ homeGame: slug })).total, slug).toBe(count)
-        for (const { slug, count } of await reference.pokedexes(db))
+        for (const { slug, count } of await reference.pokedexes(db)) {
             expect((await pokemon.pokedex(db, slug, { limit: 50, offset: 0 }, IMAGES)).total, slug).toBe(count)
+            expect((await list({ pokedex: slug })).total, slug).toBe(count)
+        }
         for (const { slug, count } of await reference.types(db))
             expect((await list({ type: slug })).total, slug).toBe(count)
     })

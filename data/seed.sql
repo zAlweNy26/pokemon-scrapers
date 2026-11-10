@@ -17,6 +17,8 @@ DELETE FROM pokedex_entry;
 DELETE FROM pokemon_origin;
 DELETE FROM pokemon_egg_group;
 DELETE FROM pokemon;
+DELETE FROM pokedex_game;
+DELETE FROM pokedex;
 DELETE FROM game;
 DELETE FROM generation;
 DELETE FROM type;
@@ -284,6 +286,19 @@ INSERT INTO pokemon_dex_number (ndex, pokedex, number) VALUES
     (26,'kanto',26),(26,'paldea',75),
     (658,'kalos-central',9),
     (1017,'kitakami',200);
+
+-- Champions is a spin-off's Pokédex of no region, and no species here.
+INSERT INTO pokedex (slug, region, main_series, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
+    ('kanto', 'kanto', 1, 'Kanto', NULL, NULL, 'Kanto', 'Kanto', NULL, 'Kanto', NULL, NULL, NULL),
+    ('kalos-central', 'kalos', 1, 'Central Kalos', NULL, NULL, 'Kalos-Zentral', 'Kalos : Centre', NULL, 'Kalos Centro', NULL, NULL, NULL),
+    ('paldea', 'paldea', 1, 'Paldea', NULL, NULL, 'Paldea', 'Paldea', NULL, 'Paldea', NULL, NULL, NULL),
+    ('kitakami', 'paldea', 1, 'Kitakami', NULL, NULL, NULL, 'Septentria', NULL, 'Kitakami', NULL, NULL, NULL),
+    ('champions', NULL, 0, 'Champions', NULL, NULL, NULL, 'Champions', NULL, NULL, NULL, NULL, NULL);
+
+INSERT INTO pokedex_game (pokedex, version_group) VALUES
+    ('kanto','red-blue'),('kanto','yellow'),('kanto','firered-leafgreen'),('kanto','red-green-japan'),('kanto','blue-japan'),
+    ('kalos-central','x-y'),('paldea','scarlet-violet'),('kitakami','scarlet-violet'),('kitakami','the-teal-mask'),
+    ('champions','champions');
 
 -- Raichu has two methods in PokéAPI: the Thunder Stone, and the same stone in Alola
 -- (Sun/Moon), which gives Alolan Raichu - absent here, so into_form_id stays NULL.

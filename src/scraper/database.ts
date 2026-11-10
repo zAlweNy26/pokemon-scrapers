@@ -75,7 +75,7 @@ export const asD1 = (sqlite: Database): D1Database => {
 /** Every dataset table, children first so the build's DELETEs hold foreign keys at every step. The order is in dataset.sql, so it is part of the version hash. */
 export const TABLES = [
     'evolution', 'encounter', 'form_shiny', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'availability', 'pokedex_entry_revision', 'pokedex_entry', 'pokemon_origin',
-    'pokemon_egg_group', 'pokemon', 'game', 'generation', 'type', 'ability', 'move', 'meta'
+    'pokemon_egg_group', 'pokemon', 'pokedex_game', 'pokedex', 'game', 'generation', 'type', 'ability', 'move', 'meta'
 ] as const
 
 export const counts = (sqlite: Database) =>
@@ -124,8 +124,13 @@ export const check = (sqlite: Database): string[] => {
         (SELECT count(*) FROM availability WHERE game NOT IN (SELECT slug FROM game)) +
         (SELECT count(*) FROM encounter WHERE game NOT IN (SELECT slug FROM game)) +
         (SELECT count(*) FROM evolution WHERE game NOT IN (SELECT version_group FROM game)) +
-        (SELECT count(*) FROM form_home_game WHERE game NOT IN (SELECT version_group FROM game))`)
+        (SELECT count(*) FROM form_home_game WHERE game NOT IN (SELECT version_group FROM game)) +
+        (SELECT count(*) FROM pokedex_game WHERE version_group NOT IN (SELECT version_group FROM game))`)
     if (unlisted) problems.push(`${unlisted} rows name a game or version group the game table does not list`)
+
+    // Not a foreign key, like the name tables: /v1/pokedexes lists only the pokedex table.
+    const undescribed = scalar('SELECT count(DISTINCT pokedex) FROM pokemon_dex_number WHERE pokedex NOT IN (SELECT slug FROM pokedex)')
+    if (undescribed) problems.push(`${undescribed} Pokédexes have dex numbers but no pokedex row`)
 
     if (!scalar("SELECT count(*) FROM meta WHERE key = 'count_pokemon'"))
         problems.push('meta has no stored counts; /v1/meta would report 0')

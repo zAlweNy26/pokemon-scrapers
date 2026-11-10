@@ -71,6 +71,7 @@ describe('GET /v1/pokemon', () => {
         expect(await slugs('eggGroup=indeterminate')).toEqual(['gengar', 'rotom'])
         expect(await slugs('obtainableIn=scarlet')).toEqual(['pikachu'])
         expect(await slugs('habitat=sea')).toEqual(['lapras'])
+        expect(await slugs('pokedex=Kitakami')).toEqual(['pikachu', 'ogerpon'])
     })
 
     test('sorts through the query string, ascending or with - descending', async () => {
@@ -417,6 +418,13 @@ describe('GET /v1/pokedexes/:slug', () => {
         const { response, body } = await json('/v1/pokedexes/KALOS-CENTRAL')
 
         expect(response.status).toBe(200)
+        expect(body).toMatchObject({
+            slug: 'kalos-central',
+            name: { en: 'Central Kalos', de: 'Kalos-Zentral' },
+            region: 'kalos',
+            mainSeries: true,
+            games: ['x', 'y']
+        })
         expect(body.meta).toEqual({ total: 2, limit: 20, offset: 0 })
         expect(body.data.map((p: any) => [p.slug, p.number])).toEqual([['greninja', 9], ['pikachu', 36]])
         expect(body.data[0]).toEqual({ ndex: 658, slug: 'greninja', uri: '/v1/pokemon/658', number: 9 })
@@ -430,7 +438,7 @@ describe('GET /v1/pokedexes/:slug', () => {
         expect((await json('/v1/pokedexes/kalos-central?limit=500')).response.status).toBe(422)
     })
 
-    test('answers 404 as a problem for a Pokédex no species is in', async () => {
+    test('answers 404 as a problem for a Pokédex it does not know', async () => {
         const { response, body } = await json('/v1/pokedexes/johto')
 
         expect(response.status).toBe(404)

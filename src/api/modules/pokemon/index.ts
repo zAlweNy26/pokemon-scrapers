@@ -23,9 +23,8 @@ export const pokemon = new Elysia({ name: 'module.pokemon', prefix: '/pokemon' }
             detail: {
                 summary: 'List Pokémon',
                 description:
-                    'Slim records for browsing. Filterable by generation, type, region, HOME depositability and HOME game, ' +
-                    'ability, egg group, game availability, species flags, color, shape, habitat, growth rate and dex numbers, ' +
-                    'and sortable by name, stats and size.',
+                    'Slim records for browsing. Filterable by generation, type, region, regional Pokédex, HOME depositability ' +
+                    'and HOME game, ability, egg group, game availability and habitat, and sortable by name, stats and size.',
                 tags: ['Pokémon']
             }
         }

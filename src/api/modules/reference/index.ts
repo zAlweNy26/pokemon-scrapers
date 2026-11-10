@@ -152,17 +152,22 @@ export const reference = new Elysia({ name: 'module.reference' })
         response: { 200: 'Pokedexes', 429: 'Problem' },
         detail: {
             summary: 'List Pokédexes',
-            description: 'Every regional Pokédex with its species count.',
+            description: 'Every regional Pokédex with its region, the games that use it and its species count.',
             tags: ['Games']
         }
     })
     .get(
         '/pokedexes/:slug',
         async ({ params, query }) => {
-            const { total, items } = await pokedex(db(), params.slug, query, env().IMAGE_BASE_URL)
-            if (!total) throw notFound(`No Pokédex matches "${params.slug}".`)
+            const [[found], { total, items }] = await Promise.all([
+                service.pokedexes(db(), params.slug),
+                pokedex(db(), params.slug, query, env().IMAGE_BASE_URL)
+            ])
+            if (!found) throw notFound(`No Pokédex matches "${params.slug}".`)
+            const { count: _, ...about } = found
 
             return {
+                ...about,
                 data: items.map((item) => ({ ...pokemonRef(item), number: item.number })),
                 meta: { total, limit: query.limit, offset: query.offset }
             }
@@ -173,7 +178,9 @@ export const reference = new Elysia({ name: 'module.reference' })
             response: { 200: 'Pokedex', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
             detail: {
                 summary: 'Get a Pokédex',
-                description: 'References to the species in this regional Pokédex in regional order, each with its regional number.',
+                description:
+                    'A regional Pokédex with its region and games, and references to its species in regional order, ' +
+                    'each with its regional number.',
                 tags: ['Games']
             }
         }

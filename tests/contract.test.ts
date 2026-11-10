@@ -104,7 +104,7 @@ describe('openapi document', () => {
 
         expect(names.sort()).toEqual([
             'ability', 'depositable', 'eggGroup', 'exclusiveTo', 'gen', 'habitat', 'homeGame', 'limit', 'obtainableIn', 'offset',
-            'region', 'sort', 'type'
+            'pokedex', 'region', 'sort', 'type'
         ])
     })
 

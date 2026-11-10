@@ -189,6 +189,8 @@ const pokeosHash = new Bun.CryptoHasher('sha256')
 const tables: [string, Table][] = [
     ['generation', data.generation],
     ['game', data.game],
+    ['pokedex', data.pokedex],
+    ['pokedex_game', data.pokedexGame],
     ['type', data.type],
     ['ability', data.ability],
     ['move', data.move],

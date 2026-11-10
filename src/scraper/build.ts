@@ -131,7 +131,7 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
         speciesEggGroups, eggGroups, encounters, locationAreas, locations, encounterSlots,
         encounterMethods, versions, evolutions, evolutionTriggers, versionGroups, items, moves, genders,
         natures, growthRates, colors, shapes, habitats, pokedexes, dexNumbers, typeNames, abilityNames, moveNames,
-        abilityProse, abilityFlavor, moveProse, moveFlavor, versionNames
+        abilityProse, abilityFlavor, moveProse, moveFlavor, versionNames, pokedexProse, pokedexVersionGroups
     ] = await Promise.all(
         [
             'pokemon_species', 'pokemon_species_names', 'pokemon', 'pokemon_forms', 'pokemon_form_names',
@@ -141,7 +141,7 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
             'evolution_triggers', 'version_groups', 'items', 'moves', 'genders', 'natures', 'growth_rates',
             'pokemon_colors', 'pokemon_shapes', 'pokemon_habitats', 'pokedexes', 'pokemon_dex_numbers',
             'type_names', 'ability_names', 'move_names', 'ability_prose', 'ability_flavor_text', 'move_effect_prose',
-            'move_flavor_text', 'version_names'
+            'move_flavor_text', 'version_names', 'pokedex_prose', 'pokedex_version_groups'
         ].map(readTable)
     )
 
@@ -246,14 +246,30 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
     }
 
     // National is the species' own ndex; the Conquest gallery is a spin-off's.
+    const regional = (slug: string) => slug !== 'national' && slug !== 'conquest-gallery'
     const pokedex = identifiers(pokedexes!)
+    const pokedexNames = byLanguage(pokedexProse!, 'pokedex_id')
+    const pokedexTable: Table = {
+        columns: ['slug', 'region', 'main_series', ...languageColumns('name')],
+        rows: pokedexes!
+            .filter((row) => regional(row.identifier!))
+            .map((row) => [
+                row.identifier!, regionById.get(row.region_id!)?.identifier ?? null, row.is_main_series === '1',
+                ...Object.values(localized(pokedexNames.get(row.id!), 'name'))
+            ])
+    }
+    const pokedexGame: Table = {
+        columns: ['pokedex', 'version_group'],
+        rows: pokedexVersionGroups!.flatMap((row) => {
+            const slug = pokedex(row.pokedex_id)!
+            return regional(slug) ? [[slug, groupById.get(row.version_group_id!)!.identifier!]] : []
+        })
+    }
     const dexNumber: Table = {
         columns: ['ndex', 'pokedex', 'number'],
         rows: dexNumbers!.flatMap((row) => {
             const name = pokedex(row.pokedex_id)!
-            return name === 'national' || name === 'conquest-gallery'
-                ? []
-                : [[Number(row.species_id), name, Number(row.pokedex_number)]]
+            return regional(name) ? [[Number(row.species_id), name, Number(row.pokedex_number)]] : []
         })
     }
 
@@ -445,7 +461,7 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
 
     return {
         generation, pokemon, eggGroup, dexNumber, form, formType, formAbility, encounter, evolution, forms,
-        type: typeTable, ability: abilityTable, move: moveTable, game: gameTable
+        type: typeTable, ability: abilityTable, move: moveTable, game: gameTable, pokedex: pokedexTable, pokedexGame
     }
 }
 

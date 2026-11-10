@@ -22,6 +22,7 @@ export interface ListFilters {
     obtainableIn?: string
     exclusiveTo?: string
     habitat?: string
+    pokedex?: string
     sort?: SortKey | `-${SortKey}`
     limit: number
     offset: number
@@ -163,6 +164,14 @@ const filterConditions = (filters: ListFilters) => {
         )
 
     if (filters.habitat !== undefined) conditions.push(sql`${pokemon.habitat} = ${filters.habitat} COLLATE NOCASE`)
+
+    if (filters.pokedex !== undefined)
+        conditions.push(
+            exists(
+                sql`(SELECT 1 FROM ${pokemonDexNumber} WHERE ${pokemonDexNumber.ndex} = ${pokemon.ndex}
+                     AND ${pokemonDexNumber.pokedex} = ${filters.pokedex} COLLATE NOCASE)`
+            )
+        )
 
     return conditions.length ? and(...conditions) : undefined
 }

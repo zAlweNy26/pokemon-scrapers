@@ -197,6 +197,31 @@ export const availability = sqliteTable(
     (table) => [primaryKey({ columns: [table.ndex, table.game, table.dlc] })]
 )
 
+/**
+ * Every regional Pokédex `pokemon_dex_number` uses, keyed by PokéAPI pokedex identifier.
+ * Names are PokéAPI's labels ("Original Johto"), not the games' text.
+ */
+export const pokedex = sqliteTable('pokedex', {
+    slug: text('slug').primaryKey(),
+    /** PokéAPI region identifier, as `generation.region`; null for a Pokédex of no region (`champions`). */
+    region: text('region'),
+    /** False for a spin-off's Pokédex. */
+    mainSeries: integer('main_series', { mode: 'boolean' }).notNull(),
+    ...localizedNames()
+})
+
+/** The version groups (`scarlet-violet`) whose games use a Pokédex. */
+export const pokedexGame = sqliteTable(
+    'pokedex_game',
+    {
+        pokedex: text('pokedex')
+            .notNull()
+            .references(() => pokedex.slug),
+        versionGroup: text('version_group').notNull()
+    },
+    (table) => [primaryKey({ columns: [table.pokedex, table.versionGroup] })]
+)
+
 /** Regional Pokédex numbers, keyed by PokéAPI pokedex identifier (`paldea`, `kitakami`). National is `ndex`. */
 export const pokemonDexNumber = sqliteTable(
     'pokemon_dex_number',
