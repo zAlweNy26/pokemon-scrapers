@@ -1,5 +1,5 @@
 import { getTableColumns } from 'drizzle-orm'
-import { pokemon, type Pokemon } from '@/db/schema'
+import { ability, pokedexEntry, pokemon, type Pokemon } from '@/db/schema'
 
 /**
  * The single place the nine game languages are listed.
@@ -17,7 +17,6 @@ import { pokemon, type Pokemon } from '@/db/schema'
 export const NAME_FIELDS = {
     en: 'nameEn',
     ja: 'nameJa',
-    ja_romaji: 'nameJaRomaji',
     de: 'nameDe',
     fr: 'nameFr',
     it: 'nameIt',
@@ -56,7 +55,6 @@ export const namesOf = (row: NameColumns): Names =>
 export const CATEGORY_FIELDS = {
     en: 'categoryEn',
     ja: 'categoryJa',
-    ja_romaji: 'categoryJaRomaji',
     de: 'categoryDe',
     fr: 'categoryFr',
     it: 'categoryIt',
@@ -71,6 +69,42 @@ export type Categories = { [L in Language]: string | null }
 export const categoriesOf = (row: Pokemon): Categories =>
     Object.fromEntries(
         Object.entries(CATEGORY_FIELDS).map(([language, column]) => [language, row[column]])
+    ) as Categories
+
+/** The in-game description per language on `ability` and `move`, keyed like `Names`. Every language may be missing. */
+export const DESCRIPTION_FIELDS = {
+    en: 'descriptionEn',
+    ja: 'descriptionJa',
+    de: 'descriptionDe',
+    fr: 'descriptionFr',
+    it: 'descriptionIt',
+    es: 'descriptionEs',
+    ko: 'descriptionKo',
+    zh_hans: 'descriptionZhHans',
+    zh_hant: 'descriptionZhHant'
+} as const satisfies Record<Language, keyof typeof ability.$inferSelect>
+
+export const descriptionsOf = (row: Record<(typeof DESCRIPTION_FIELDS)[Language], string | null>): Categories =>
+    Object.fromEntries(
+        Object.entries(DESCRIPTION_FIELDS).map(([language, column]) => [language, row[column]])
+    ) as Categories
+
+/** A Pokédex entry's text per language, keyed like `Names`. Null in a language the game never showed it in. */
+export const ENTRY_TEXT_FIELDS = {
+    en: 'textEn',
+    ja: 'textJa',
+    de: 'textDe',
+    fr: 'textFr',
+    it: 'textIt',
+    es: 'textEs',
+    ko: 'textKo',
+    zh_hans: 'textZhHans',
+    zh_hant: 'textZhHant'
+} as const satisfies Record<Language, keyof typeof pokedexEntry.$inferSelect>
+
+export const entryTextsOf = (row: typeof pokedexEntry.$inferSelect): Categories =>
+    Object.fromEntries(
+        Object.entries(ENTRY_TEXT_FIELDS).map(([language, column]) => [language, row[column]])
     ) as Categories
 
 /**

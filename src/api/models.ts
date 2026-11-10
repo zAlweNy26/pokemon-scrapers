@@ -39,7 +39,6 @@ export const namesSchema = z
     .object({
         en: z.string(),
         ja: z.string().nullable(),
-        ja_romaji: z.string().nullable().describe('The Japanese name in Latin letters, from PokéAPI; not text the games show'),
         de: z.string().nullable(),
         fr: z.string().nullable(),
         it: z.string().nullable(),
@@ -55,7 +54,6 @@ export const categorySchema = z
     .object({
         en: z.string().nullable(),
         ja: z.string().nullable(),
-        ja_romaji: z.string().nullable(),
         de: z.string().nullable(),
         fr: z.string().nullable(),
         it: z.string().nullable(),

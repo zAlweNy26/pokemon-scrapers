@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { namesSchema, paginationMeta } from '@/api/models'
+import { categorySchema, namesSchema, paginationMeta } from '@/api/models'
 import { listQuery, pokemonRefSchema } from '@/api/modules/pokemon/model'
 
 /** An identifier other endpoints return, with its display name per language. */
@@ -36,9 +36,11 @@ export const gameParams = z.object({
 
 export const pageQuery = listQuery.pick({ limit: true, offset: true })
 
-/** English only for now: the one language PokéAPI has for (nearly) every ability and move. */
-const englishTexts = (thing: string) => ({
-    description: z.string().nullable().describe('The in-game description in English, from the latest game that has one'),
+/** The games' description in every language, and PokéAPI's English effect. */
+const describedTexts = (thing: string) => ({
+    description: categorySchema.describe(
+        'The in-game description in each language, from the latest game that has one; null in a language no game describes it in'
+    ),
     effect: z.string().nullable().describe(`What the ${thing} does in detail, in English. Not game text: PokéAPI's own explanation; null where it has none`)
 })
 
@@ -60,7 +62,10 @@ const gameSchema = z.object({
 
 const pokedexSchema = z.object({
     slug: z.string().describe('PokéAPI pokedex identifier, as /v1/pokedexes/{slug} and the `pokedex` filter on /v1/pokemon take it'),
-    name: namesSchema.describe('Not game text: PokéAPI\'s names for its Pokédexes ("Original Johto", "Updated Unova")'),
+    name: namesSchema.describe(
+        'The label a game gives this Pokédex ("Kitakami Pokédex"). Where no game names it on its own (Kanto, Johto, ' +
+            "Hisui...), every language is null but `en`, which is PokéAPI's name for it and not game text"
+    ),
     region: z.string().nullable().describe("PokéAPI region identifier, as a generation's `region`; null for a Pokédex of no region"),
     mainSeries: z.boolean().describe("False for a spin-off's Pokédex (`champions`)"),
     games: z
@@ -104,12 +109,12 @@ export const referenceModels = {
     'Abilities': z.array(namedSchema),
 
     'Ability': speciesPage('Species with a form that has this ability, hidden or not, by dex number').extend(
-        englishTexts('ability')
+        describedTexts('ability')
     ),
 
     'Moves': z.array(namedSchema),
 
-    'Move': namedSchema.extend(englishTexts('move')),
+    'Move': namedSchema.extend(describedTexts('move')),
 
     'EggGroups': counted('Species in this egg group'),
 

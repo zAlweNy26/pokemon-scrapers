@@ -4,10 +4,9 @@ import { alias } from 'drizzle-orm/sqlite-core'
 import type { Db } from '@/db/client'
 import {
     ability, availability, encounter, evolution, form, formAbility, formHomeGame, formShiny, formType, generation, pokedexEntry,
-    pokedexEntryRevision,
     pokemon, pokemonDexNumber, pokemonEggGroup, pokemonOrigin, type Form, type Pokemon, type ShinyStatus
 } from '@/db/schema'
-import { categoriesOf, nameColumns, nameProjection, namesOf, type NameColumns } from '@/api/names'
+import { categoriesOf, entryTextsOf, nameColumns, nameProjection, namesOf, type NameColumns } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
 import type { SortKey } from './model'
 
@@ -449,7 +448,7 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
     const { ndex } = species
 
     const [
-        forms, typeRows, abilityRows, homeRows, shinyRows, eggGroups, origins, encounters, dexNumbers, evolutions, entries, revisions, places
+        forms, typeRows, abilityRows, homeRows, shinyRows, eggGroups, origins, encounters, dexNumbers, evolutions, entries, places
     ] = await db.batch([
         db.select().from(form).where(eq(form.ndex, ndex)).orderBy(sql`${form.isDefault} DESC`, form.id),
         ...formFacts(db, eq(form.ndex, ndex)),
@@ -471,17 +470,8 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
             .orderBy(pokemonDexNumber.pokedex),
         // The whole family, so a client can draw the tree from any member.
         evolutionSteps(db, species.evolutionChain),
-        // rowid is Bulbapedia's order: oldest game first, each form after the species.
-        db
-            .select({ game: pokedexEntry.game, form: pokedexEntry.form, text: pokedexEntry.text })
-            .from(pokedexEntry)
-            .where(eq(pokedexEntry.ndex, ndex))
-            .orderBy(sql`rowid`),
-        db
-            .select({ game: pokedexEntryRevision.game, form: pokedexEntryRevision.form, revision: pokedexEntryRevision.revision, text: pokedexEntryRevision.text })
-            .from(pokedexEntryRevision)
-            .where(eq(pokedexEntryRevision.ndex, ndex))
-            .orderBy(pokedexEntryRevision.revision),
+        // rowid is the build's order: oldest game first, each form after the species.
+        db.select().from(pokedexEntry).where(eq(pokedexEntry.ndex, ndex)).orderBy(sql`rowid`),
         db
             .select({
                 game: availability.game,
@@ -526,12 +516,7 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
         depositable: forms.some((entry) => entry.depositable),
         forms: formDocuments(forms, typeRows, abilityRows, homeRows, shinyRows, imageBaseUrl),
         // '' is the stored "none" for these key columns; the API says null.
-        // `revisions` only where a game's text changed, so the other entries keep their shape.
-        pokedexEntries: entries.map((row) => {
-            const earlier = revisions.filter((revision) => revision.game === row.game && revision.form === row.form)
-            const entry = { game: row.game, form: row.form || null, text: row.text }
-            return earlier.length ? { ...entry, revisions: earlier.map(({ revision, text }) => ({ revision, text })) } : entry
-        }),
+        pokedexEntries: entries.map((row) => ({ game: row.game, form: row.form || null, text: entryTextsOf(row) })),
         availability: places.map((row) => ({
             game: row.game,
             dlc: row.dlc || null,

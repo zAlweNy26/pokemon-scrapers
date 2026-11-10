@@ -271,12 +271,18 @@ describe('pokemon.detail', () => {
         ])
     })
 
-    test('lists Pokédex entries and game locations in Bulbapedia order, "none" as null', async () => {
+    test('lists Pokédex entries in stored order with their text per language, and game locations, "none" as null', async () => {
         const result = await pokemon.detail(db, (await pokemon.findSpecies(db, 'pikachu'))!, IMAGES)
 
         expect(result.pokedexEntries.map((entry) => [entry.game, entry.form])).toEqual([
             ['red', null], ['sword', null], ['sword', 'Gigantamax'], ['scarlet', null], ['legends-za', null]
         ])
+        expect(result.pokedexEntries[3]!.text).toMatchObject({
+            en: 'When it is angered, it immediately discharges the energy stored in the pouches in its cheeks.',
+            ja: '両頬には　電気を　溜めこむ　袋がある。　怒ると　溜めこんだ　電気を　一気に　放ってくる。',
+            it: 'Quando s’arrabbia, libera subito l’energia accumulata nelle sacche sulle guance.',
+            ko: null
+        })
         expect(result.availability.map((place) => [place.game, place.dlc, place.obtainable])).toEqual([
             ['red', null, true], ['xd', null, false], ['black', null, false], ['scarlet', null, true],
             ['scarlet', 'the-hidden-treasure-of-area-zero', true], ['legends-za', 'mega-dimension', true]
@@ -291,7 +297,7 @@ describe('pokemon.detail', () => {
     test('names abilities in every language', async () => {
         const result = await pokemon.detail(db, (await pokemon.findSpecies(db, 'pikachu'))!, IMAGES)
 
-        expect(result.forms[0]?.abilities[0]?.name).toMatchObject({ en: 'Static', it: 'Statico', ja: 'せいでんき', ja_romaji: null })
+        expect(result.forms[0]?.abilities[0]?.name).toMatchObject({ en: 'Static', it: 'Statico', ja: 'せいでんき' })
     })
 
     test('every member of a family gets the whole evolution chain, conditions parsed', async () => {

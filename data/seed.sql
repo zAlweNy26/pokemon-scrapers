@@ -38,101 +38,102 @@ INSERT INTO generation (id, region, debut) VALUES
     (9, 'paldea', 2022);
 
 -- Every PokéAPI version, as `bun run data:build` writes them, so every game below resolves.
-INSERT INTO game (slug, version_group, generation, base_game, sort, color, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
-('red-japan', 'red-green-japan', 1, NULL, 0, '#DA3914', 'Red', '赤', NULL, 'Rot', 'Rouge', 'Rossa', 'Rojo', '레드', NULL, NULL),
-('green-japan', 'red-green-japan', 1, NULL, 1, '#24A724', 'Green', '緑', NULL, 'Grüne', 'Vert', 'Verde', 'Verde', '그린', NULL, NULL),
-('blue-japan', 'blue-japan', 1, NULL, 2, '#2E50D8', 'Blue', '青', NULL, 'Blau', 'Bleu', 'Blu', 'Azul', '블루', NULL, NULL),
-('red', 'red-blue', 1, NULL, 3, '#DA3914', 'Red', '赤', NULL, 'Rot', 'Rouge', 'Rossa', 'Rojo', '레드', '紅', '紅'),
-('blue', 'red-blue', 1, NULL, 4, '#2E50D8', 'Blue', '青', NULL, 'Blau', 'Bleu', 'Blu', 'Azul', '블루', '藍', '藍'),
-('yellow', 'yellow', 1, NULL, 5, '#FFD733', 'Yellow', 'ピカチュウ', NULL, 'Gelb', 'Jaune', 'Gialla', 'Amarillo', '피카츄', '皮卡丘', '皮卡丘'),
-('gold', 'gold-silver', 2, NULL, 6, '#DAA520', 'Gold', '金', NULL, 'Gold', 'Or', 'Oro', 'Oro', '골드', '金', '金'),
-('silver', 'gold-silver', 2, NULL, 7, '#C0C0C0', 'Silver', '銀', NULL, 'Silber', 'Argent', 'Argento', 'Plata', '실버', '銀', '銀'),
-('crystal', 'crystal', 2, NULL, 8, '#4FD9FF', 'Crystal', 'クリスタル', NULL, 'Kristall', 'Cristal', 'Cristallo', 'Cristal', '크리스탈', '水晶', '水晶'),
-('ruby', 'ruby-sapphire', 3, NULL, 9, '#CD2236', 'Ruby', 'ルビー', NULL, 'Rubin', 'Rubis', 'Rubino', 'Rubí', '루비', '紅寶石', '紅寶石'),
-('sapphire', 'ruby-sapphire', 3, NULL, 10, '#3D51A7', 'Sapphire', 'サファイア', NULL, 'Saphir', 'Saphir', 'Zaffiro', 'Zafiro', '사파이어', '藍寶石', '藍寶石'),
-('emerald', 'emerald', 3, NULL, 11, '#009652', 'Emerald', 'エメラルド', NULL, 'Smaragd', 'Émeraude', 'Smeraldo', 'Esmeralda', '에메랄드', '綠寶石', '綠寶石'),
-('colosseum', 'colosseum', 3, NULL, 12, '#B6CAE4', 'Colosseum', 'コロシアム', NULL, 'Colosseum', 'Colosseum', 'Colosseum', 'Colosseum', '콜로세움', NULL, NULL),
-('xd', 'xd', 3, NULL, 13, '#604E82', 'XD', 'XD', NULL, 'XD', 'XD', 'XD', 'XD', 'XD', NULL, NULL),
-('firered', 'firered-leafgreen', 3, NULL, 14, '#F15C01', 'FireRed', 'ファイアレッド', NULL, 'Feuerrot', 'Rouge Feu', 'Rosso Fuoco', 'Rojo Fuego', '파이어레드', '火紅', '火紅'),
-('leafgreen', 'firered-leafgreen', 3, NULL, 15, '#9FDC00', 'LeafGreen', 'リーフグリーン', NULL, 'Blattgrün', 'Vert Feuille', 'Verde Foglia', 'Verde Hoja', '리프그린', '葉綠', '葉綠'),
-('diamond', 'diamond-pearl', 4, NULL, 16, '#90BEED', 'Diamond', 'ダイヤモンド', NULL, 'Diamant', 'Diamant', 'Diamante', 'Diamante', '디아루가', '钻石', '鑽石'),
-('pearl', 'diamond-pearl', 4, NULL, 17, '#DD7CB1', 'Pearl', 'パール', NULL, 'Perl', 'Perle', 'Perla', 'Perla', '펄기아', '珍珠', '珍珠'),
-('platinum', 'platinum', 4, NULL, 18, '#A0A08D', 'Platinum', 'プラチナ', NULL, 'Platin', 'Platine', 'Platino', 'Platino', '기라티나', '白金', '白金'),
-('heartgold', 'heartgold-soulsilver', 4, NULL, 19, '#E8B502', 'HeartGold', 'ハートゴールド', NULL, 'HeartGold', 'Or HeartGold', 'Oro HeartGold', 'Oro HeartGold', '하트골드', '心金', '心金'),
-('soulsilver', 'heartgold-soulsilver', 4, NULL, 20, '#AAB9CF', 'SoulSilver', 'ソウルシルバー', NULL, 'SoulSilver', 'Argent SoulSilver', 'Argento SoulSilver', 'Plata SoulSilver', '소울실버', '魂銀', '魂銀'),
-('black', 'black-white', 5, NULL, 21, '#444444', 'Black', 'ブラック', NULL, 'Schwarz', 'Noir', 'Nera', 'Negro', '블랙', '黑', '黑'),
-('white', 'black-white', 5, NULL, 22, '#E1E1E1', 'White', 'ホワイト', NULL, 'Weiß', 'Blanc', 'Bianca', 'Blanco', '화이트', '白', '白'),
-('black-2', 'black-2-white-2', 5, NULL, 23, '#303E51', 'Black 2', 'ブラック2', NULL, 'Schwarz 2', 'Noir 2', 'Nera 2', 'Negro 2', '블랙 2', '黑2', '黑2'),
-('white-2', 'black-2-white-2', 5, NULL, 24, '#EBC5C3', 'White 2', 'ホワイト2', NULL, 'Weiß 2', 'Blanc 2', 'Bianca 2', 'Blanco 2', '화이트 2', '白2', '白2'),
-('x', 'x-y', 6, NULL, 25, '#025DA6', 'X', 'X', NULL, 'X', 'X', 'X', 'X', 'X', 'X', 'X'),
-('y', 'x-y', 6, NULL, 26, '#EA1A3E', 'Y', 'Y', NULL, 'Y', 'Y', 'Y', 'Y', 'Y', 'Y', 'Y'),
-('omega-ruby', 'omega-ruby-alpha-sapphire', 6, NULL, 27, '#AB2813', 'Omega Ruby', 'オメガルビー', NULL, 'Omega Rubin', 'Rubis Oméga', 'Rubino Omega', 'Rubí Omega', '오메가루비', '欧米伽红宝石', '歐米加紅寶石'),
-('alpha-sapphire', 'omega-ruby-alpha-sapphire', 6, NULL, 28, '#26649C', 'Alpha Sapphire', 'アルファサファイア', NULL, 'Alpha Saphir', 'Saphir Alpha', 'Zaffiro Alpha', 'Zafiro Alfa', '알파사파이어', '阿尔法蓝宝石', '阿爾法藍寶石'),
-('sun', 'sun-moon', 7, NULL, 29, '#F1912B', 'Sun', 'サン', NULL, 'Sonne', 'Soleil', 'Sole', 'Sol', '썬', '太阳', '太陽'),
-('moon', 'sun-moon', 7, NULL, 30, '#5599CA', 'Moon', 'ムーン', NULL, 'Mond', 'Lune', 'Luna', 'Luna', '문', '月亮', '月亮'),
-('ultra-sun', 'ultra-sun-ultra-moon', 7, NULL, 31, '#E95B2B', 'Ultra Sun', 'ウルトラサン', NULL, 'Ultrasonne', 'Ultra-Soleil', 'Ultrasole', 'Ultrasol', '울트라썬', '究极之日', '究極之日'),
-('ultra-moon', 'ultra-sun-ultra-moon', 7, NULL, 32, '#226DB5', 'Ultra Moon', 'ウルトラムーン', NULL, 'Ultramond', 'Ultra-Lune', 'Ultraluna', 'Ultraluna', '울트라문', '究极之月', '究極之月'),
-('lets-go-pikachu', 'lets-go-pikachu-lets-go-eevee', 7, NULL, 33, '#F5DA26', 'Let’s Go, Pikachu!', 'Let’s Go! ピカチュウ', NULL, 'Let’s Go, Pikachu!', 'Let’s Go, Pikachu', 'Let’s Go, Pikachu!', 'Let’s Go, Pikachu!', '레츠고! 피카츄', 'Let’s Go！皮卡丘', 'Let’s Go！皮卡丘'),
-('lets-go-eevee', 'lets-go-pikachu-lets-go-eevee', 7, NULL, 34, '#D4924B', 'Let’s Go, Eevee!', 'Let’s Go! イーブイ', NULL, 'Let’s Go, Evoli!', 'Let’s Go, Évoli', 'Let’s Go, Eevee!', 'Let’s Go, Eevee!', '레츠고! 이브이', 'Let’s Go！伊布', 'Let’s Go！伊布'),
-('sword', 'sword-shield', 8, NULL, 35, '#00A1E9', 'Sword', 'ソード', NULL, 'Schwert', 'Épée', 'Spada', 'Espada', '소드', '剑', '劍'),
-('shield', 'sword-shield', 8, NULL, 36, '#BF004F', 'Shield', 'シールド', NULL, 'Schild', 'Bouclier', 'Scudo', 'Escudo', '실드', '盾', '盾'),
-('the-isle-of-armor-sword', 'the-isle-of-armor', 8, 'sword', 37, '#FCD00B', 'Sword: The Isle of Armor', 'ソード: 鎧の孤島', NULL, 'Schwert: Die Insel der Rüstung', 'Épée: L’île solitaire de l’Armure', 'Spada: L’isola solitaria dell’armatura', 'Espada: La isla de la armadura', '소드: 갑옷의 외딴섬', '剑: 铠之孤岛', '劍: 鎧之孤島'),
-('the-isle-of-armor-shield', 'the-isle-of-armor', 8, 'shield', 38, '#FCD00B', 'Shield: The Isle of Armor', 'シールド: 鎧の孤島', NULL, 'Schild: Die Insel der Rüstung', 'Bouclier: L’île solitaire de l’Armure', 'Scudo: L’isola solitaria dell’armatura', 'Escudo: La isla de la armadura', '실드: 갑옷의 외딴섬', '盾: 铠之孤岛', '盾: 鎧之孤島'),
-('the-crown-tundra-sword', 'the-crown-tundra', 8, 'sword', 39, '#15AE68', 'Sword: The Crown Tundra', 'ソード: 冠の雪原', NULL, 'Schwert: Die Schneelande der Krone', 'Épée: Les terres enneigées de la Couronne', 'Spada: Le terre innevate della corona', 'Espada: Las nieves de la corona', '소드: 왕관의 설원', '剑: 冠之雪原', '劍: 冠之雪原'),
-('the-crown-tundra-shield', 'the-crown-tundra', 8, 'shield', 40, '#15AE68', 'Shield: The Crown Tundra', 'シールド: 冠の雪原', NULL, 'Schild: Die Schneelande der Krone', 'Bouclier: Les terres enneigées de la Couronne', 'Scudo: Le terre innevate della corona', 'Escudo: Las nieves de la corona', '실드: 왕관의 설원', '盾: 冠之雪原', '盾: 冠之雪原'),
-('brilliant-diamond', 'brilliant-diamond-shining-pearl', 8, NULL, 41, '#44BAE5', 'Brilliant Diamond', 'ブリリアントダイヤモンド', NULL, 'Strahlender Diamant', 'Diamant Étincelant', 'Diamante Lucente', 'Diamante Brillante', '브릴리언트 다이아몬드', '晶灿钻石', '晶燦鑽石'),
-('shining-pearl', 'brilliant-diamond-shining-pearl', 8, NULL, 42, '#DA7D99', 'Shining Pearl', 'シャイニングパール', NULL, 'Leuchtende Perle', 'Perle Scintillante', 'Perla Splendente', 'Perla Reluciente', '샤이닝 펄', '明亮珍珠', '明亮珍珠'),
-('legends-arceus', 'legends-arceus', 8, NULL, 43, '#36597B', 'Legends: Arceus', 'LEGENDS アルセウス', NULL, 'Legenden: Arceus', 'Légendes : Arceus', 'Leggende: Arceus', 'Leyendas: Arceus', 'LEGENDS 아르세우스', '传说 阿尔宙斯', '傳說 阿爾宙斯'),
-('scarlet', 'scarlet-violet', 9, NULL, 44, '#F34134', 'Scarlet', 'スカーレット', NULL, 'Karmesin', 'Écarlate', 'Scarlatto', 'Escarlata', '스칼렛', '朱', '朱'),
-('violet', 'scarlet-violet', 9, NULL, 45, '#8334B7', 'Violet', 'バイオレット', NULL, 'Purpur', 'Violet', 'Violetto', 'Púrpura', '바이올렛', '紫', '紫'),
-('the-teal-mask-scarlet', 'the-teal-mask', 9, 'scarlet', 46, '#00A398', 'Scarlet: The Teal Mask', 'スカーレット: 碧の仮面', NULL, 'Karmesin: Die Türkisgrüne Maske', 'Écarlate: Le Masque Turquoise', 'Scarlatto: La maschera turchese', 'Escarlata: La máscara turquesa', NULL, '朱: 碧之假面', NULL),
-('the-teal-mask-violet', 'the-teal-mask', 9, 'violet', 47, '#00A398', 'Violet: The Teal Mask', 'バイオレット: 碧の仮面', NULL, 'Purpur: Die Türkisgrüne Maske', 'Violet: Le Masque Turquoise', 'Violetto: La maschera turchese', 'Púrpura: La máscara turquesa', NULL, '紫: 碧之假面', NULL),
-('the-indigo-disk-scarlet', 'the-indigo-disk', 9, 'scarlet', 48, '#004878', 'Scarlet: The Indigo Disk', 'スカーレット: 藍の円盤', NULL, 'Karmesin: Die Indigoblaue Scheibe', 'Écarlate: Le Disque Indigo', 'Scarlatto: Il disco indaco', 'Escarlata: El disco índigo', NULL, '朱: 藍之圓盤', NULL),
-('the-indigo-disk-violet', 'the-indigo-disk', 9, 'violet', 49, '#004878', 'Violet: The Indigo Disk', 'バイオレット: 藍の円盤', NULL, 'Purpur: Die Indigoblaue Scheibe', 'Violet: Le Disque Indigo', 'Violetto: Il disco indaco', 'Púrpura: El disco índigo', NULL, '紫: 藍之圓盤', NULL),
-('legends-za', 'legends-za', 9, NULL, 50, '#31CA56', 'Legends: Z-A', 'レジェンズ Z-A', 'Legends Z-A', 'Legenden: Z-A', 'Légendes : Z-A', 'Leggende: Z-A', 'Leyendas: Z-A', 'LEGENDS Z-A', '传说 Z-A', '傳說 Z-A'),
-('mega-dimension', 'mega-dimension', 9, 'legends-za', 51, '#C57DDC', 'Mega Dimension', NULL, NULL, 'Mega-Dimension', 'Méga-Dimension', 'Megadimensione', 'Megadimensión', '메가 차원 러시', '超次元爆涌', '超次元爆湧'),
-('champions', 'champions', 9, NULL, 52, '#8477FB', 'Champions', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO game (slug, version_group, generation, base_game, sort, color, name_en, name_ja, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
+('red-japan', 'red-green-japan', 1, NULL, 0, '#DA3914', 'Red', '赤', 'Rot', 'Rouge', 'Rossa', 'Rojo', '레드', NULL, NULL),
+('green-japan', 'red-green-japan', 1, NULL, 1, '#24A724', 'Green', '緑', 'Grüne', 'Vert', 'Verde', 'Verde', '그린', NULL, NULL),
+('blue-japan', 'blue-japan', 1, NULL, 2, '#2E50D8', 'Blue', '青', 'Blau', 'Bleu', 'Blu', 'Azul', '블루', NULL, NULL),
+('red', 'red-blue', 1, NULL, 3, '#DA3914', 'Red', '赤', 'Rot', 'Rouge', 'Rossa', 'Rojo', '레드', '紅', '紅'),
+('blue', 'red-blue', 1, NULL, 4, '#2E50D8', 'Blue', '青', 'Blau', 'Bleu', 'Blu', 'Azul', '블루', '藍', '藍'),
+('yellow', 'yellow', 1, NULL, 5, '#FFD733', 'Yellow', 'ピカチュウ', 'Gelb', 'Jaune', 'Gialla', 'Amarillo', '피카츄', '皮卡丘', '皮卡丘'),
+('gold', 'gold-silver', 2, NULL, 6, '#DAA520', 'Gold', '金', 'Gold', 'Or', 'Oro', 'Oro', '골드', '金', '金'),
+('silver', 'gold-silver', 2, NULL, 7, '#C0C0C0', 'Silver', '銀', 'Silber', 'Argent', 'Argento', 'Plata', '실버', '銀', '銀'),
+('crystal', 'crystal', 2, NULL, 8, '#4FD9FF', 'Crystal', 'クリスタル', 'Kristall', 'Cristal', 'Cristallo', 'Cristal', '크리스탈', '水晶', '水晶'),
+('ruby', 'ruby-sapphire', 3, NULL, 9, '#CD2236', 'Ruby', 'ルビー', 'Rubin', 'Rubis', 'Rubino', 'Rubí', '루비', '紅寶石', '紅寶石'),
+('sapphire', 'ruby-sapphire', 3, NULL, 10, '#3D51A7', 'Sapphire', 'サファイア', 'Saphir', 'Saphir', 'Zaffiro', 'Zafiro', '사파이어', '藍寶石', '藍寶石'),
+('emerald', 'emerald', 3, NULL, 11, '#009652', 'Emerald', 'エメラルド', 'Smaragd', 'Émeraude', 'Smeraldo', 'Esmeralda', '에메랄드', '綠寶石', '綠寶石'),
+('colosseum', 'colosseum', 3, NULL, 12, '#B6CAE4', 'Colosseum', 'コロシアム', 'Colosseum', 'Colosseum', 'Colosseum', 'Colosseum', '콜로세움', NULL, NULL),
+('xd', 'xd', 3, NULL, 13, '#604E82', 'XD', 'XD', 'XD', 'XD', 'XD', 'XD', 'XD', NULL, NULL),
+('firered', 'firered-leafgreen', 3, NULL, 14, '#F15C01', 'FireRed', 'ファイアレッド', 'Feuerrot', 'Rouge Feu', 'Rosso Fuoco', 'Rojo Fuego', '파이어레드', '火紅', '火紅'),
+('leafgreen', 'firered-leafgreen', 3, NULL, 15, '#9FDC00', 'LeafGreen', 'リーフグリーン', 'Blattgrün', 'Vert Feuille', 'Verde Foglia', 'Verde Hoja', '리프그린', '葉綠', '葉綠'),
+('diamond', 'diamond-pearl', 4, NULL, 16, '#90BEED', 'Diamond', 'ダイヤモンド', 'Diamant', 'Diamant', 'Diamante', 'Diamante', '디아루가', '钻石', '鑽石'),
+('pearl', 'diamond-pearl', 4, NULL, 17, '#DD7CB1', 'Pearl', 'パール', 'Perl', 'Perle', 'Perla', 'Perla', '펄기아', '珍珠', '珍珠'),
+('platinum', 'platinum', 4, NULL, 18, '#A0A08D', 'Platinum', 'プラチナ', 'Platin', 'Platine', 'Platino', 'Platino', '기라티나', '白金', '白金'),
+('heartgold', 'heartgold-soulsilver', 4, NULL, 19, '#E8B502', 'HeartGold', 'ハートゴールド', 'HeartGold', 'Or HeartGold', 'Oro HeartGold', 'Oro HeartGold', '하트골드', '心金', '心金'),
+('soulsilver', 'heartgold-soulsilver', 4, NULL, 20, '#AAB9CF', 'SoulSilver', 'ソウルシルバー', 'SoulSilver', 'Argent SoulSilver', 'Argento SoulSilver', 'Plata SoulSilver', '소울실버', '魂銀', '魂銀'),
+('black', 'black-white', 5, NULL, 21, '#444444', 'Black', 'ブラック', 'Schwarz', 'Noir', 'Nera', 'Negro', '블랙', '黑', '黑'),
+('white', 'black-white', 5, NULL, 22, '#E1E1E1', 'White', 'ホワイト', 'Weiß', 'Blanc', 'Bianca', 'Blanco', '화이트', '白', '白'),
+('black-2', 'black-2-white-2', 5, NULL, 23, '#303E51', 'Black 2', 'ブラック2', 'Schwarz 2', 'Noir 2', 'Nera 2', 'Negro 2', '블랙 2', '黑2', '黑2'),
+('white-2', 'black-2-white-2', 5, NULL, 24, '#EBC5C3', 'White 2', 'ホワイト2', 'Weiß 2', 'Blanc 2', 'Bianca 2', 'Blanco 2', '화이트 2', '白2', '白2'),
+('x', 'x-y', 6, NULL, 25, '#025DA6', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'),
+('y', 'x-y', 6, NULL, 26, '#EA1A3E', 'Y', 'Y', 'Y', 'Y', 'Y', 'Y', 'Y', 'Y', 'Y'),
+('omega-ruby', 'omega-ruby-alpha-sapphire', 6, NULL, 27, '#AB2813', 'Omega Ruby', 'オメガルビー', 'Omega Rubin', 'Rubis Oméga', 'Rubino Omega', 'Rubí Omega', '오메가루비', '欧米伽红宝石', '歐米加紅寶石'),
+('alpha-sapphire', 'omega-ruby-alpha-sapphire', 6, NULL, 28, '#26649C', 'Alpha Sapphire', 'アルファサファイア', 'Alpha Saphir', 'Saphir Alpha', 'Zaffiro Alpha', 'Zafiro Alfa', '알파사파이어', '阿尔法蓝宝石', '阿爾法藍寶石'),
+('sun', 'sun-moon', 7, NULL, 29, '#F1912B', 'Sun', 'サン', 'Sonne', 'Soleil', 'Sole', 'Sol', '썬', '太阳', '太陽'),
+('moon', 'sun-moon', 7, NULL, 30, '#5599CA', 'Moon', 'ムーン', 'Mond', 'Lune', 'Luna', 'Luna', '문', '月亮', '月亮'),
+('ultra-sun', 'ultra-sun-ultra-moon', 7, NULL, 31, '#E95B2B', 'Ultra Sun', 'ウルトラサン', 'Ultrasonne', 'Ultra-Soleil', 'Ultrasole', 'Ultrasol', '울트라썬', '究极之日', '究極之日'),
+('ultra-moon', 'ultra-sun-ultra-moon', 7, NULL, 32, '#226DB5', 'Ultra Moon', 'ウルトラムーン', 'Ultramond', 'Ultra-Lune', 'Ultraluna', 'Ultraluna', '울트라문', '究极之月', '究極之月'),
+('lets-go-pikachu', 'lets-go-pikachu-lets-go-eevee', 7, NULL, 33, '#F5DA26', 'Let’s Go, Pikachu!', 'Let’s Go! ピカチュウ', 'Let’s Go, Pikachu!', 'Let’s Go, Pikachu', 'Let’s Go, Pikachu!', 'Let’s Go, Pikachu!', '레츠고! 피카츄', 'Let’s Go！皮卡丘', 'Let’s Go！皮卡丘'),
+('lets-go-eevee', 'lets-go-pikachu-lets-go-eevee', 7, NULL, 34, '#D4924B', 'Let’s Go, Eevee!', 'Let’s Go! イーブイ', 'Let’s Go, Evoli!', 'Let’s Go, Évoli', 'Let’s Go, Eevee!', 'Let’s Go, Eevee!', '레츠고! 이브이', 'Let’s Go！伊布', 'Let’s Go！伊布'),
+('sword', 'sword-shield', 8, NULL, 35, '#00A1E9', 'Sword', 'ソード', 'Schwert', 'Épée', 'Spada', 'Espada', '소드', '剑', '劍'),
+('shield', 'sword-shield', 8, NULL, 36, '#BF004F', 'Shield', 'シールド', 'Schild', 'Bouclier', 'Scudo', 'Escudo', '실드', '盾', '盾'),
+('the-isle-of-armor-sword', 'the-isle-of-armor', 8, 'sword', 37, '#FCD00B', 'Sword: The Isle of Armor', 'ソード: 鎧の孤島', 'Schwert: Die Insel der Rüstung', 'Épée: L’île solitaire de l’Armure', 'Spada: L’isola solitaria dell’armatura', 'Espada: La isla de la armadura', '소드: 갑옷의 외딴섬', '剑: 铠之孤岛', '劍: 鎧之孤島'),
+('the-isle-of-armor-shield', 'the-isle-of-armor', 8, 'shield', 38, '#FCD00B', 'Shield: The Isle of Armor', 'シールド: 鎧の孤島', 'Schild: Die Insel der Rüstung', 'Bouclier: L’île solitaire de l’Armure', 'Scudo: L’isola solitaria dell’armatura', 'Escudo: La isla de la armadura', '실드: 갑옷의 외딴섬', '盾: 铠之孤岛', '盾: 鎧之孤島'),
+('the-crown-tundra-sword', 'the-crown-tundra', 8, 'sword', 39, '#15AE68', 'Sword: The Crown Tundra', 'ソード: 冠の雪原', 'Schwert: Die Schneelande der Krone', 'Épée: Les terres enneigées de la Couronne', 'Spada: Le terre innevate della corona', 'Espada: Las nieves de la corona', '소드: 왕관의 설원', '剑: 冠之雪原', '劍: 冠之雪原'),
+('the-crown-tundra-shield', 'the-crown-tundra', 8, 'shield', 40, '#15AE68', 'Shield: The Crown Tundra', 'シールド: 冠の雪原', 'Schild: Die Schneelande der Krone', 'Bouclier: Les terres enneigées de la Couronne', 'Scudo: Le terre innevate della corona', 'Escudo: Las nieves de la corona', '실드: 왕관의 설원', '盾: 冠之雪原', '盾: 冠之雪原'),
+('brilliant-diamond', 'brilliant-diamond-shining-pearl', 8, NULL, 41, '#44BAE5', 'Brilliant Diamond', 'ブリリアントダイヤモンド', 'Strahlender Diamant', 'Diamant Étincelant', 'Diamante Lucente', 'Diamante Brillante', '브릴리언트 다이아몬드', '晶灿钻石', '晶燦鑽石'),
+('shining-pearl', 'brilliant-diamond-shining-pearl', 8, NULL, 42, '#DA7D99', 'Shining Pearl', 'シャイニングパール', 'Leuchtende Perle', 'Perle Scintillante', 'Perla Splendente', 'Perla Reluciente', '샤이닝 펄', '明亮珍珠', '明亮珍珠'),
+('legends-arceus', 'legends-arceus', 8, NULL, 43, '#36597B', 'Legends: Arceus', 'LEGENDS アルセウス', 'Legenden: Arceus', 'Légendes : Arceus', 'Leggende: Arceus', 'Leyendas: Arceus', 'LEGENDS 아르세우스', '传说 阿尔宙斯', '傳說 阿爾宙斯'),
+('scarlet', 'scarlet-violet', 9, NULL, 44, '#F34134', 'Scarlet', 'スカーレット', 'Karmesin', 'Écarlate', 'Scarlatto', 'Escarlata', '스칼렛', '朱', '朱'),
+('violet', 'scarlet-violet', 9, NULL, 45, '#8334B7', 'Violet', 'バイオレット', 'Purpur', 'Violet', 'Violetto', 'Púrpura', '바이올렛', '紫', '紫'),
+('the-teal-mask-scarlet', 'the-teal-mask', 9, 'scarlet', 46, '#00A398', 'Scarlet: The Teal Mask', 'スカーレット: 碧の仮面', 'Karmesin: Die Türkisgrüne Maske', 'Écarlate: Le Masque Turquoise', 'Scarlatto: La maschera turchese', 'Escarlata: La máscara turquesa', NULL, '朱: 碧之假面', NULL),
+('the-teal-mask-violet', 'the-teal-mask', 9, 'violet', 47, '#00A398', 'Violet: The Teal Mask', 'バイオレット: 碧の仮面', 'Purpur: Die Türkisgrüne Maske', 'Violet: Le Masque Turquoise', 'Violetto: La maschera turchese', 'Púrpura: La máscara turquesa', NULL, '紫: 碧之假面', NULL),
+('the-indigo-disk-scarlet', 'the-indigo-disk', 9, 'scarlet', 48, '#004878', 'Scarlet: The Indigo Disk', 'スカーレット: 藍の円盤', 'Karmesin: Die Indigoblaue Scheibe', 'Écarlate: Le Disque Indigo', 'Scarlatto: Il disco indaco', 'Escarlata: El disco índigo', NULL, '朱: 藍之圓盤', NULL),
+('the-indigo-disk-violet', 'the-indigo-disk', 9, 'violet', 49, '#004878', 'Violet: The Indigo Disk', 'バイオレット: 藍の円盤', 'Purpur: Die Indigoblaue Scheibe', 'Violet: Le Disque Indigo', 'Violetto: Il disco indaco', 'Púrpura: El disco índigo', NULL, '紫: 藍之圓盤', NULL),
+('legends-za', 'legends-za', 9, NULL, 50, '#31CA56', 'Legends: Z-A', 'レジェンズ Z-A', 'Legenden: Z-A', 'Légendes : Z-A', 'Leggende: Z-A', 'Leyendas: Z-A', 'LEGENDS Z-A', '传说 Z-A', '傳說 Z-A'),
+('mega-dimension', 'mega-dimension', 9, 'legends-za', 51, '#C57DDC', 'Mega Dimension', NULL, 'Mega-Dimension', 'Méga-Dimension', 'Megadimensione', 'Megadimensión', '메가 차원 러시', '超次元爆涌', '超次元爆湧'),
+('champions', 'champions', 9, NULL, 52, '#8477FB', 'Champions', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- Real names from PokéAPI for every type, ability and move used here. Fire is only on a
 -- non-default form, so /v1/types lists it with a count of 0.
-INSERT INTO type (slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
-    ('dark','Dark','あく',NULL,'Unlicht','Ténèbres','Buio','Siniestro','악','恶','惡'),
-    ('electric','Electric','でんき',NULL,'Elektro','Électrik','Elettro','Eléctrico','전기','电','電'),
-    ('fighting','Fighting','かくとう',NULL,'Kampf','Combat','Lotta','Lucha','격투','格斗','格鬥'),
-    ('fire','Fire','ほのお',NULL,'Feuer','Feu','Fuoco','Fuego','불꽃','火','火'),
-    ('ghost','Ghost','ゴースト',NULL,'Geist','Spectre','Spettro','Fantasma','고스트','幽灵','幽靈'),
-    ('grass','Grass','くさ',NULL,'Pflanze','Plante','Erba','Planta','풀','草','草'),
-    ('ice','Ice','こおり',NULL,'Eis','Glace','Ghiaccio','Hielo','얼음','冰','冰'),
-    ('poison','Poison','どく',NULL,'Gift','Poison','Veleno','Veneno','독','毒','毒'),
-    ('water','Water','みず',NULL,'Wasser','Eau','Acqua','Agua','물','水','水');
+INSERT INTO type (slug, name_en, name_ja, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
+    ('dark','Dark','あく','Unlicht','Ténèbres','Buio','Siniestro','악','恶','惡'),
+    ('electric','Electric','でんき','Elektro','Électrik','Elettro','Eléctrico','전기','电','電'),
+    ('fighting','Fighting','かくとう','Kampf','Combat','Lotta','Lucha','격투','格斗','格鬥'),
+    ('fire','Fire','ほのお','Feuer','Feu','Fuoco','Fuego','불꽃','火','火'),
+    ('ghost','Ghost','ゴースト','Geist','Spectre','Spettro','Fantasma','고스트','幽灵','幽靈'),
+    ('grass','Grass','くさ','Pflanze','Plante','Erba','Planta','풀','草','草'),
+    ('ice','Ice','こおり','Eis','Glace','Ghiaccio','Hielo','얼음','冰','冰'),
+    ('poison','Poison','どく','Gift','Poison','Veleno','Veneno','독','毒','毒'),
+    ('water','Water','みず','Wasser','Eau','Acqua','Agua','물','水','水');
 
-INSERT INTO ability (slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
-    ('battle-bond','Battle Bond','きずなへんげ',NULL,'Freundschaftsakt','Synergie','Morfosintonia','Fuerte Afecto','유대변화','牵绊变身','牽絆變身'),
-    ('cursed-body','Cursed Body','のろわれボディ',NULL,'Tastfluch','Corps Maudit','Corpofunesto','Cuerpo Maldito','저주받은바디','诅咒之躯','詛咒之軀'),
-    ('defiant','Defiant','まけんき',NULL,'Siegeswille','Acharné','Agonismo','Competitivo','오기','不服输','不服輸'),
-    ('hydration','Hydration','うるおいボディ',NULL,'Hydration','Hydratation','Idratazione','Hidratación','촉촉바디','湿润之躯','濕潤之軀'),
-    ('levitate','Levitate','ふゆう',NULL,'Schwebe','Lévitation','Levitazione','Levitación','부유','飘浮','飄浮'),
-    ('lightning-rod','Lightning Rod','ひらいしん',NULL,'Blitzfänger','Paratonnerre','Parafulmine','Pararrayos','피뢰침','避雷针','避雷針'),
-    ('mold-breaker','Mold Breaker','かたやぶり',NULL,'Überbrückung','Brise Moule','Rompiforma','Rompemoldes','틀깨기','破格','破格'),
-    ('protean','Protean','へんげんじざい',NULL,'Wandlungskunst','Protéen','Mutatipo','Mutatipo','변환자재','变幻自如','變幻自如'),
-    ('shell-armor','Shell Armor','シェルアーマー',NULL,'Panzerhaut','Coque Armure','Guscioscudo','Caparazón','조가비갑옷','硬壳盔甲','硬殼盔甲'),
-    ('static','Static','せいでんき',NULL,'Statik','Statik','Statico','Electricidad Estática','정전기','静电','靜電'),
-    ('torrent','Torrent','げきりゅう',NULL,'Sturzbach','Torrent','Acquaiuto','Torrente','급류','激流','激流'),
-    ('unseen-fist','Unseen Fist','ふかしのこぶし',NULL,'Verborgene Faust','Poing Invisible','Pugni Invisibili','Puño Invisible','보이지않는주먹','无形拳','無形拳'),
-    ('water-absorb','Water Absorb','ちょすい',NULL,'H2O-Absorber','Absorbe-Eau','Assorbacqua','Absorbe Agua','저수','储水','儲水');
+INSERT INTO ability (slug, name_en, name_ja, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
+    ('battle-bond','Battle Bond','きずなへんげ','Freundschaftsakt','Synergie','Morfosintonia','Fuerte Afecto','유대변화','牵绊变身','牽絆變身'),
+    ('cursed-body','Cursed Body','のろわれボディ','Tastfluch','Corps Maudit','Corpofunesto','Cuerpo Maldito','저주받은바디','诅咒之躯','詛咒之軀'),
+    ('defiant','Defiant','まけんき','Siegeswille','Acharné','Agonismo','Competitivo','오기','不服输','不服輸'),
+    ('hydration','Hydration','うるおいボディ','Hydration','Hydratation','Idratazione','Hidratación','촉촉바디','湿润之躯','濕潤之軀'),
+    ('levitate','Levitate','ふゆう','Schwebe','Lévitation','Levitazione','Levitación','부유','飘浮','飄浮'),
+    ('lightning-rod','Lightning Rod','ひらいしん','Blitzfänger','Paratonnerre','Parafulmine','Pararrayos','피뢰침','避雷针','避雷針'),
+    ('mold-breaker','Mold Breaker','かたやぶり','Überbrückung','Brise Moule','Rompiforma','Rompemoldes','틀깨기','破格','破格'),
+    ('protean','Protean','へんげんじざい','Wandlungskunst','Protéen','Mutatipo','Mutatipo','변환자재','变幻自如','變幻自如'),
+    ('shell-armor','Shell Armor','シェルアーマー','Panzerhaut','Coque Armure','Guscioscudo','Caparazón','조가비갑옷','硬壳盔甲','硬殼盔甲'),
+    ('static','Static','せいでんき','Statik','Statik','Statico','Electricidad Estática','정전기','静电','靜電'),
+    ('torrent','Torrent','げきりゅう','Sturzbach','Torrent','Acquaiuto','Torrente','급류','激流','激流'),
+    ('unseen-fist','Unseen Fist','ふかしのこぶし','Verborgene Faust','Poing Invisible','Pugni Invisibili','Puño Invisible','보이지않는주먹','无形拳','無形拳'),
+    ('water-absorb','Water Absorb','ちょすい','H2O-Absorber','Absorbe-Eau','Assorbacqua','Absorbe Agua','저수','储水','儲水');
 
 -- One ability with a description and effect, the others without.
 UPDATE ability SET
-    description = 'The Pokémon draws in all Electric-type moves. Instead of taking damage from them, its Sp. Atk stat is boosted.',
+    description_en = 'The Pokémon draws in all Electric-type moves. Instead of taking damage from them, its Sp. Atk stat is boosted.',
     effect = 'All other Pokémon''s single-target Electric-type moves are redirected to this Pokémon if it is an eligible target.'
 WHERE slug = 'lightning-rod';
 
-INSERT INTO move (slug, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
-    ('thunderbolt','Thunderbolt','１０まんボルト',NULL,'Donnerblitz','Tonnerre','Fulmine','Rayo','10만볼트','十万伏特','十萬伏特'),
-    ('volt-tackle','Volt Tackle','ボルテッカー',NULL,'Volttackle','Électacle','Locomovolt','Placaje Eléctrico','볼트태클','伏特攻击','伏特攻擊');
+INSERT INTO move (slug, name_en, name_ja, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
+    ('thunderbolt','Thunderbolt','１０まんボルト','Donnerblitz','Tonnerre','Fulmine','Rayo','10만볼트','十万伏特','十萬伏特'),
+    ('volt-tackle','Volt Tackle','ボルテッカー','Volttackle','Électacle','Locomovolt','Placaje Eléctrico','볼트태클','伏特攻击','伏特攻擊');
 
 UPDATE move SET
-    description = 'The user attacks the target with a strong electric blast. This may also leave the target with paralysis.',
+    description_en = 'The user attacks the target with a strong electric blast. This may also leave the target with paralysis.',
+    description_it = 'Il Pokémon attacca il bersaglio con una potente scarica elettrica che può anche paralizzarlo.',
     effect = 'Inflicts regular damage.  Has a chance to paralyze the target.'
 WHERE slug = 'thunderbolt';
 
@@ -140,40 +141,40 @@ INSERT INTO pokemon
     (ndex, slug, gen, catch_rate, base_friendship, gender_rate, egg_cycles,
      evolution_chain, is_legendary, is_mythical, is_baby, has_gender_differences, forms_switchable,
      growth_rate, color, shape, habitat,
-     name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant,
+     name_en, name_ja, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant,
      category_en, category_ja)
 VALUES
     (25,   'pikachu',  1, 190, 50,  4, 10,
      10, 0, 0, 0, 1, 0, 'medium', 'yellow', 'quadruped', 'forest',
-     'Pikachu','ピカチュウ','Pikachu','Pikachu','Pikachu','Pikachu','Pikachu','피카츄','皮卡丘','皮卡丘',
+     'Pikachu','ピカチュウ','Pikachu','Pikachu','Pikachu','Pikachu','피카츄','皮卡丘','皮卡丘',
      'Mouse Pokémon','ねずみポケモン'),
     (26,   'raichu',   1, 75, 50,  4, 10,
      10, 0, 0, 0, 1, 0, 'medium', 'yellow', 'upright', 'forest',
-     'Raichu','ライチュウ','Raichu','Raichu','Raichu','Raichu','Raichu','라이츄','雷丘','雷丘',
+     'Raichu','ライチュウ','Raichu','Raichu','Raichu','Raichu','라이츄','雷丘','雷丘',
      'Mouse Pokémon','ねずみポケモン'),
     (94,   'gengar',   1, 45, 50,  4, 20,
      40, 0, 0, 0, 0, 1, 'medium-slow', 'purple', 'upright', 'cave',
-     'Gengar','ゲンガー','Gengar','Gengar','Ectoplasma','Gengar','Gengar','팬텀','耿鬼','耿鬼',
+     'Gengar','ゲンガー','Gengar','Ectoplasma','Gengar','Gengar','팬텀','耿鬼','耿鬼',
      'Shadow Pokémon','シャドーポケモン'),
     (131,  'lapras',   1, 45, 50,  4, 40,
      65, 0, 0, 0, 0, 0, 'slow', 'blue', 'fish', 'sea',
-     'Lapras','ラプラス','Laplace','Lapras','Lokhlass','Lapras','Lapras','라프라스','拉普拉斯','拉普拉斯',
+     'Lapras','ラプラス','Lapras','Lokhlass','Lapras','Lapras','라프라스','拉普拉斯','拉普拉斯',
      'Transport Pokémon','のりものポケモン'),
     (479,  'rotom',    4, 45, 50, -1, 20,
      240, 0, 0, 0, 0, 1, 'medium', 'red', 'ball', NULL,
-     'Rotom','ロトム','Rotom','Rotom','Motisma','Rotom','Rotom','로토무','洛托姆','洛托姆',
+     'Rotom','ロトム','Rotom','Motisma','Rotom','Rotom','로토무','洛托姆','洛托姆',
      'Plasma Pokémon','プラズマポケモン'),
     (658,  'greninja', 6, 45, 50,  1, 20,
      339, 0, 0, 0, 0, 0, 'medium-slow', 'blue', 'humanoid', NULL,
-     'Greninja','ゲッコウガ','Gekkouga','Quajutsu','Amphinobi','Greninja','Greninja','개굴닌자','甲贺忍蛙','甲賀忍蛙',
+     'Greninja','ゲッコウガ','Quajutsu','Amphinobi','Greninja','Greninja','개굴닌자','甲贺忍蛙','甲賀忍蛙',
      'Ninja Pokémon','しのびポケモン'),
     (892,  'urshifu',  8, 3, 50,  1, 40,
      470, 1, 0, 0, 0, 0, 'slow', 'gray', 'humanoid', NULL,
-     'Urshifu','ウーラオス','Wulaosu','Wulaosu','Shifours','Urshifu','Urshifu','우라오스','武道熊师','武道熊師',
+     'Urshifu','ウーラオス','Wulaosu','Shifours','Urshifu','Urshifu','우라오스','武道熊师','武道熊師',
      'Wushu Pokémon','けんぽうポケモン'),
     (1017, 'ogerpon',  9, 5, 50,  8, 20,
      543, 1, 0, 0, 0, 0, 'slow', 'green', 'humanoid', NULL,
-     'Ogerpon','オーガポン','Ogapon','Oger-Pon','Ogerpon','Ogerpon','Ogerpon','오거폰','厄诡椪','厄詭椪',
+     'Ogerpon','オーガポン','Oger-Pon','Ogerpon','Ogerpon','Ogerpon','오거폰','厄诡椪','厄詭椪',
      'Mask Pokémon', NULL);
 
 INSERT INTO pokemon_egg_group (ndex, egg_group) VALUES
@@ -263,13 +264,16 @@ INSERT INTO encounter (ndex, form_id, game, location, method) VALUES
     (892,10,'sword','tower-of-waters','gift'),
     (1017,11,'scarlet','oni-mountain','only-one');
 
--- From Pikachu's Bulbapedia page, in its order: oldest game first, forms after the species.
-INSERT INTO pokedex_entry (ndex, form, game, text) VALUES
-    (25,'','red','When several of these Pokémon gather, their electricity could build and cause lightning storms.'),
-    (25,'','sword','Pikachu that can generate powerful electricity have cheek sacs that are extra soft and super stretchy.'),
-    (25,'Gigantamax','sword','Its Gigantamax power expanded, forming its supersized body and towering tail.'),
-    (25,'','scarlet','When it is angered, it immediately discharges the energy stored in the pouches in its cheeks.'),
-    (25,'','legends-za','It has small electric sacs on both its cheeks. When in a tough spot, this Pokémon discharges electricity.');
+-- Pikachu's entries as the build stores them: oldest game first, forms after the species. Scarlet's
+-- carries Japanese and Italian too; the others are English only here.
+INSERT INTO pokedex_entry (ndex, form, game, text_en, text_ja, text_it) VALUES
+    (25,'','red','When several of these POKéMON gather, their electricity could build and cause lightning storms.',NULL,NULL),
+    (25,'','sword','Pikachu that can generate powerful electricity have cheek sacs that are extra soft and super stretchy.',NULL,NULL),
+    (25,'Gigantamax','sword','Its Gigantamax power expanded, forming its supersized body and towering tail.',NULL,NULL),
+    (25,'','scarlet','When it is angered, it immediately discharges the energy stored in the pouches in its cheeks.',
+        '両頬には　電気を　溜めこむ　袋がある。　怒ると　溜めこんだ　電気を　一気に　放ってくる。',
+        'Quando s’arrabbia, libera subito l’energia accumulata nelle sacche sulle guance.'),
+    (25,'','legends-za','It has small electric sacs on both its cheeks. When in a tough spot, this Pokémon discharges electricity.',NULL,NULL);
 
 -- Gengar's Omega Ruby row is illustrative: marked exclusive so the flag and its filter have a case.
 INSERT INTO availability (ndex, game, dlc, area, obtainable, exclusive, origin_mark) VALUES
@@ -288,12 +292,12 @@ INSERT INTO pokemon_dex_number (ndex, pokedex, number) VALUES
     (1017,'kitakami',200);
 
 -- Champions is a spin-off's Pokédex of no region, and no species here.
-INSERT INTO pokedex (slug, region, main_series, name_en, name_ja, name_ja_romaji, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
-    ('kanto', 'kanto', 1, 'Kanto', NULL, NULL, 'Kanto', 'Kanto', NULL, 'Kanto', NULL, NULL, NULL),
-    ('kalos-central', 'kalos', 1, 'Central Kalos', NULL, NULL, 'Kalos-Zentral', 'Kalos : Centre', NULL, 'Kalos Centro', NULL, NULL, NULL),
-    ('paldea', 'paldea', 1, 'Paldea', NULL, NULL, 'Paldea', 'Paldea', NULL, 'Paldea', NULL, NULL, NULL),
-    ('kitakami', 'paldea', 1, 'Kitakami', NULL, NULL, NULL, 'Septentria', NULL, 'Kitakami', NULL, NULL, NULL),
-    ('champions', NULL, 0, 'Champions', NULL, NULL, NULL, 'Champions', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO pokedex (slug, region, main_series, name_en, name_ja, name_de, name_fr, name_it, name_es, name_ko, name_zh_hans, name_zh_hant) VALUES
+    ('kanto', 'kanto', 1, 'Kanto', NULL, 'Kanto', 'Kanto', NULL, 'Kanto', NULL, NULL, NULL),
+    ('kalos-central', 'kalos', 1, 'Central Kalos', NULL, 'Kalos-Zentral', 'Kalos : Centre', NULL, 'Kalos Centro', NULL, NULL, NULL),
+    ('paldea', 'paldea', 1, 'Paldea', NULL, 'Paldea', 'Paldea', NULL, 'Paldea', NULL, NULL, NULL),
+    ('kitakami', 'paldea', 1, 'Kitakami', NULL, NULL, 'Septentria', NULL, 'Kitakami', NULL, NULL, NULL),
+    ('champions', NULL, 0, 'Champions', NULL, NULL, 'Champions', NULL, NULL, NULL, NULL, NULL);
 
 INSERT INTO pokedex_game (pokedex, version_group) VALUES
     ('kanto','red-blue'),('kanto','yellow'),('kanto','firered-leafgreen'),('kanto','red-green-japan'),('kanto','blue-japan'),

@@ -31,7 +31,6 @@ export const readTable = async (name: string) => parseCsv(await Bun.file(`${CSV_
 export const LANGUAGE_IDS = {
     en: ['9'],
     ja: ['11', '1'],
-    ja_romaji: ['2'],
     de: ['6'],
     fr: ['5'],
     it: ['8'],

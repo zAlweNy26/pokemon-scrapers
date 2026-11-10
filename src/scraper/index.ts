@@ -13,15 +13,18 @@ import { GENERATION_PAGE, buildFromPokeApi, debutYearsOf, type Table } from './b
 import { TABLES, check, counts, diff, openDatabase } from './database'
 import { fetchGameColors, fetchSpeciesPages, fetchWikitext } from './bulbapedia'
 import { originsOf } from './etymology'
-import { ORIGIN_MARKS, availabilityOf, dexEntriesOf, exclusivesOf } from './pokedex'
+import { ORIGIN_MARKS, availabilityOf, exclusivesOf } from './pokedex'
+import { dexEntriesFromCorpus } from './dex-entries'
 import { fetchGameEvidence, homeGames } from './games'
 import { matchEntry } from './match'
-import { POKEAPI_COMMIT, checkoutPokeApi, readTable } from './pokeapi'
+import { LANGUAGES, POKEAPI_COMMIT, checkoutPokeApi, readTable } from './pokeapi'
 import { fetchPokeos, formResolver, shinyLockedForms } from './pokeos'
 import { fetchDepositable } from './serebii'
 import { SHINY_PAGE, shinyRowsOf, shinyTableOf } from './shiny'
 import { SPRITES_COMMIT, artworkKeys, checkoutArtwork } from './sprites'
 import { DATASET, STAMP, insert, literal, versionOf } from './sql'
+import { CORPUS_COMMIT, checkoutCorpus } from './corpus'
+import { loadGameText } from './game-text'
 
 const VERSION = new URL('../../data/version.json', import.meta.url).pathname
 
@@ -32,7 +35,9 @@ const fail = (message: string): never => {
 
 await checkoutPokeApi()
 await checkoutArtwork()
-const data = await buildFromPokeApi(await artworkKeys(), debutYearsOf(await fetchWikitext(GENERATION_PAGE)))
+await checkoutCorpus()
+const gameText = await loadGameText()
+const data = await buildFromPokeApi(await artworkKeys(), debutYearsOf(await fetchWikitext(GENERATION_PAGE)), gameText)
 
 // Each game's colour, from Bulbapedia's colour templates.
 const gameColors = await fetchGameColors(data.game.rows.map((row) => row[data.game.columns.indexOf('name_en')] as string))
@@ -101,31 +106,15 @@ const siblings = new Map(
         versionRows.filter((other) => other.version_group_id === row.version_group_id && other.id !== row.id).map((other) => other.identifier!)
     ])
 )
-// The forms an entry printing the form's type stands for (Silvally's "This is its <Type>-type form."):
-// every form but the default, with its form name and its first type's English name.
-const typeNames = new Map(data.type.rows.map((row) => [row[0] as string, row[1] as string]))
-const firstTypes = new Map(data.formType.rows.filter((row) => row[1] === 1).map((row) => [row[0] as number, row[2] as string]))
-const typeFormsOf = (ndex: number) =>
-    data.forms
-        .filter((form) => form.ndex === ndex && !form.isDefault && form.formName)
-        .map((form): [string, string] => [form.formName!, typeNames.get(firstTypes.get(form.id)!)!])
 const unknownTemplates = new Set<string>()
 const skippedGames = new Set<string>()
 const origins: Table = { columns: ['ndex', 'lang', 'note'], rows: [] }
-const pokedexEntry: Table = { columns: ['ndex', 'form', 'game', 'text'], rows: [] }
-const pokedexRevision: Table = { columns: ['ndex', 'form', 'game', 'revision', 'text'], rows: [] }
 const availability: Table = { columns: ['ndex', 'game', 'dlc', 'area', 'obtainable'], rows: [] }
 for (const [ndex, wikitext] of bulbapedia.pages) {
     for (const row of originsOf(wikitext, unknownTemplates)) origins.rows.push([ndex, ...row])
-    const dex = dexEntriesOf(wikitext, versions, unknownTemplates, typeFormsOf(ndex))
-    for (const row of dex.revisions) pokedexRevision.rows.push([ndex, ...row])
-    for (const [table, { rows, skipped }] of [
-        [pokedexEntry, dex],
-        [availability, availabilityOf(wikitext, versions, unknownTemplates)]
-    ] as const) {
-        for (const row of rows) table.rows.push([ndex, ...row])
-        for (const label of skipped) skippedGames.add(label)
-    }
+    const { rows, skipped } = availabilityOf(wikitext, versions, unknownTemplates)
+    for (const row of rows) availability.rows.push([ndex, ...row])
+    for (const label of skipped) skippedGames.add(label)
 }
 // Shiny availability per generation for the forms Bulbapedia lists as hard to get shiny.
 const shiny = shinyRowsOf(shinyTableOf(await fetchWikitext(SHINY_PAGE)), data.forms)
@@ -147,7 +136,7 @@ const alphasZA = alphaFormsOf(zaAlphaRowsOf(await fetchWikitext(ZA_ALPHA_PAGE)),
 data.form.columns.push('alpha_legends_arceus', 'alpha_legends_za')
 for (const row of data.form.rows) row.push(alphasLA.has(row[0] as number), alphasZA.has(row[0] as number))
 const bulbapediaHash = new Bun.CryptoHasher('sha256')
-    .update(JSON.stringify([origins.rows, pokedexEntry.rows, pokedexRevision.rows, availability.rows, formShiny.rows, [...alphasZA], gameColors]))
+    .update(JSON.stringify([origins.rows, availability.rows, formShiny.rows, [...alphasZA], gameColors]))
     .digest('hex')
     .slice(0, 12)
 
@@ -155,6 +144,16 @@ const bulbapediaHash = new Bun.CryptoHasher('sha256')
 // PokéAPI has none for, from pokeos.com.
 const pokeos = await fetchPokeos()
 const speciesSlug = new Map(data.pokemon.rows.map((row) => [row[0] as number, row[1] as string]))
+
+// Pokédex entries in every language, from the games' text: oldest game first, each form after its species.
+const corpusEntries = await dexEntriesFromCorpus(speciesSlug, gameText.formLabelAt)
+const gameSort = new Map(data.game.rows.map((row) => [row[0] as string, row[data.game.columns.indexOf('sort')] as number]))
+const pokedexEntry: Table = {
+    columns: ['ndex', 'form', 'game', ...LANGUAGES.map((language) => `text_${language}`)],
+    rows: corpusEntries.entries
+        .toSorted((a, b) => a.ndex - b.ndex || gameSort.get(a.game)! - gameSort.get(b.game)! || Number(!!a.form) - Number(!!b.form))
+        .map((entry) => [entry.ndex, entry.form, entry.game, ...Object.values(entry.texts)])
+}
 data.pokemon.columns.push('is_sub_legendary', 'is_ultra_beast', 'is_paradox', 'pronunciation', 'pronunciation_ipa')
 for (const row of data.pokemon.rows) {
     const flags = pokeos.flags.get(row[0] as number)
@@ -198,7 +197,6 @@ const tables: [string, Table][] = [
     ['pokemon_egg_group', data.eggGroup],
     ['pokemon_origin', origins],
     ['pokedex_entry', pokedexEntry],
-    ['pokedex_entry_revision', pokedexRevision],
     ['availability', availability],
     ['pokemon_dex_number', data.dexNumber],
     ['form', data.form],
@@ -208,7 +206,7 @@ const tables: [string, Table][] = [
     ['form_shiny', formShiny],
     ['encounter', data.encounter],
     ['evolution', data.evolution],
-    ['meta', { columns: ['key', 'value'], rows: [['source_pokeapi', POKEAPI_COMMIT], ['source_sprites', SPRITES_COMMIT], ['source_serebii', serebiiHash], ['source_bulbapedia', bulbapediaHash], ['source_pokeos', pokeosHash]] }]
+    ['meta', { columns: ['key', 'value'], rows: [['source_pokeapi', POKEAPI_COMMIT], ['source_corpus', CORPUS_COMMIT], ['source_sprites', SPRITES_COMMIT], ['source_serebii', serebiiHash], ['source_bulbapedia', bulbapediaHash], ['source_pokeos', pokeosHash]] }]
 ]
 
 const body = [
@@ -274,7 +272,9 @@ const byLanguage = Object.groupBy(origins.rows, ([, language]) => language as st
 console.log(
     `  etymology: ${Object.entries(byLanguage).map(([language, rows]) => `${language} ${rows!.length}`).join(', ')}`
 )
-console.log(`  Pokédex entries: ${pokedexEntry.rows.length} (${pokedexRevision.rows.length} earlier revisions), game locations: ${availability.rows.length}`)
+console.log(`  Pokédex entries: ${pokedexEntry.rows.length}, game locations: ${availability.rows.length}`)
+if (corpusEntries.unmatched.length)
+    console.log(`    corpus entries left out (no species or form label): ${corpusEntries.unmatched.length}, e.g. ${corpusEntries.unmatched.slice(0, 5).join('; ')}`)
 console.log(`  alphas: Legends: Arceus ${alphasLA.size} forms, Legends: Z-A ${alphasZA.size} forms`)
 console.log(`  shiny availability: ${new Set(formShiny.rows.map(([id]) => id)).size} forms, ${formShiny.rows.length} generation rows`)
 console.log(`    labels that are not a main-series game, left out: ${[...skippedGames].join(', ')}`)

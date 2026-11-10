@@ -276,15 +276,17 @@ export const pokemonModels = {
             .array(
                 z.object({
                     game: z.string().describe('PokéAPI version identifier'),
-                    form: z.string().nullable().describe("Bulbapedia's form label ('Alolan Form'), not game text; null for the species"),
-                    text: z.string().describe('The game\'s own words, Generation I-III capitals included ("POKéMON"); the latest revision'),
-                    revisions: z
-                        .array(z.object({ revision: z.string().meta({ examples: ['1.0'] }), text: z.string() }))
-                        .optional()
-                        .describe('Earlier texts of this game\'s entry, oldest first; present only where a later release changed it')
+                    form: z
+                        .string()
+                        .nullable()
+                        .describe("HOME's label for the form the entry describes ('Alolan Form'); null for the species"),
+                    text: categorySchema.describe(
+                        'The game\'s own words in each language it shows them in, on one line, Generation I-III capitals ' +
+                            'included ("POKéMON"); null in a language the game has no entry in'
+                    )
                 })
             )
-            .describe('Pokédex entries in English, as Bulbapedia transcribes them, oldest game first'),
+            .describe("Pokédex entries from the games' text, oldest game first; a form's own entry only where its text differs"),
         availability: z
             .array(
                 z.object({

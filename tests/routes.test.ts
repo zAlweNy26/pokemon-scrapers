@@ -567,26 +567,28 @@ describe('GET /v1/types/:slug, /v1/abilities/:slug and /v1/moves/:slug', () => {
         expect((await json('/v1/abilities/battle-bond')).body.data.map((p: any) => p.slug)).toEqual(['greninja'])
     })
 
-    test('an ability with its English description and effect', async () => {
+    test('an ability with its description per language and effect', async () => {
         const { body } = await json('/v1/abilities/lightning-rod')
 
-        expect(body.description).toStartWith('The Pokémon draws in all Electric-type moves.')
+        expect(body.description.en).toStartWith('The Pokémon draws in all Electric-type moves.')
+        expect(body.description.it).toBeNull()
         expect(body.effect).toStartWith("All other Pokémon's single-target Electric-type moves")
 
         const { body: bare } = await json('/v1/abilities/static')
-        expect(bare.description).toBeNull()
+        expect(Object.values(bare.description)).toEqual(Array(9).fill(null))
         expect(bare.effect).toBeNull()
         expect((await json('/v1/abilities')).body[0]).not.toHaveProperty('description')
     })
 
-    test('a move with its names, English description and effect, in any case', async () => {
+    test('a move with its names, description per language and effect, in any case', async () => {
         const { response, body } = await json('/v1/moves/Thunderbolt')
 
         expect(response.status).toBe(200)
         expect(body).toMatchObject({ slug: 'thunderbolt', name: { en: 'Thunderbolt', it: 'Fulmine' } })
-        expect(body.description).toStartWith('The user attacks the target with a strong electric blast.')
+        expect(body.description.en).toStartWith('The user attacks the target with a strong electric blast.')
+        expect(body.description.it).toStartWith('Il Pokémon attacca il bersaglio')
         expect(body.effect).toStartWith('Inflicts regular damage.')
-        expect((await json('/v1/moves/volt-tackle')).body).toMatchObject({ description: null, effect: null })
+        expect((await json('/v1/moves/volt-tackle')).body).toMatchObject({ description: { en: null, it: null }, effect: null })
         expect((await json('/v1/moves')).body[0]).not.toHaveProperty('description')
     })
 

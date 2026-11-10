@@ -1,5 +1,7 @@
 import { regionOf } from './games'
 import { LANGUAGE_IDS, LANGUAGES, readTable, type Language } from './pokeapi'
+import type { Texts } from './corpus'
+import type { GameText } from './game-text'
 import type { Value } from './sql'
 import type { EvolutionConditions, FormCategory } from '@/db/schema'
 
@@ -112,8 +114,9 @@ const localized = (names: Map<string, Row> | undefined, field: string): Record<L
 export const unwrap = (value: string) =>
     value.replace(/\u00ad\n/g, '').replace(/-\n/g, '-').replace(/\n/g, ' ').replace(/\u00ad/g, '')
 
-/** What Sword/Shield onwards say for a move they dropped: not a description, so an older game's text is used. */
-export const DROPPED_MOVE = /^This move can.t be used\. It.s recommended that this move is forgotten\./
+
+/** Every language missing, in LANGUAGES order. */
+const noTexts = () => Object.fromEntries(LANGUAGES.map((language) => [language, null])) as Texts
 
 const languageColumns = (prefix: string) => LANGUAGES.map((language) => `${prefix}_${language}`)
 
@@ -124,14 +127,14 @@ const shinyOf = (key: string | null, artwork: Set<string>) => {
     return shiny && artwork.has(shiny) ? shiny : null
 }
 
-export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<string, number>) => {
+export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<string, number>, gameText: GameText) => {
     const [
         speciesRows, speciesNames, pokemonRows, formRows, formNames, generations, regions,
         pokemonTypes, formTypes, types, pokemonAbilities, abilities, pokemonStats,
         speciesEggGroups, eggGroups, encounters, locationAreas, locations, encounterSlots,
         encounterMethods, versions, evolutions, evolutionTriggers, versionGroups, items, moves, genders,
         natures, growthRates, colors, shapes, habitats, pokedexes, dexNumbers, typeNames, abilityNames, moveNames,
-        abilityProse, abilityFlavor, moveProse, moveFlavor, versionNames, pokedexProse, pokedexVersionGroups
+        abilityProse, moveProse, versionNames, pokedexProse, pokedexVersionGroups
     ] = await Promise.all(
         [
             'pokemon_species', 'pokemon_species_names', 'pokemon', 'pokemon_forms', 'pokemon_form_names',
@@ -140,26 +143,38 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
             'locations', 'encounter_slots', 'encounter_methods', 'versions', 'pokemon_evolution',
             'evolution_triggers', 'version_groups', 'items', 'moves', 'genders', 'natures', 'growth_rates',
             'pokemon_colors', 'pokemon_shapes', 'pokemon_habitats', 'pokedexes', 'pokemon_dex_numbers',
-            'type_names', 'ability_names', 'move_names', 'ability_prose', 'ability_flavor_text', 'move_effect_prose',
-            'move_flavor_text', 'version_names', 'pokedex_prose', 'pokedex_version_groups'
+            'type_names', 'ability_names', 'move_names', 'ability_prose', 'move_effect_prose',
+            'version_names', 'pokedex_prose', 'pokedex_version_groups'
         ].map(readTable)
     )
 
-    /** `slug` plus a name per language, for the rows of `table` that `keep` accepts. */
-    const namesTable = (rows: Row[], names: Row[], key: string, keep: (row: Row) => boolean): Table => {
+    /**
+     * `slug` plus a name per language, for the rows of `table` that `keep` accepts: the games'
+     * own names where `game` finds PokéAPI's English one, else PokéAPI's.
+     */
+    const namesTable = (
+        rows: Row[],
+        names: Row[],
+        key: string,
+        keep: (row: Row) => boolean,
+        game: (english: string) => Texts | undefined
+    ): Table => {
         const byId = byLanguage(names, key)
         return {
             columns: ['slug', ...languageColumns('name')],
-            rows: rows.filter(keep).map((row) => [row.identifier!, ...Object.values(localized(byId.get(row.id!), 'name'))])
+            rows: rows.filter(keep).map((row) => {
+                const pokeApi = localized(byId.get(row.id!), 'name')
+                return [row.identifier!, ...Object.values((pokeApi.en && game(pokeApi.en)) || pokeApi)]
+            })
         }
     }
     // Every type, `unknown` included: Arceus's ??? form has it. Move ids from 10000
     // are Colosseum/XD's shadow moves, which nothing here refers to.
-    const typeTable = namesTable(types!, typeNames!, 'type_id', () => true)
+    const typeTable = namesTable(types!, typeNames!, 'type_id', () => true, gameText.type)
     const mainAbilities = abilities!.filter((row) => row.is_main_series === '1')
     const gameMoves = moves!.filter((row) => Number(row.id) < 10000)
-    const abilityTable = namesTable(mainAbilities, abilityNames!, 'ability_id', () => true)
-    const moveTable = namesTable(gameMoves, moveNames!, 'move_id', () => true)
+    const abilityTable = namesTable(mainAbilities, abilityNames!, 'ability_id', () => true, gameText.ability)
+    const moveTable = namesTable(gameMoves, moveNames!, 'move_id', () => true, gameText.move)
 
     const groupOrder = new Map(versionGroups!.map((row) => [row.id!, Number(row.order)]))
 
@@ -184,24 +199,25 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
     const englishEffects = (prose: Row[], key: string) =>
         new Map(prose.filter((row) => row.local_language_id === '9').map((row) => [row[key]!, text(row.effect)]))
     /**
-     * Adds `description` and `effect` in English to `table`, whose rows are `rows` in order.
-     * Oldest game first, so the map keeps the latest game's text.
+     * Adds the in-game description per language (the games', or none) and PokéAPI's English
+     * effect to `table`, whose rows are `rows` in order and whose second column is `name_en`.
      */
-    const withTexts = (table: Table, rows: Row[], flavor: Row[], key: string, effectOf: (row: Row) => string | null | undefined) => {
-        const descriptions = new Map(
-            flavor
-                .filter((row) => row.language_id === '9')
-                .toSorted((a, b) => groupOrder.get(a.version_group_id!)! - groupOrder.get(b.version_group_id!)!)
-                .map((row) => [row[key]!, text(unwrap(row.flavor_text!))] as const)
-                .filter(([, description]) => description && !DROPPED_MOVE.test(description))
-        )
-        table.columns.push('description', 'effect')
-        rows.forEach((row, i) => table.rows[i]!.push(descriptions.get(row.id!) ?? null, effectOf(row) ?? null))
+    const withTexts = (
+        table: Table,
+        rows: Row[],
+        description: (english: string) => Texts | undefined,
+        effectOf: (row: Row) => string | null | undefined
+    ) => {
+        table.columns.push(...languageColumns('description'), 'effect')
+        rows.forEach((row, i) => {
+            const tableRow = table.rows[i]!
+            tableRow.push(...Object.values(description(tableRow[1] as string) ?? noTexts()), effectOf(row) ?? null)
+        })
     }
     const abilityEffects = englishEffects(abilityProse!, 'ability_id')
     const moveEffects = englishEffects(moveProse!, 'move_effect_id')
-    withTexts(abilityTable, mainAbilities, abilityFlavor!, 'ability_id', (row) => abilityEffects.get(row.id!))
-    withTexts(moveTable, gameMoves, moveFlavor!, 'move_id', (row) => moveEffects.get(row.effect_id!))
+    withTexts(abilityTable, mainAbilities, gameText.abilityDescription, (row) => abilityEffects.get(row.id!))
+    withTexts(moveTable, gameMoves, gameText.moveDescription, (row) => moveEffects.get(row.effect_id!))
 
     const pokemonById = indexBy(pokemonRows!, 'id')
     const regionById = indexBy(regions!, 'id')
@@ -240,7 +256,8 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
                 Number(row.evolution_chain_id), row.is_legendary === '1', row.is_mythical === '1',
                 row.is_baby === '1', row.has_gender_differences === '1', row.forms_switchable === '1',
                 growthRate(row.growth_rate_id), color(row.color_id), shape(row.shape_id), habitat(row.habitat_id),
-                ...Object.values(localized(names, 'name')), ...Object.values(localized(names, 'genus'))
+                ...Object.values(gameText.species(Number(row.id)) ?? localized(names, 'name')),
+                ...Object.values(gameText.category(Number(row.id)) ?? localized(names, 'genus'))
             ]
         })
     }
@@ -255,7 +272,13 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
             .filter((row) => regional(row.identifier!))
             .map((row) => [
                 row.identifier!, regionById.get(row.region_id!)?.identifier ?? null, row.is_main_series === '1',
-                ...Object.values(localized(pokedexNames.get(row.id!), 'name'))
+                // The games' label; a Pokédex no game names keeps PokéAPI's English name (required) and nothing else.
+                ...Object.values(
+                    gameText.pokedex(row.identifier!) ?? {
+                        ...noTexts(),
+                        en: localized(pokedexNames.get(row.id!), 'name').en
+                    }
+                )
             ])
     }
     const pokedexGame: Table = {
@@ -302,10 +325,12 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
     for (const row of formRows!) {
         const variety = pokemonById.get(row.pokemon_id!)!
         const ndex = Number(variety.species_id)
-        const speciesNames = localized(speciesNamesById.get(variety.species_id!), 'name')
+        const speciesNames = gameText.species(ndex) ?? localized(speciesNamesById.get(variety.species_id!), 'name')
         const names = formNamesById.get(row.id!)
         const fullNames = localized(names, 'pokemon_name')
-        const shortNames = localized(names, 'form_name')
+        const pokeApiShort = localized(names, 'form_name')
+        // The games' label in every language where HOME has this form, else PokéAPI's.
+        const shortNames = (pokeApiShort.en && gameText.formLabel(ndex, pokeApiShort.en)) || pokeApiShort
         const hasFormName = Object.values(shortNames).some(Boolean)
         const isDefault = row.is_default === '1' && variety.is_default === '1'
         const id = Number(row.id)

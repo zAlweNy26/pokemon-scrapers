@@ -73,8 +73,8 @@ load before deploying: the deploy announces the new `DATA_VERSION`, and a replic
 still holding old rows at that moment would have them cached at the edge, under
 the new version, for a week.
 
-The build reads PokéAPI's CSV files from a pinned git checkout in `.cache/` (no
-requests to PokéAPI), 19 Serebii pages — the HOME box list plus each
+The build reads PokéAPI's CSV files and the games' text ([Poké Corpus](https://github.com/abcboy101/poke-corpus))
+from pinned git checkouts in `.cache/` (no requests to PokéAPI), 19 Serebii pages — the HOME box list plus each
 HOME-connected game's availability lists — reused for 24 hours, and Bulbapedia's
 species pages (~21 API requests of 50 pages each) plus two list pages (unobtainable
 shinies, Legends: Z-A alphas), reused for 30 days. Requests go
@@ -120,8 +120,8 @@ known facts, or any API response its schema rejects. Gaps the sources leave
 | `GET /v1/generations` | Also each generation's games: version groups in release order, DLCs as their own groups, each with its version slugs |
 | `GET /v1/games`, `GET /v1/games/:slug` | Every game the other endpoints return (PokéAPI versions, DLCs included), with its names in every language, generation, version group, the game a DLC extends (`baseGame`), a game's `dlcs`, and its colour (`color`, Bulbapedia's) |
 | `GET /v1/abilities`, `GET /v1/moves` | Every main-series ability and move, with its name in every language |
-| `GET /v1/moves/:slug` | One move with its names, `description` (in-game text from the latest game that has a real one) and `effect` (the mechanics); both in English only for now |
-| `GET /v1/types/:slug`, `GET /v1/abilities/:slug` | `?limit &offset`. One type or ability with its names, and a page of references (`ndex`, `slug`, `uri`) to what `/v1/pokemon?type=` or `?ability=` returns for it. An ability also has `description`, its in-game text from the latest game that has one, and `effect`, the mechanics; both in English only for now |
+| `GET /v1/moves/:slug` | One move with its names, `description` (in-game text from the latest game that has a real one, in every language) and `effect` (the mechanics, in English) |
+| `GET /v1/types/:slug`, `GET /v1/abilities/:slug` | `?limit &offset`. One type or ability with its names, and a page of references (`ndex`, `slug`, `uri`) to what `/v1/pokemon?type=` or `?ability=` returns for it. An ability also has `description`, its in-game text from the latest game that has one, in every language, and `effect`, the mechanics, in English |
 | `GET /v1/egg-groups`, `GET /v1/home-games`, `GET /v1/pokedexes` | The values `eggGroup`, `homeGame` and `/v1/pokedexes/:slug` accept, each with its species count |
 | `GET /v1/pokedexes/:slug` | `?limit &offset`. Species in a regional Pokédex, in its order: references (`ndex`, `slug`, `uri`) plus their regional `number` |
 | `GET /v1/meta` | Dataset version, counts and provenance |
@@ -194,8 +194,9 @@ same driver, same SQL, FTS5 included — with no workerd, Vite or network.
 
 ## Status
 
-The API is complete. The dataset builds from PokéAPI (1025 species, 1579 forms,
-names and categories in all languages), HOME depositability and per-game
+The API is complete. The dataset builds from PokéAPI (1025 species, 1579 forms) and
+the games' own text (names, categories, descriptions and every game's Pokédex
+entries, in each language the game ships), HOME depositability and per-game
 availability (`homeGames`) from Serebii — `src/scraper/games.ts` documents how the
 per-game rules fill in what Serebii's pages show — and name etymology in every
 language from Bulbapedia. No Cloudflare resources have been created.

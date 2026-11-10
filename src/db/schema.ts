@@ -20,7 +20,6 @@ import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from
 const localizedNames = () => ({
     nameEn: text('name_en').notNull(),
     nameJa: text('name_ja'),
-    nameJaRomaji: text('name_ja_romaji'),
     nameDe: text('name_de'),
     nameFr: text('name_fr'),
     nameIt: text('name_it'),
@@ -30,10 +29,17 @@ const localizedNames = () => ({
     nameZhHant: text('name_zh_hant')
 })
 
-/** English only for now: the one language PokéAPI has for (nearly) every ability and move. */
-const englishTexts = () => ({
-    /** In-game description, from the latest game that has a real one. */
-    description: text('description'),
+/** The in-game description per language, from the games (CLAUDE.md, "Game text only"), and PokéAPI's English effect. */
+const texts = () => ({
+    descriptionEn: text('description_en'),
+    descriptionJa: text('description_ja'),
+    descriptionDe: text('description_de'),
+    descriptionFr: text('description_fr'),
+    descriptionIt: text('description_it'),
+    descriptionEs: text('description_es'),
+    descriptionKo: text('description_ko'),
+    descriptionZhHans: text('description_zh_hans'),
+    descriptionZhHant: text('description_zh_hant'),
     /** The mechanics in detail: PokéAPI's `ability_prose` or `move_effect_prose`. */
     effect: text('effect')
 })
@@ -45,8 +51,8 @@ const englishTexts = () => ({
  * src/scraper/database.ts fails a build that leaves an identifier unnamed.
  */
 export const type = sqliteTable('type', { slug: text('slug').primaryKey(), ...localizedNames() })
-export const ability = sqliteTable('ability', { slug: text('slug').primaryKey(), ...localizedNames(), ...englishTexts() })
-export const move = sqliteTable('move', { slug: text('slug').primaryKey(), ...localizedNames(), ...englishTexts() })
+export const ability = sqliteTable('ability', { slug: text('slug').primaryKey(), ...localizedNames(), ...texts() })
+export const move = sqliteTable('move', { slug: text('slug').primaryKey(), ...localizedNames(), ...texts() })
 
 export const generation = sqliteTable('generation', {
     id: integer('id').primaryKey(),
@@ -109,7 +115,6 @@ export const pokemon = sqliteTable(
         habitat: text('habitat'),
         nameEn: text('name_en').notNull(),
         nameJa: text('name_ja'),
-        nameJaRomaji: text('name_ja_romaji'),
         nameDe: text('name_de'),
         nameFr: text('name_fr'),
         nameIt: text('name_it'),
@@ -120,7 +125,6 @@ export const pokemon = sqliteTable(
         /** The species category ("Mouse Pokémon"), per language. */
         categoryEn: text('category_en'),
         categoryJa: text('category_ja'),
-        categoryJaRomaji: text('category_ja_romaji'),
         categoryDe: text('category_de'),
         categoryFr: text('category_fr'),
         categoryIt: text('category_it'),
@@ -137,9 +141,9 @@ export const pokemon = sqliteTable(
 )
 
 /**
- * Pokédex entries in English, from Bulbapedia. `form` is Bulbapedia's form label
- * ("Alolan Form", "Gigantamax"), '' for the species itself; `game` a PokéAPI
- * version identifier. Rows are stored in Bulbapedia's order, oldest game first.
+ * Pokédex entries in every language each game shows them in, from the games' text (Poké Corpus).
+ * `form` is HOME's English label for the form ("Alolan Form"), '' for the species itself; `game`
+ * a PokéAPI version identifier. Rows are stored oldest game first, each form after its species.
  */
 export const pokedexEntry = sqliteTable(
     'pokedex_entry',
@@ -149,28 +153,17 @@ export const pokedexEntry = sqliteTable(
             .references(() => pokemon.ndex),
         form: text('form').notNull().default(''),
         game: text('game').notNull(),
-        text: text('text').notNull()
+        textEn: text('text_en'),
+        textJa: text('text_ja'),
+        textDe: text('text_de'),
+        textFr: text('text_fr'),
+        textIt: text('text_it'),
+        textEs: text('text_es'),
+        textKo: text('text_ko'),
+        textZhHans: text('text_zh_hans'),
+        textZhHant: text('text_zh_hant')
     },
     (table) => [primaryKey({ columns: [table.ndex, table.form, table.game] })]
-)
-
-/**
- * A Pokédex entry's earlier text, for the few games whose text changed in a later
- * release (Ruby 1.0, FireRed 1.0): `pokedex_entry` holds the latest, this the ones
- * before it. `revision` is the release Bulbapedia names ("1.0").
- */
-export const pokedexEntryRevision = sqliteTable(
-    'pokedex_entry_revision',
-    {
-        ndex: integer('ndex')
-            .notNull()
-            .references(() => pokemon.ndex),
-        form: text('form').notNull().default(''),
-        game: text('game').notNull(),
-        revision: text('revision').notNull(),
-        text: text('text').notNull()
-    },
-    (table) => [primaryKey({ columns: [table.ndex, table.form, table.game, table.revision] })]
 )
 
 /**
@@ -273,7 +266,6 @@ export const form = sqliteTable(
         slug: text('slug').notNull().unique(),
         nameEn: text('name_en').notNull(),
         nameJa: text('name_ja'),
-        nameJaRomaji: text('name_ja_romaji'),
         nameDe: text('name_de'),
         nameFr: text('name_fr'),
         nameIt: text('name_it'),

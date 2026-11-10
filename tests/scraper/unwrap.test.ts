@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { DROPPED_MOVE, unwrap } from '@/scraper/build'
+import { unwrap } from '@/scraper/build'
+import { DROPPED_MOVE } from '@/scraper/game-text'
 
 describe('unwrap', () => {
     test('a line break is a space, except after a hyphen', () => {

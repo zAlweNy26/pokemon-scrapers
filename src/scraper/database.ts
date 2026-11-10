@@ -74,7 +74,7 @@ export const asD1 = (sqlite: Database): D1Database => {
 
 /** Every dataset table, children first so the build's DELETEs hold foreign keys at every step. The order is in dataset.sql, so it is part of the version hash. */
 export const TABLES = [
-    'evolution', 'encounter', 'form_shiny', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'availability', 'pokedex_entry_revision', 'pokedex_entry', 'pokemon_origin',
+    'evolution', 'encounter', 'form_shiny', 'form_home_game', 'form_ability', 'form_type', 'form', 'pokemon_dex_number', 'availability', 'pokedex_entry', 'pokemon_origin',
     'pokemon_egg_group', 'pokemon', 'pokedex_game', 'pokedex', 'game', 'generation', 'type', 'ability', 'move', 'meta'
 ] as const
 
@@ -120,7 +120,6 @@ export const check = (sqlite: Database): string[] => {
     // /v1/games promises to resolve every game another endpoint returns.
     const unlisted = scalar(`SELECT
         (SELECT count(*) FROM pokedex_entry WHERE game NOT IN (SELECT slug FROM game)) +
-        (SELECT count(*) FROM pokedex_entry_revision WHERE game NOT IN (SELECT slug FROM game)) +
         (SELECT count(*) FROM availability WHERE game NOT IN (SELECT slug FROM game)) +
         (SELECT count(*) FROM encounter WHERE game NOT IN (SELECT slug FROM game)) +
         (SELECT count(*) FROM evolution WHERE game NOT IN (SELECT version_group FROM game)) +
