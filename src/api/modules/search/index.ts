@@ -26,7 +26,7 @@ export const search = new Elysia({ name: 'module.search', prefix: '/search' })
         },
         {
             query: searchQuery,
-            response: { 200: 'search.results', 422: 'problem', 429: 'problem' },
+            response: { 200: 'SearchResults', 422: 'Problem', 429: 'Problem' },
             detail: {
                 summary: 'Search names',
                 description:

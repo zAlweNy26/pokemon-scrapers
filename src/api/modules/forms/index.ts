@@ -30,7 +30,7 @@ export const forms = new Elysia({ name: 'module.forms', prefix: '/forms' })
         },
         {
             query: formsQuery,
-            response: { 200: 'forms.list', 422: 'problem', 429: 'problem' },
+            response: { 200: 'FormList', 422: 'Problem', 429: 'Problem' },
             detail: {
                 summary: 'List forms',
                 description:
@@ -50,7 +50,7 @@ export const forms = new Elysia({ name: 'module.forms', prefix: '/forms' })
         },
         {
             params: formParams,
-            response: { 200: 'forms.detail', 404: 'problem', 422: 'problem', 429: 'problem' },
+            response: { 200: 'Form', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
             detail: {
                 summary: 'Get a form',
                 description: 'The form as /v1/pokemon/:idOrName lists it in `forms`, plus its species.',

@@ -46,7 +46,7 @@ export const meta = new Elysia({ name: 'module.meta' }).use(sharedModels).get(
                 }),
                 sources: z.record(z.string(), z.string())
             }),
-            429: 'problem'
+            429: 'Problem'
         },
         detail: {
             summary: 'Get dataset info',

@@ -33,9 +33,9 @@ export const searchQuery = z.object({
 })
 
 export const searchModels = {
-    'search.result': resultSchema,
+    'SearchResult': resultSchema,
 
-    'search.results': z.object({
+    'SearchResults': z.object({
         data: z.array(resultSchema),
         meta: z.object({
             // `count`, not `total`: search is not paginated (there is no offset),

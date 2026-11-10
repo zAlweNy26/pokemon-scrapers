@@ -217,14 +217,14 @@ export const idOrNameParams = z.object({
 })
 
 export const pokemonModels = {
-    'pokemon.listItem': listItemSchema,
+    'PokemonListItem': listItemSchema,
 
-    'pokemon.list': z.object({
+    'PokemonList': z.object({
         data: z.array(listItemSchema),
         meta: paginationMeta
     }),
 
-    'pokemon.detail': z.object({
+    'Pokemon': z.object({
         ndex: z.number(),
         slug: z.string(),
         generation: z.number(),

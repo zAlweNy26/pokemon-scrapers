@@ -25,12 +25,12 @@ export const formParams = z.object({
 })
 
 export const formsModels = {
-    'forms.list': z.object({
+    'FormList': z.object({
         data: z.array(listItemSchema),
         meta: paginationMeta
     }),
 
-    'forms.detail': formSchema.extend({
+    'Form': formSchema.extend({
         species: z.object({ ndex: z.number(), slug: z.string(), name: namesSchema }),
         encounters: z.array(encounterSchema).describe('Where this form itself is found, per game')
     })

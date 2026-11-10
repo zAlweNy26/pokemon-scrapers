@@ -87,10 +87,10 @@ export const MAX_QUERY_LENGTH = 64
 
 /**
  * Registered by every module rather than once on the root instance: an Elysia
- * plugin is type-checked in isolation, so a module referencing `'problem'` by
+ * plugin is type-checked in isolation, so a module referencing `'Problem'` by
  * name has to have the model in scope itself. Instances are deduplicated by
  * name, so using this everywhere costs nothing.
  */
 export const sharedModels = new Elysia({ name: 'models.shared' }).model({
-    problem: problemSchema
+    Problem: problemSchema
 })

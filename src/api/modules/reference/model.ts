@@ -59,7 +59,7 @@ const gameSchema = z.object({
 })
 
 export const referenceModels = {
-    'reference.generations': z.array(
+    'Generations': z.array(
         z.object({
             id: z.number(),
             region: z.string(),
@@ -77,36 +77,36 @@ export const referenceModels = {
         })
     ),
 
-    'reference.games': z.array(gameSchema),
+    'Games': z.array(gameSchema),
 
-    'reference.game': gameSchema,
+    'Game': gameSchema,
 
-    'reference.types': z.array(
+    'Types': z.array(
         namedSchema.extend({
             id: typeId,
             count: z.number().describe('Species whose default form has this type')
         })
     ),
 
-    'reference.type': speciesPage('Species whose default form has this type, by dex number').extend({ id: typeId }),
+    'Type': speciesPage('Species whose default form has this type, by dex number').extend({ id: typeId }),
 
-    'reference.abilities': z.array(namedSchema),
+    'Abilities': z.array(namedSchema),
 
-    'reference.ability': speciesPage('Species with a form that has this ability, hidden or not, by dex number').extend(
+    'Ability': speciesPage('Species with a form that has this ability, hidden or not, by dex number').extend(
         englishTexts('ability')
     ),
 
-    'reference.moves': z.array(namedSchema),
+    'Moves': z.array(namedSchema),
 
-    'reference.move': namedSchema.extend(englishTexts('move')),
+    'Move': namedSchema.extend(englishTexts('move')),
 
-    'reference.eggGroups': counted('Species in this egg group'),
+    'EggGroups': counted('Species in this egg group'),
 
-    'reference.homeGames': counted('Species with a form that can move into this version group from HOME'),
+    'HomeGames': counted('Species with a form that can move into this version group from HOME'),
 
-    'reference.pokedexes': counted('Species in this regional Pokédex'),
+    'Pokedexes': counted('Species in this regional Pokédex'),
 
-    'reference.pokedex': z.object({
+    'Pokedex': z.object({
         data: z.array(pokemonRefSchema.extend({ number: z.number().describe('Number in this regional Pokédex') })),
         meta: paginationMeta
     })

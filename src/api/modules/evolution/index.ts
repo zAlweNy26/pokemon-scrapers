@@ -18,7 +18,7 @@ export const evolution = new Elysia({ name: 'module.evolution', prefix: '/evolut
         },
         {
             params: chainParams,
-            response: { 200: 'evolution.chain', 404: 'problem', 422: 'problem', 429: 'problem' },
+            response: { 200: 'EvolutionChain', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
             detail: {
                 summary: 'Get an evolution chain',
                 description: 'The chain the species with this national dex number is in. References to its species, and its steps as /v1/pokemon/:idOrName has them.',

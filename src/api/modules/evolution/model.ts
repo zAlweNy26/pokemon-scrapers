@@ -7,7 +7,7 @@ export const chainParams = z.object({
 })
 
 export const evolutionModels = {
-    'evolution.chain': z.object({
+    'EvolutionChain': z.object({
         id: z.number().describe('PokéAPI evolution chain id'),
         members: z.array(pokemonRefSchema).describe('Every species in the chain, by dex number'),
         steps: z

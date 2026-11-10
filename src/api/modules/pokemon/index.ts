@@ -19,7 +19,7 @@ export const pokemon = new Elysia({ name: 'module.pokemon', prefix: '/pokemon' }
         },
         {
             query: listQuery,
-            response: { 200: 'pokemon.list', 422: 'problem', 429: 'problem' },
+            response: { 200: 'PokemonList', 422: 'Problem', 429: 'Problem' },
             detail: {
                 summary: 'List Pokémon',
                 description:
@@ -43,7 +43,7 @@ export const pokemon = new Elysia({ name: 'module.pokemon', prefix: '/pokemon' }
         },
         {
             params: idOrNameParams,
-            response: { 200: 'pokemon.detail', 404: 'problem', 422: 'problem', 429: 'problem' },
+            response: { 200: 'Pokemon', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
             detail: {
                 summary: 'Get a Pokémon',
                 description: 'Every form, all nine names, etymology and encounter locations in a single document.',

@@ -53,9 +53,9 @@ describe('openapi document', () => {
 
     test('documents the evolution chain, type and ability pages', () => {
         const cases = [
-            ['/v1/evolution-chains/{ndex}', ['path:ndex'], 'evolution.chain'],
-            ['/v1/types/{slug}', ['path:slug', 'query:limit', 'query:offset'], 'reference.type'],
-            ['/v1/abilities/{slug}', ['path:slug', 'query:limit', 'query:offset'], 'reference.ability']
+            ['/v1/evolution-chains/{ndex}', ['path:ndex'], 'EvolutionChain'],
+            ['/v1/types/{slug}', ['path:slug', 'query:limit', 'query:offset'], 'Type'],
+            ['/v1/abilities/{slug}', ['path:slug', 'query:limit', 'query:offset'], 'Ability']
         ] as const
 
         for (const [path, parameters, model] of cases) {
@@ -77,7 +77,7 @@ describe('openapi document', () => {
         ])
         expect(Object.keys(operation.responses).sort()).toEqual(['200', '404', '422', '429'])
         expect(operation.responses['200'].content['application/json'].schema.$ref).toBe(
-            '#/components/schemas/reference.pokedex'
+            '#/components/schemas/Pokedex'
         )
     })
 
@@ -88,10 +88,10 @@ describe('openapi document', () => {
         expect(list.parameters.map((p: any) => p.name).sort()).toEqual([
             'category', 'depositable', 'gen', 'homeGame', 'isDefault', 'limit', 'offset', 'type'
         ])
-        expect(list.responses['200'].content['application/json'].schema.$ref).toBe('#/components/schemas/forms.list')
+        expect(list.responses['200'].content['application/json'].schema.$ref).toBe('#/components/schemas/FormList')
         expect(Object.keys(detail.responses).sort()).toEqual(['200', '404', '422', '429'])
         expect(detail.responses['200'].content['application/json'].schema.$ref).toBe(
-            '#/components/schemas/forms.detail'
+            '#/components/schemas/Form'
         )
     })
 
@@ -136,9 +136,9 @@ describe('openapi document', () => {
         const ref = (path: string, status: string) =>
             spec.paths[path].get.responses[status].content['application/json'].schema.$ref
 
-        expect(ref('/v1/pokemon', '200')).toBe('#/components/schemas/pokemon.list')
-        expect(ref('/v1/pokemon/{idOrName}', '200')).toBe('#/components/schemas/pokemon.detail')
-        expect(ref('/v1/pokemon/{idOrName}', '404')).toBe('#/components/schemas/problem')
+        expect(ref('/v1/pokemon', '200')).toBe('#/components/schemas/PokemonList')
+        expect(ref('/v1/pokemon/{idOrName}', '200')).toBe('#/components/schemas/Pokemon')
+        expect(ref('/v1/pokemon/{idOrName}', '404')).toBe('#/components/schemas/Problem')
     })
 
     test('documents the failures a client has to handle, on every route', () => {
@@ -181,7 +181,7 @@ describe('openapi document', () => {
         )
 
         expect(failures.length).toBeGreaterThan(0)
-        expect([...new Set(failures)]).toEqual(['#/components/schemas/problem'])
+        expect([...new Set(failures)]).toEqual(['#/components/schemas/Problem'])
     })
 
     test('states the licence, since the data carries obligations', () => {
