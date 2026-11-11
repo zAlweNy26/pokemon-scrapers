@@ -46,6 +46,24 @@ describe('loading data', () => {
         expect(unlisted()).toHaveLength(1)
     })
 
+    test("the build refuses a DLC whose base game the game table does not list", async () => {
+        const sqlite = await createSqlite()
+        const unlisted = () => check(sqlite).filter((problem) => problem.includes('game table'))
+
+        sqlite.run("UPDATE game SET base_game = 'shieldd' WHERE slug = (SELECT min(slug) FROM game WHERE base_game IS NOT NULL)")
+        expect(unlisted()).toHaveLength(1)
+    })
+
+    test("the build refuses an encounter whose form belongs to another species", async () => {
+        // Not a foreign key: /v1/pokemon/25 would list another species' form among Pikachu's encounters.
+        const sqlite = await createSqlite()
+        const stray = () => check(sqlite).filter((problem) => problem.includes('another species'))
+
+        expect(stray()).toEqual([])
+        sqlite.run("INSERT INTO encounter (ndex, form_id, game, location, method) VALUES (25, (SELECT min(id) FROM form WHERE ndex != 25), 'red', 'nowhere', 'walk')")
+        expect(stray()).toHaveLength(1)
+    })
+
     test('refuses a row that points at a missing species', async () => {
         // D1 enforces foreign keys; the test database must fail the same way first.
         const sqlite = await createSqlite()

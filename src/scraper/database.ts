@@ -104,6 +104,10 @@ export const check = (sqlite: Database): string[] => {
     )
     if (homeless) problems.push(`${homeless} HOME game rows belong to forms HOME cannot store`)
 
+    // Not a foreign key: the API would list another species' form among this one's encounters.
+    const strayEncounters = scalar('SELECT count(*) FROM encounter e JOIN form f ON f.id = e.form_id WHERE f.ndex != e.ndex')
+    if (strayEncounters) problems.push(`${strayEncounters} encounters name a form of another species`)
+
     // Every form HOME can store has artwork today; a sprites bump that loses some should stop the build.
     const unpictured = scalar('SELECT count(*) FROM form WHERE depositable = 1 AND sprite_key IS NULL')
     if (unpictured) problems.push(`${unpictured} depositable forms have no artwork in PokeAPI/sprites`)
@@ -124,7 +128,8 @@ export const check = (sqlite: Database): string[] => {
         (SELECT count(*) FROM encounter WHERE game NOT IN (SELECT slug FROM game)) +
         (SELECT count(*) FROM evolution WHERE game NOT IN (SELECT version_group FROM game)) +
         (SELECT count(*) FROM form_home_game WHERE game NOT IN (SELECT version_group FROM game)) +
-        (SELECT count(*) FROM pokedex_game WHERE version_group NOT IN (SELECT version_group FROM game))`)
+        (SELECT count(*) FROM pokedex_game WHERE version_group NOT IN (SELECT version_group FROM game)) +
+        (SELECT count(*) FROM game WHERE base_game NOT IN (SELECT slug FROM game))`)
     if (unlisted) problems.push(`${unlisted} rows name a game or version group the game table does not list`)
 
     // Not a foreign key, like the name tables: /v1/pokedexes lists only the pokedex table.

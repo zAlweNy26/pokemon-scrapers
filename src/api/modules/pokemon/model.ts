@@ -7,8 +7,8 @@ import {
 export const formSchema = z.object({
     slug: z.string(),
     name: namesSchema.describe(
-        'The form\'s name per language. Not always game text: PokéAPI\'s full names ("Active Xerneas") and ' +
-            '"Species (form name)" built from two official strings where it has none'
+        'The form\'s name per language. Not game text: PokéAPI\'s full names ("Active Xerneas"), or ' +
+            '"Species (form name)" built from two official strings where it has none; a default form has its species\' name'
     ),
     isDefault: z.boolean(),
     category: z
@@ -27,7 +27,7 @@ export const formSchema = z.object({
                 status: z
                     .enum(SHINY_STATUSES)
                     .describe('`obtainable` in game, `event` (distributions or transfer only), or `unobtainable`'),
-                games: z.string().nullable().describe('The games named, as Bulbapedia abbreviates them (not game text); null for the whole generation')
+                games: z.string().nullable().describe('Not game text: the games named, as Bulbapedia abbreviates them; null for the whole generation')
             })
         )
         .describe(
@@ -128,7 +128,7 @@ export const evolutionStepSchema = z.object({
 export const encounterSchema = z.object({
     game: z.string().describe('PokéAPI version identifier'),
     location: z.string(),
-    method: z.string().nullable(),
+    method: z.string(),
     form: z.string().describe('Slug of the form found there (`vulpix-alola`)')
 })
 
@@ -298,7 +298,8 @@ export const pokemonModels = {
                         .string()
                         .nullable()
                         .describe(
-                            'Origin mark a Pokémon caught here carries; null for Generations III-V. Game Boy and Game Boy ' +
+                            'Origin mark a Pokémon caught here carries; null where the game gives none (Generation III but FireRed and ' +
+                                'LeafGreen, and Generations IV-V). Game Boy and Game Boy ' +
                                 'Advance marks come only from the Nintendo Switch / Virtual Console releases'
                         )
                         .meta({ examples: ['galar', 'pentagon', 'legends-za'] }),

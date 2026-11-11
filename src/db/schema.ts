@@ -76,7 +76,7 @@ export const game = sqliteTable('game', {
     baseGame: text('base_game'),
     /** Release order: PokéAPI's version-group order, then version id. */
     sort: integer('sort').notNull(),
-    /** Bulbapedia's colour for the game (`F34134`), from its `{{Scarlet color}}` template; a DLC has its own. */
+    /** Bulbapedia's colour for the game (`#F34134`), from its `{{Scarlet color}}` template; a DLC has its own. */
     color: text('color').notNull(),
     ...localizedNames()
 })
@@ -192,7 +192,7 @@ export const availability = sqliteTable(
 
 /**
  * Every regional Pokédex `pokemon_dex_number` uses, keyed by PokéAPI pokedex identifier.
- * Names are PokéAPI's labels ("Original Johto"), not the games' text.
+ * Names are ours, in one style for every language (src/scraper/pokedex-names.ts): not the games' text.
  */
 export const pokedex = sqliteTable('pokedex', {
     slug: text('slug').primaryKey(),

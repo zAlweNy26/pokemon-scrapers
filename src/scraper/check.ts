@@ -7,7 +7,11 @@
  */
 import { handleRequest } from '@/api/handler'
 import { setLogSink } from '@/api/log'
+import type { ZodType } from 'zod'
 import { MAX_PAGE_SIZE } from '@/api/models'
+import { pokemonModels } from '@/api/modules/pokemon/model'
+import { referenceModels } from '@/api/modules/reference/model'
+import { searchModels } from '@/api/modules/search/model'
 import type { Env, RateLimiter } from '@/api/platform'
 import { asD1, check, openDatabase } from './database'
 import { unwrap } from './build'
@@ -153,18 +157,25 @@ setLogSink(() => {})
 const allow: RateLimiter = { limit: async () => ({ success: true }) }
 const env: Env = { DB: asD1(db), RL_GLOBAL: allow, RL_SEARCH: allow, DATA_VERSION: 'check', IMAGE_BASE_URL: 'https://images.test' }
 const species = scalar('SELECT count(*) FROM pokemon') as number
-const paths = [
-    ...Array.from({ length: species }, (_, i) => `/v1/pokemon/${i + 1}`),
-    ...Array.from({ length: Math.ceil(species / MAX_PAGE_SIZE) }, (_, i) => `/v1/pokemon?limit=${MAX_PAGE_SIZE}&offset=${i * MAX_PAGE_SIZE}`),
-    ...['pika', 'Quaj', 'ゲンガ', '皮卡', 'Mr. M', 'farfetch', 'flabé', 'nidoran', 'ピカ', '이상'].map((q) => `/v1/search?q=${encodeURIComponent(q)}`),
-    '/v1/types', '/v1/abilities', '/v1/moves', '/v1/generations', '/v1/games', '/v1/games/the-indigo-disk-violet', '/v1/meta', '/openapi.json'
+// Elysia does not validate responses, so each body is parsed with its published model here.
+const paths: [string, ZodType | null][] = [
+    ...Array.from({ length: species }, (_, i): [string, ZodType] => [`/v1/pokemon/${i + 1}`, pokemonModels.Pokemon]),
+    ...Array.from({ length: Math.ceil(species / MAX_PAGE_SIZE) }, (_, i): [string, ZodType] => [`/v1/pokemon?limit=${MAX_PAGE_SIZE}&offset=${i * MAX_PAGE_SIZE}`, pokemonModels.PokemonList]),
+    ...['pika', 'Quaj', 'ゲンガ', '皮卡', 'Mr. M', 'farfetch', 'flabé', 'nidoran', 'ピカ', '이상'].map((q): [string, ZodType] => [`/v1/search?q=${encodeURIComponent(q)}`, searchModels.SearchResults]),
+    ['/v1/types', referenceModels.Types], ['/v1/abilities', referenceModels.Abilities], ['/v1/moves', referenceModels.Moves],
+    ['/v1/generations', referenceModels.Generations], ['/v1/games', referenceModels.Games], ['/v1/games/the-indigo-disk-violet', referenceModels.Game],
+    ['/v1/meta', null], ['/openapi.json', null]
 ]
 const failed: string[] = []
-for (const path of paths) {
+for (const [path, model] of paths) {
     const response = await handleRequest(new Request(`http://homedex.test${path}`), env)
     if (response.status !== 200) failed.push(`${path} → ${response.status} ${(await response.text()).slice(0, 100)}`)
+    else if (model) {
+        const parsed = model.safeParse(await response.json())
+        if (!parsed.success) failed.push(`${path} → ${parsed.error.issues.slice(0, 2).map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ')}`)
+    }
 }
-expect(`${paths.length} requests answered 200`, failed.length === 0, failed.length ? failed.slice(0, 3) : '')
+expect(`${paths.length} requests answered 200, as their schemas say`, failed.length === 0, failed.length ? failed.slice(0, 3) : '')
 
 console.log('\n— Gaps the sources leave (not failures)')
 const missing = (column: string, table: string) =>

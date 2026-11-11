@@ -7,7 +7,7 @@ against the source itself.
 ## Status (2026-11-04)
 
 - **Done:** step 1 — `bun run data:build` builds the dataset from PokéAPI's CSVs at a
-  pinned commit, with names, form names and categories in all ten languages,
+  pinned commit, with names, form names and categories in all nine languages,
   identifiers instead of labels, collapsed encounters (117,128 → 37,137 rows), chunked
   SQL, validation, a diff against the previous build and an automatic `DATA_VERSION`.
   HOME depositability per form comes from Serebii's box list: all 1391 entries map to
@@ -97,9 +97,9 @@ The main protection is needing very few requests:
 | Source | Used for | Requests per full run |
 |---|---|---|
 | PokéAPI | almost everything | **0** (git clone) |
-| Serebii | HOME depositability | **2 pages**: `pokemonhome/depositablepokemon.shtml`, `nondepositablepokemon.shtml` (*checked*) |
+| Serebii | HOME depositability | **19 pages**: the HOME box list plus each HOME-connected game's availability lists (`NOTICE.md`) |
 | Bulbapedia | name etymology | **~21**: the MediaWiki API returns 50 pages per request |
-| pokeos.com | Scarlet/Violet + Z-A encounters, sub-legendary/Ultra Beast/Paradox/shiny-locked flags, pronunciations | **~85**: one bulk species list, one pronunciation list, then one request per location (owner's permission: don't spam it). Cached 30 days |
+| pokeos.com | Scarlet/Violet + Z-A encounters, sub-legendary/Ultra Beast/Paradox/shiny-locked flags, pronunciations | **~95**: one bulk species list, one pronunciation list, then one request per location (owner's permission: don't spam it). Cached 30 days |
 
 About 110 requests, under 10 minutes at Bulbapedia's 5-second delay (one delay for every site). Rules:
 

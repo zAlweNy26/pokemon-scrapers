@@ -11,8 +11,9 @@ acting on an old row (see *Re-checking* at the end).
 - **Done:** section 1's evolutions, EV yield, base experience, species flags and regional
   dex numbers (see the commit that added this file); then names for types, abilities and moves;
   then section 2: Bulbapedia's Pokédex entries (17,909) and game locations (26,791), every
-  main-series game and DLC. Left as they are: entries are English only; form labels
-  ("Alolan Form") are Bulbapedia's text, not linked to form slugs; locations are a readable
+  main-series game and DLC. Since 2026-11-10 the entries come from the games themselves
+  (Poké Corpus) in every language each game ships, form labels ("Alolan Form") are HOME's,
+  still not linked to form slugs. Left as they are: locations are a readable
   sentence per game, not structured (location, method) rows; side games (Stadium, Pal Park,
   Pokéwalker, Dream World, Pokopia) are left out.
 - **Done (2026-11-07), from pokeos.com** (`src/scraper/pokeos.ts`, owner's permission):
@@ -38,8 +39,8 @@ The build reads 21 of PokéAPI's 188 CSVs. No new requests are needed for any of
 | Localized labels for natures, egg groups, items, growth rates | `*_names`, `*_prose` | all our languages; still returned as slugs |
 | ~~Localized version names~~ | `version_names` | done: `/v1/games`. No Korean for The Teal Mask, The Indigo Disk or Champions |
 | Localized location names | `location_names` | only partial: en/ja/fr ~1,070; de/es/it/ko/zh 286; zh-Hans/ja-Hrkt 89 |
-| ~~Ability descriptions~~ | `ability_prose` (en effect), `ability_flavor_text` (per game, all languages) | English done: `description` and `effect` on `/v1/abilities/:slug`, all 314. Other languages left out for now: flavor text covers ja 311, fr 307, the rest 267 (nothing after Gen 8); prose only fr and de, partially |
-| ~~Move descriptions~~ | `move_flavor_text`, `move_effect_prose` via `moves.effect_id` | English done: `description` and `effect` on `/v1/moves/:slug`. Descriptions 914 of 919 (not the five Starmobile torque moves); effects 826: the 93 newest moves (Legends Arceus, Gen 9) have no `effect_id`. Sword/Shield's "This move can't be used" notice is skipped for the last real text |
+| ~~Ability descriptions~~ | `ability_prose` (en effect), `ability_flavor_text` (per game, all languages) | `description` from the games (Poké Corpus) in every language, all 314, and `effect` (English, PokéAPI's prose) on `/v1/abilities/:slug` |
+| ~~Move descriptions~~ | `move_flavor_text`, `move_effect_prose` via `moves.effect_id` | `description` from the games (Poké Corpus) in every language, all 919, and `effect` on `/v1/moves/:slug`; effects 826: the 93 newest moves (Legends Arceus, Gen 9) have no `effect_id`. Sword/Shield's "This move can't be used" notice is skipped for the last real text |
 | Earlier-generation stats, types, abilities | `pokemon_stats_past`, `pokemon_types_past`, `pokemon_abilities_past` | 235 / 36 / 569 rows (e.g. Clefairy was Normal before Gen 6) |
 | Type chart, for per-form weaknesses | `type_efficacy`, `type_efficacy_past` | complete |
 | Learnsets | `pokemon_moves`, `moves`, `move_names`, `machines` | 638k rows (142k collapsed across games). Up to Scarlet/Violet, Legends Arceus, Champions. **No Legends Z-A or Mega Dimension.** Several times today's 3.5 MB dataset: decide the shape (latest game only? per game?) before adding |
@@ -76,7 +77,7 @@ is the starting point. Licence is unchanged (Bulbapedia is already CC BY-NC-SA 2
 
 ## 4. Known, out of scope here
 
-- `form.sprite_key` is null on all 1,579 forms: the image decision in `DATA-PLAN.md` item 13.
+- `form.sprite_key`: 1,563 of 1,579 forms have a HOME render (`src/scraper/sprites.ts`); the other 16 have none in PokeAPI/sprites.
 
 ## Re-checking
 
