@@ -56,6 +56,13 @@ describe('availabilityOf', () => {
         ])
         expect([...skipped]).toEqual(['Shuffle'])
     })
+
+    test('an unclosed <sup> note runs to the end of the cell, in parentheses like a closed one', () => {
+        const unclosed = `==={{pkmn|games|Game}} locations===
+{{Availability/Entry1/None|v=Sword|area=[[Trade]]<sup>Version 1.3.0+}}`
+
+        expect(availabilityOf(unclosed, versions, new Set()).rows).toEqual([['sword', '', 'Trade (Version 1.3.0+)', false]])
+    })
 })
 
 describe('exclusivesOf', () => {

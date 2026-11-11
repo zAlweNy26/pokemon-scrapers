@@ -69,8 +69,9 @@ export const availabilityOf = (
     // Two ways to obtain it are both kept; an obtainable row beats a grey one.
     const byGame = new Map<string, [string, string, string | null, boolean]>()
     for (const { name, named } of templates(body, 'Availability/Entry')) {
-        // "Trade<sup>Version 1.2.0+</sup>" reads "Trade (Version 1.2.0+)", not "TradeVersion".
-        const area = (named.area ? plain(named.area.replace(/<sup>([\s\S]*?)<\/sup>/g, ' ($1)'), unknown) : '') || null
+        // "Trade<sup>Version 1.2.0+</sup>" reads "Trade (Version 1.2.0+)", not "TradeVersion"; an
+        // unclosed <sup> (Kabuto's "Trade<sup>Version 1.3.0+") runs to the end, as MediaWiki renders it.
+        const area = (named.area ? plain(named.area.replace(/<sup>([\s\S]*?)(?:<\/sup>|$)/g, ' ($1)'), unknown) : '') || null
         const obtainable = !name.endsWith('/None')
         for (const label of labelsOf(named)) {
             const games = gamesOf(label, named.ex, versions)
