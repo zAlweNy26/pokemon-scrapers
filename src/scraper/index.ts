@@ -133,6 +133,9 @@ const legendaryColumns = ['is_legendary', 'is_mythical'].map((column) => data.po
 const legendary = new Set(data.pokemon.rows.filter((row) => legendaryColumns.some((column) => row[column])).map((row) => row[0] as number))
 const alphasLA = legendsArceusAlphas(data.forms, inGame('legends-arceus'), legendary)
 const alphasZA = alphaFormsOf(zaAlphaRowsOf(await fetchWikitext(ZA_ALPHA_PAGE)), data.forms, inGame('legends-za'))
+// A wild alpha is in the game, so a storable one HOME's rules leave out means a rule in games.ts is missing.
+const strayAlphas = data.forms.filter((form) => alphasZA.has(form.id) && depositable.has(form.id) && !inGame('legends-za').has(form.id))
+if (strayAlphas.length) fail(`Legends: Z-A alphas HOME cannot move into it (src/scraper/games.ts): ${strayAlphas.map((form) => form.slug).join(' ')}`)
 data.form.columns.push('alpha_legends_arceus', 'alpha_legends_za')
 for (const row of data.form.rows) row.push(alphasLA.has(row[0] as number), alphasZA.has(row[0] as number))
 const bulbapediaHash = new Bun.CryptoHasher('sha256')

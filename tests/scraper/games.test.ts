@@ -80,6 +80,14 @@ describe('homeGames', () => {
         expect(games(F.meowthGalar)).toEqual([])
     })
 
+    test('forms: a form named by slug is in the game though no page or rule brings it', () => {
+        // Legends: Arceus gives Alolan Vulpix and Ninetales as gifts; its pages show only Kantonian icons.
+        const games = gamesOf({ 'legends-arceus': { codes: codes('52'), forms: ['meowth-alola'] } })
+
+        expect(games(F.meowthAlola)).toEqual(['legends-arceus'])
+        expect(games(F.meowthGalar)).toEqual([])
+    })
+
     test('a form is regional by name, not slug: Alola Cap Pikachu is cosmetic', () => {
         // Shown for one game, absent from another: the absent game does not support it.
         const games = gamesOf({ 'sword-shield': { codes: codes('25', '25-a') }, bdsp: { codes: codes('25') } })

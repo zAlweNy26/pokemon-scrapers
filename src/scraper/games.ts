@@ -12,6 +12,8 @@ interface GameSource {
     nationalDexUpTo?: number
     /** Regional forms that the game holds whenever it holds the species' default form. */
     regionsFollowSpecies?: string[]
+    /** Forms the game holds that no page shows and no rule brings in, by slug. */
+    forms?: string[]
     /** Regions whose evidence also brings the species' default form. */
     speciesFollowsRegions?: string[]
 }
@@ -27,7 +29,10 @@ const GAMES: Record<string, GameSource> = {
         folder: 'swordshield',
         // Its pages show only the Galarian icon for all 19 species that have one, though
         // the game holds the regular forms too (Kantonian Meowth, Unovan Yamask).
-        speciesFollowsRegions: ['galar']
+        speciesFollowsRegions: ['galar'],
+        // The Alolan forms of species it holds come by trade and Diglett rewards (Bulbapedia),
+        // shown only by the species' icon; its Hisuian and Paldean forms are not in the game.
+        regionsFollowSpecies: ['alola']
     },
     'brilliant-diamond-shining-pearl': {
         folder: 'brilliantdiamondshiningpearl',
@@ -35,9 +40,24 @@ const GAMES: Record<string, GameSource> = {
         // Serebii's National Pokédex page states it runs "from Bulbasaur up to Arceus".
         nationalDexUpTo: 493
     },
-    'legends-arceus': { folder: 'legendsarceus' },
-    'scarlet-violet': { folder: 'scarletviolet' },
-    'legends-za': { folder: 'legendsz-a' }
+    'legends-arceus': {
+        folder: 'legendsarceus',
+        // Gifts in Request 83 (Bulbapedia); its pages show only the Kantonian icons. Its other
+        // regional forms of Kanto species are not in the game.
+        forms: ['vulpix-alola', 'ninetales-alola']
+    },
+    'scarlet-violet': {
+        folder: 'scarletviolet',
+        // Alolan Meowth and Persian, Galarian Meowth and Hisuian Growlithe and Arcanine come
+        // by HOME or as gifts (Bulbapedia), shown only by the species' icon.
+        regionsFollowSpecies: ['alola', 'galar', 'hisui']
+    },
+    'legends-za': {
+        folder: 'legendsz-a',
+        // Its wild zones, trades and evolutions give these forms (Bulbapedia, and its alpha
+        // list), shown only by the species' icon.
+        regionsFollowSpecies: ['alola', 'galar', 'hisui']
+    }
 }
 
 /**
@@ -108,7 +128,8 @@ export const regionOf = (form: Pick<FormInfo, 'formName' | 'pokemonName'>) => {
  *    Its default form goes with it.
  * 2. A regional form needs evidence for its own region within the species: Combat
  *    Breed Paldean Tauros brings the other breeds, Hisuian Growlithe does not bring
- *    Kantonian Growlithe into Legends: Arceus. `regionsFollowSpecies` widens this.
+ *    Kantonian Growlithe into Legends: Arceus. `regionsFollowSpecies` widens this,
+ *    and `forms` names single forms no page or rule brings in.
  * 3. Any other form is in the game when shown; when not shown, it is out if this
  *    game lists the species form by form (Vivillon patterns in Scarlet/Violet), or
  *    if it is cosmetic and shown for some other game (Cap Pikachu appears for
@@ -133,7 +154,7 @@ export const homeGames = (
 
     const rows: [number, string][] = []
 
-    for (const [game, { codes, nationalDexUpTo, regionsFollowSpecies = [], speciesFollowsRegions = [] }] of evidence) {
+    for (const [game, { codes, nationalDexUpTo, regionsFollowSpecies = [], speciesFollowsRegions = [], forms: alsoHeld = [] }] of evidence) {
         const shown = new Set([...shownIn(codes)].map((form) => form.id))
         // Species this game lists form by form - by a form's own code ("718-10"), not the
         // plain number, which Serebii also uses for "Zygarde Power Construct".
@@ -158,7 +179,7 @@ export const homeGames = (
             if (!depositable.has(form.id)) continue
 
             const region = regionOf(form)
-            const inGame = form.isDefault
+            const inGame = alsoHeld.includes(form.slug) || (form.isDefault
                 ? species.has(form.ndex)
                 : region
                   ? shownRegions.has(`${form.ndex}:${region}`) ||
@@ -166,7 +187,7 @@ export const homeGames = (
                   : shown.has(form.id) ||
                     (species.has(form.ndex) &&
                         !listedHere.has(form.ndex) &&
-                        !(isCosmetic(form) && shownAnywhere.has(form.id)))
+                        !(isCosmetic(form) && shownAnywhere.has(form.id))))
 
             if (inGame) rows.push([form.id, game])
         }

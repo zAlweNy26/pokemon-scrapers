@@ -125,7 +125,6 @@ const noTexts = () => Object.fromEntries(LANGUAGES.map((language) => [language, 
 
 const languageColumns = (prefix: string) => LANGUAGES.map((language) => `${prefix}_${language}`)
 
-/** `artwork`: the HOME renders in PokeAPI/sprites, from `artworkKeys()`. */
 /** The shiny render of the same picture (`home/25` → `home/shiny/25`), or null. */
 const shinyOf = (key: string | null, artwork: Set<string>) => {
     const shiny = key?.replace(/^home\//, 'home/shiny/')
@@ -154,20 +153,14 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
     )
 
     /**
-     * `slug` plus a name per language, for the rows of `table` that `keep` accepts: the games'
-     * own names where `game` finds PokéAPI's English one, else PokéAPI's.
+     * `slug` plus a name per language for each of `rows`: the games' own names where `game`
+     * finds PokéAPI's English one, else PokéAPI's.
      */
-    const namesTable = (
-        rows: Row[],
-        names: Row[],
-        key: string,
-        keep: (row: Row) => boolean,
-        game: (english: string) => Texts | undefined
-    ): Table => {
+    const namesTable = (rows: Row[], names: Row[], key: string, game: (english: string) => Texts | undefined): Table => {
         const byId = byLanguage(names, key)
         return {
             columns: ['slug', ...languageColumns('name')],
-            rows: rows.filter(keep).map((row) => {
+            rows: rows.map((row) => {
                 const pokeApi = localized(byId.get(row.id!), 'name')
                 return [row.identifier!, ...Object.values((pokeApi.en && game(pokeApi.en)) || pokeApi)]
             })
@@ -175,11 +168,11 @@ export const buildFromPokeApi = async (artwork: Set<string>, debutYears: Map<str
     }
     // Every type, `unknown` included: Arceus's ??? form has it. Move ids from 10000
     // are Colosseum/XD's shadow moves, which nothing here refers to.
-    const typeTable = namesTable(types!, typeNames!, 'type_id', () => true, gameText.type)
+    const typeTable = namesTable(types!, typeNames!, 'type_id', gameText.type)
     const mainAbilities = abilities!.filter((row) => row.is_main_series === '1')
     const gameMoves = moves!.filter((row) => Number(row.id) < 10000)
-    const abilityTable = namesTable(mainAbilities, abilityNames!, 'ability_id', () => true, gameText.ability)
-    const moveTable = namesTable(gameMoves, moveNames!, 'move_id', () => true, gameText.move)
+    const abilityTable = namesTable(mainAbilities, abilityNames!, 'ability_id', gameText.ability)
+    const moveTable = namesTable(gameMoves, moveNames!, 'move_id', gameText.move)
 
     const groupOrder = new Map(versionGroups!.map((row) => [row.id!, Number(row.order)]))
 

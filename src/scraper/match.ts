@@ -7,7 +7,7 @@ import type { SerebiiEntry } from './serebii'
  * code - to PokéAPI form identifiers. Add an entry when the build report lists one
  * as unmatched or ambiguous; never make the matcher guess.
  */
-export const OVERRIDES: Record<string, string[]> = {
+const OVERRIDES: Record<string, string[]> = {
     '128-p': ['tauros-paldea-combat-breed'], // the Paldean default breed
     '555-g': ['darmanitan-galar-standard'], // Zen Mode is battle-only
     '676-de': ['furfrou-debutante'], // Serebii spells it "Deputante"
@@ -15,6 +15,7 @@ export const OVERRIDES: Record<string, string[]> = {
     '854-f': ['sinistea-antique'], // "Authentic Form" in the games, "antique" in PokéAPI
     '855-f': ['polteageist-antique'],
     '901-b': ['ursaluna-bloodmoon'],
+    '215-h-f': ['sneasel-hisui'], // "Sneasel (Female)": the code, not the label, says Hisuian
     '718:Zygarde Power Construct': ['zygarde-50-power-construct'],
     '718-10:Zygarde Power Construct': ['zygarde-10-power-construct'],
     ...alcremie()

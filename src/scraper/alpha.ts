@@ -6,16 +6,26 @@ export const ZA_ALPHA_PAGE = 'List of alpha Pokémon in Legends: Z-A by exclusiv
  * Every row of the page's table, `${ndex}${form}` → whether it appears as a wild
  * alpha: `form` is the sprite's form parameter (`-Galar`, `-Female`), '' for the
  * species. A starred move means the game lists one it never uses (Mewtwo): false.
+ * A second row with the same sprite is the form its label names (Greninja, then
+ * `<small>Battle Bond</small>` Greninja → `658-Battle-Bond`), so it cannot overwrite the first.
  */
 export const zaAlphaRowsOf = (wikitext: string): Map<string, boolean> => {
-    const rows = [...wikitext.matchAll(/\{\{MSP\/ZA\|(\d{4})\|[^|}]*(?:\|form=([^|}]*))?\}\}\s*\n\|[^\n]*?\}\}(\*?)/g)]
+    const rows = [...wikitext.matchAll(/(?:<small>([^<]*)<\/small>\s*\|\|\s*)?\{\{MSP\/ZA\|(\d{4})\|[^|}]*(?:\|form=([^|}]*))?\}\}\s*\n\|[^\n]*?\}\}(\*?)/g)]
     if (rows.length < 300) throw new Error(`${ZA_ALPHA_PAGE}: only ${rows.length} rows - layout changed?`)
-    return new Map(rows.map(([, ndex, form, star]) => [`${Number(ndex)}${form ?? ''}`, !star]))
+    const result = new Map<string, boolean>()
+    for (const [, label, ndex, form, star] of rows) {
+        const key = `${Number(ndex)}${form ?? ''}`
+        if (!result.has(key)) result.set(key, !star)
+        else if (label) result.set(`${key}-${label.replaceAll(' ', '-')}`, !star)
+        else throw new Error(`${ZA_ALPHA_PAGE}: two rows for ${key} and no label to tell them apart`)
+    }
+    return result
 }
 
 /**
  * Ids of the forms that can be wild alphas, from `zaAlphaRowsOf`. A row with a form
- * parameter is the form whose slug has it (`-Galar` → meowth-galar); a species row
+ * parameter is the form whose slug has it (`-Galar` → meowth-galar, `-Battle-Bond` →
+ * greninja-battle-bond); a species row
  * is its default form and its other forms in `inGame` that no row names. Throws on
  * a form parameter that matches no form.
  */
@@ -26,8 +36,8 @@ export const alphaFormsOf = (rows: Map<string, boolean>, forms: FormInfo[], inGa
     for (const [key, alpha] of rows) {
         const [, ndex, parameter] = /^(\d+)(.*)$/.exec(key)!
         if (!parameter) continue
-        const part = parameter.slice(1).toLowerCase()
-        const form = forms.find((form) => form.ndex === Number(ndex) && form.slug.split('-').includes(part))
+        const part = `-${parameter.slice(1).toLowerCase()}-`
+        const form = forms.find((form) => form.ndex === Number(ndex) && `-${form.slug}-`.includes(part))
         if (!form) throw new Error(`${ZA_ALPHA_PAGE}: no form for ${key}`)
         named.add(form.id)
         if (alpha) ids.add(form.id)
