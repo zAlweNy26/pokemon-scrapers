@@ -28,3 +28,13 @@ test(
     // The fetcher keeps 5 s between requests, retries included.
     15_000
 )
+
+test('stops on any other MediaWiki error rather than caching it as the page', async () => {
+    globalThis.fetch = (async () =>
+        new Response('{"error":{"code":"internal_api_error_DBQueryError"}}', {
+            headers: { 'mediawiki-api-error': 'internal_api_error_DBQueryError' }
+        })) as unknown as typeof fetch
+
+    await expect(fetchPage(PAGE)).rejects.toThrow('MediaWiki API error internal_api_error_DBQueryError')
+    expect(await Bun.file(`${CACHE}${key}.body`).exists()).toBe(false)
+}, 15_000)

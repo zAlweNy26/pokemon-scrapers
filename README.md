@@ -46,7 +46,9 @@ dataset `data/version.json` names (a load records its version and time in `meta`
 and waits out the rest of the minute after the load. The dataset itself is never
 committed — the repository is public — so a pre-push hook loads it from here:
 `bun install` turns it on (`core.hooksPath` = `.githooks`). When a push to `main`
-names another dataset than production holds, the hook uploads the sprites R2 lacks,
+names another dataset than production holds, the hook runs the tests, typecheck and
+`data:check` (the load lands before CI, so a red CI after it would leave production
+failing), then uploads the sprites R2 lacks,
 applies migrations and loads `data/dataset.sql` before git pushes; any failure stops
 the push. Pushed with `--no-verify`, new data fails the deploy: run
 `bun run data:load:remote`, then re-run it (Actions → Deploy → Re-run).
@@ -110,7 +112,7 @@ known facts, or any API response its schema rejects. Gaps the sources leave
 
 | Endpoint | Notes |
 |---|---|
-| `GET /v1/pokemon` | `?gen &type &region &depositable &homeGame &ability &eggGroup &obtainableIn &exclusiveTo &habitat &sort &limit &offset`. `homeGame` takes a version group (`scarlet-violet`), `obtainableIn` and `exclusiveTo` a version (`scarlet`). `sort` is `ndex` (default), `name`, `bst`, `hp`, `atk`, `def`, `spAtk`, `spDef`, `spd`, `height` or `weight` of the default form, `-` prefixed for descending (`-bst`); unknown values last, ties by dex number |
+| `GET /v1/pokemon` | `?gen &type &region &depositable &homeGame &ability &eggGroup &obtainableIn &exclusiveTo &habitat &pokedex &sort &limit &offset`. `homeGame` takes a version group (`scarlet-violet`), `obtainableIn` and `exclusiveTo` a version (`scarlet`), `pokedex` a regional Pokédex (`paldea`). `sort` is `ndex` (default), `name`, `bst`, `hp`, `atk`, `def`, `spAtk`, `spDef`, `spd`, `height` or `weight` of the default form, `-` prefixed for descending (`-bst`); unknown values last, ties by dex number |
 | `GET /v1/pokemon/:idOrName` | Accepts `25`, `pikachu` or `Pikachu`; returns every form |
 | `GET /v1/evolution-chains/:ndex` | The chain of the species with that national dex number: references to its species (`ndex`, `slug`, `uri`) in `members`, and `steps` exactly as `/v1/pokemon/:idOrName` has them in `evolutionChain` |
 | `GET /v1/forms` | `?gen &type &depositable &homeGame &isDefault &category &limit &offset`. Every form, where HOME depositability lives: `depositable` is the form's own, so it tells Pikachu apart from Partner Pikachu |

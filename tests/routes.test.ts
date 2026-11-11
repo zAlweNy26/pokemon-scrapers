@@ -131,6 +131,12 @@ describe('GET /v1/pokemon/:idOrName', () => {
         expect(body.name.ko).toBe('피카츄')
     })
 
+    test('reads only plain digits as a dex number', async () => {
+        expect((await call('/v1/pokemon/25')).status).toBe(200)
+        // Number() reads each of these as 25.
+        for (const path of ['0x19', '2.5e1', '%2025']) expect((await call(`/v1/pokemon/${path}`)).status).toBe(404)
+    })
+
     test('returns RFC 9457 problem details for an unknown species', async () => {
         const { response, body } = await json('/v1/pokemon/mewthree')
 

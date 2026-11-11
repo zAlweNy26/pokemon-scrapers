@@ -53,7 +53,12 @@ const request = async (url: string, cached: Cached | null): Promise<Response> =>
         // MediaWiki answers `maxlag` with a 200 error body and Retry-After: cached, it would fail every build for 30 days.
         const retryable = response.status === 429 || response.status >= 500 || response.headers.has('retry-after')
 
-        if (!retryable) return response
+        if (!retryable) {
+            // Its other errors are 200s too, marked only by this header: never cache one as the page.
+            const apiError = response.headers.get('mediawiki-api-error')
+            if (apiError) throw new Error(`${url}: MediaWiki API error ${apiError} - stopping`)
+            return response
+        }
         if (attempt >= MAX_ATTEMPTS)
             throw new Error(`${url}: HTTP ${response.status} after ${attempt} attempts - stopping`)
 

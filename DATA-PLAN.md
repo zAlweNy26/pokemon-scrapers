@@ -40,7 +40,7 @@ against the source itself.
 - **Done:** evolutions, regional dex numbers, EV yield, base experience and species flags
   from PokéAPI. What else a full view would need, and where it is: `DATA-GAPS.md`.
 
-## Left over from the audit (`AUDIT.md`)
+## Left over from the 2026-11-04 audit (`AUDIT.md`, removed in git history)
 
 Everything is closed except **15** (answer 304 before the database runs), skipped on
 purpose: Workers Cache answers most revalidations first. Follow-ups found on the way:

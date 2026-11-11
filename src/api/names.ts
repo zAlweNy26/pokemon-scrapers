@@ -1,32 +1,31 @@
 import { getTableColumns } from 'drizzle-orm'
-import { ability, pokedexEntry, pokemon, type Pokemon } from '@/db/schema'
+import { pokemon, type Pokemon } from '@/db/schema'
 
 /**
- * The single place the nine game languages are listed.
+ * The single place the nine game languages are listed: each response key
+ * (snake_case, as published) with the suffix its columns carry (`name_zh_hans`
+ * is `nameZhHans`).
  *
  * Every other spelling of that list is derived from this map: the Drizzle select
- * projection, the alias list in search's raw FTS5 query, the response type and
+ * projection, the alias list in search's raw FTS5 query, the response types and
  * the row-to-response mapping. Adding a language is one edit here plus the
- * schema column and `namesSchema` - and `namesSchema satisfies z.ZodType<Names>`
+ * schema columns and `namesSchema` - and `namesSchema satisfies z.ZodType<Names>`
  * in src/api/models.ts makes forgetting the latter a compile error rather than a
  * silently missing field.
- *
- * Keys are the response shape (snake_case, as published); values name the column
- * on `pokemon`.
  */
-export const NAME_FIELDS = {
-    en: 'nameEn',
-    ja: 'nameJa',
-    de: 'nameDe',
-    fr: 'nameFr',
-    it: 'nameIt',
-    es: 'nameEs',
-    ko: 'nameKo',
-    zh_hans: 'nameZhHans',
-    zh_hant: 'nameZhHant'
-} as const satisfies Record<string, keyof Pokemon>
+const SUFFIXES = { en: 'En', ja: 'Ja', de: 'De', fr: 'Fr', it: 'It', es: 'Es', ko: 'Ko', zh_hans: 'ZhHans', zh_hant: 'ZhHant' } as const
 
-type Language = keyof typeof NAME_FIELDS
+type Language = keyof typeof SUFFIXES
+const languages = Object.keys(SUFFIXES) as Language[]
+
+/** The column of each language for a prefix: `{ en: 'nameEn', ... }` for `name`. */
+type ColumnsOf<P extends string> = { [L in Language]: `${P}${(typeof SUFFIXES)[L]}` }
+
+const columnsOf = <P extends string>(prefix: P) =>
+    Object.fromEntries(languages.map((language) => [language, `${prefix}${SUFFIXES[language]}`])) as ColumnsOf<P>
+
+export const NAME_FIELDS = columnsOf('name') satisfies Record<Language, keyof Pokemon>
+
 type NameColumn = (typeof NAME_FIELDS)[Language]
 
 /** Nullability comes straight from the schema: `en` is NOT NULL, the rest are not. */
@@ -51,61 +50,14 @@ export const nameProjection = nameColumns(pokemon)
 export const namesOf = (row: NameColumns): Names =>
     Object.fromEntries(fields.map(([language, column]) => [language, row[column]])) as Names
 
-/** The species category per language, keyed like `Names`. Every language may be missing. */
-export const CATEGORY_FIELDS = {
-    en: 'categoryEn',
-    ja: 'categoryJa',
-    de: 'categoryDe',
-    fr: 'categoryFr',
-    it: 'categoryIt',
-    es: 'categoryEs',
-    ko: 'categoryKo',
-    zh_hans: 'categoryZhHans',
-    zh_hant: 'categoryZhHant'
-} as const satisfies Record<Language, keyof Pokemon>
+/** A text keyed like `Names` where every language may be missing: a category, a description, a Pokédex entry. */
+export type Texts = { [L in Language]: string | null }
 
-export type Categories = { [L in Language]: string | null }
-
-export const categoriesOf = (row: Pokemon): Categories =>
-    Object.fromEntries(
-        Object.entries(CATEGORY_FIELDS).map(([language, column]) => [language, row[column]])
-    ) as Categories
-
-/** The in-game description per language on `ability` and `move`, keyed like `Names`. Every language may be missing. */
-export const DESCRIPTION_FIELDS = {
-    en: 'descriptionEn',
-    ja: 'descriptionJa',
-    de: 'descriptionDe',
-    fr: 'descriptionFr',
-    it: 'descriptionIt',
-    es: 'descriptionEs',
-    ko: 'descriptionKo',
-    zh_hans: 'descriptionZhHans',
-    zh_hant: 'descriptionZhHant'
-} as const satisfies Record<Language, keyof typeof ability.$inferSelect>
-
-export const descriptionsOf = (row: Record<(typeof DESCRIPTION_FIELDS)[Language], string | null>): Categories =>
-    Object.fromEntries(
-        Object.entries(DESCRIPTION_FIELDS).map(([language, column]) => [language, row[column]])
-    ) as Categories
-
-/** A Pokédex entry's text per language, keyed like `Names`. Null in a language the game never showed it in. */
-export const ENTRY_TEXT_FIELDS = {
-    en: 'textEn',
-    ja: 'textJa',
-    de: 'textDe',
-    fr: 'textFr',
-    it: 'textIt',
-    es: 'textEs',
-    ko: 'textKo',
-    zh_hans: 'textZhHans',
-    zh_hant: 'textZhHant'
-} as const satisfies Record<Language, keyof typeof pokedexEntry.$inferSelect>
-
-export const entryTextsOf = (row: typeof pokedexEntry.$inferSelect): Categories =>
-    Object.fromEntries(
-        Object.entries(ENTRY_TEXT_FIELDS).map(([language, column]) => [language, row[column]])
-    ) as Categories
+/** `row`'s columns with `prefix` keyed by language: `textsOf('category', species)`, `textsOf('text', entry)`. */
+export const textsOf = <P extends string>(prefix: P, row: { [C in ColumnsOf<P>[Language]]: string | null }): Texts => {
+    const columns = columnsOf(prefix)
+    return Object.fromEntries(languages.map((language) => [language, row[columns[language]]])) as Texts
+}
 
 /**
  * `p.name_ja AS nameJa, ...` for the one query that cannot use the builder.

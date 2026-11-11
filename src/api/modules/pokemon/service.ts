@@ -6,7 +6,7 @@ import {
     ability, availability, encounter, evolution, form, formAbility, formHomeGame, formShiny, formType, generation, pokedexEntry,
     pokemon, pokemonDexNumber, pokemonEggGroup, pokemonOrigin, type Form, type Pokemon, type ShinyStatus
 } from '@/db/schema'
-import { categoriesOf, entryTextsOf, nameColumns, nameProjection, namesOf, type NameColumns } from '@/api/names'
+import { nameColumns, nameProjection, namesOf, textsOf, type NameColumns } from '@/api/names'
 import { spritesFor } from '@/api/sprites'
 import type { SortKey } from './model'
 
@@ -257,11 +257,10 @@ export const typesByForm = async (db: Db, formIds: number[]) => {
 
 /** Accepts a National Dex number, a slug, or an English name - case-insensitively. */
 export const findSpecies = async (db: Db, idOrName: string): Promise<Pokemon | undefined> => {
-    const asNumber = Number(idOrName)
-
+    // Digits only: Number() would also read `1e1`, `0x19` and ` 25` as dex numbers.
     const where =
-        Number.isInteger(asNumber) && asNumber > 0
-            ? eq(pokemon.ndex, asNumber)
+        /^\d+$/.test(idOrName)
+            ? eq(pokemon.ndex, Number(idOrName))
             : sql`(${pokemon.slug} = ${idOrName} COLLATE NOCASE
                    OR ${pokemon.nameEn} = ${idOrName} COLLATE NOCASE)`
 
@@ -490,7 +489,7 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
         ndex: species.ndex,
         slug: species.slug,
         generation: species.gen,
-        category: categoriesOf(species),
+        category: textsOf('category', species),
         name: namesOf(species),
         catchRate: species.catchRate,
         baseFriendship: species.baseFriendship,
@@ -516,7 +515,7 @@ export const detail = async (db: Db, species: Pokemon, imageBaseUrl: string) => 
         depositable: forms.some((entry) => entry.depositable),
         forms: formDocuments(forms, typeRows, abilityRows, homeRows, shinyRows, imageBaseUrl),
         // '' is the stored "none" for these key columns; the API says null.
-        pokedexEntries: entries.map((row) => ({ game: row.game, form: row.form || null, text: entryTextsOf(row) })),
+        pokedexEntries: entries.map((row) => ({ game: row.game, form: row.form || null, text: textsOf('text', row) })),
         availability: places.map((row) => ({
             game: row.game,
             dlc: row.dlc || null,

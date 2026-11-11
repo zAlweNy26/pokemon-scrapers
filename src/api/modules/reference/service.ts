@@ -4,7 +4,7 @@ import {
     ability, form, formHomeGame, formType, game, generation, move, pokedex, pokedexGame, pokemon, pokemonDexNumber,
     pokemonEggGroup, type
 } from '@/db/schema'
-import { descriptionsOf, nameColumns, namesOf, type NameColumns } from '@/api/names'
+import { nameColumns, namesOf, textsOf, type NameColumns } from '@/api/names'
 import { groupBy } from '@/api/modules/pokemon/service'
 
 const named = (rows: ({ slug: string } & NameColumns)[]) => rows.map((row) => ({ slug: row.slug, name: namesOf(row) }))
@@ -33,7 +33,7 @@ export const findType = async (db: Db, slug: string) => {
 
 const described = (row: typeof ability.$inferSelect) => ({
     ...named([row])[0]!,
-    description: descriptionsOf(row),
+    description: textsOf('description', row),
     effect: row.effect
 })
 

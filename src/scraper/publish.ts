@@ -4,8 +4,11 @@
  * dataset never leaves this machine for anywhere but D1: the repository is public.
  *
  * When production already holds the pushed data/version.json it costs one query.
- * Otherwise it uploads the sprites R2 lacks (new rows must not point at missing
- * images), then `data:load:remote` applies migrations and loads data/dataset.sql. Any
+ * Otherwise it runs what CI would refuse (tests, typecheck) and `data:check` first: the
+ * load lands before CI and its migrations can drop columns the live Worker reads, so a
+ * red CI after it would leave production failing. Then it uploads the sprites R2 lacks
+ * (new rows must not point at missing images), and `data:load:remote` applies
+ * migrations and loads data/dataset.sql. Any
  * failure stops the push. `git push --no-verify` skips it, and CI then refuses to
  * deploy until the data is loaded.
  */
@@ -46,6 +49,7 @@ if (!process.env.S3_BUCKET) fail('the new data needs its sprites in R2, and .env
 
 console.log(`Production holds dataset ${have}; loading ${want} before the push.`)
 try {
+    await $`bun test && bun run typecheck && bun run data:check`
     await $`bun run data:sprites`
     // A restore point to hand to `wrangler d1 time-travel restore` if the migration or load goes wrong.
     await $`bunx wrangler d1 time-travel info ${database.database_name}`.nothrow()
