@@ -62,7 +62,7 @@ describe('openapi document', () => {
             const operation = spec.paths[path].get
 
             expect(operation.parameters.map((p: any) => `${p.in}:${p.name}`).sort()).toEqual([...parameters])
-            expect(Object.keys(operation.responses).sort()).toEqual(['200', '404', '422', '429'])
+            expect(Object.keys(operation.responses).sort()).toEqual(['200', '304', '404', '422', '429'])
             expect(operation.responses['200'].content['application/json'].schema.$ref).toBe(
                 `#/components/schemas/${model}`
             )
@@ -75,7 +75,7 @@ describe('openapi document', () => {
         expect(operation.parameters.map((p: any) => `${p.in}:${p.name}`).sort()).toEqual([
             'path:slug', 'query:limit', 'query:offset'
         ])
-        expect(Object.keys(operation.responses).sort()).toEqual(['200', '404', '422', '429'])
+        expect(Object.keys(operation.responses).sort()).toEqual(['200', '304', '404', '422', '429'])
         expect(operation.responses['200'].content['application/json'].schema.$ref).toBe(
             '#/components/schemas/Pokedex'
         )
@@ -89,7 +89,7 @@ describe('openapi document', () => {
             'category', 'depositable', 'gen', 'homeGame', 'isDefault', 'limit', 'offset', 'type'
         ])
         expect(list.responses['200'].content['application/json'].schema.$ref).toBe('#/components/schemas/FormList')
-        expect(Object.keys(detail.responses).sort()).toEqual(['200', '404', '422', '429'])
+        expect(Object.keys(detail.responses).sort()).toEqual(['200', '304', '404', '422', '429'])
         expect(detail.responses['200'].content['application/json'].schema.$ref).toBe(
             '#/components/schemas/Form'
         )
@@ -152,13 +152,19 @@ describe('openapi document', () => {
         for (const [path, statuses] of operations)
             expect(statuses, `${path} should document 429`).toContain('429')
 
+        // Every /v1 route is cacheable too, so each answers a matching If-None-Match with 304.
+        for (const [path, statuses] of operations)
+            expect(statuses, `${path} should document 304`).toContain('304')
+
         expect(Object.keys(spec.paths['/v1/search'].get.responses).sort()).toEqual([
             '200',
+            '304',
             '422',
             '429'
         ])
         expect(Object.keys(spec.paths['/v1/pokemon/{idOrName}'].get.responses).sort()).toEqual([
             '200',
+            '304',
             '404',
             '422',
             '429'
@@ -175,7 +181,7 @@ describe('openapi document', () => {
         // `application/json` as correct would quietly bless it.
         const failures = Object.values(spec.paths).flatMap((item: any) =>
             Object.entries(item.get.responses)
-                .filter(([status]) => status !== '200')
+                .filter(([status]) => Number(status) >= 400)
                 .map(([, response]: [string, any]) => Object.values(response.content)[0] as any)
                 .map((media) => media.schema.$ref)
         )

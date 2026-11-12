@@ -160,9 +160,19 @@ export type SortKey = (typeof sortKeys)[number]
  * would silently lose every filter. Responses keep names, which do produce $refs.
  */
 export const listQuery = z.object({
-        gen: z.coerce.number().int().min(1).optional(),
-        type: z.string().max(20).optional().meta({ examples: ['Water'] }),
-        region: z.string().max(30).optional().meta({ examples: ['Kanto'] }),
+        gen: z.coerce.number().int().min(1).optional().describe('Generation the species was introduced in').meta({ examples: [1] }),
+        type: z
+            .string()
+            .max(20)
+            .optional()
+            .describe('Type identifier, in any case (/v1/types lists them)')
+            .meta({ examples: ['Water'] }),
+        region: z
+            .string()
+            .max(30)
+            .optional()
+            .describe("Region the species was introduced in, as a generation's `region`, in any case")
+            .meta({ examples: ['Kanto'] }),
         depositable: booleanString.optional().describe('Filter on Pokemon HOME compatibility'),
         homeGame: z
             .string()
@@ -209,8 +219,8 @@ export const listQuery = z.object({
                     'form; prefix `-` for descending. Unknown values sort last, ties by dex number'
             )
             .meta({ examples: ['-bst'] }),
-        limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(20),
-        offset: z.coerce.number().int().min(0).default(0)
+        limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(20).describe(`Records per page, at most ${MAX_PAGE_SIZE}`),
+        offset: z.coerce.number().int().min(0).default(0).describe('Records to skip; add `limit` for the next page')
 })
 
 export const idOrNameParams = z.object({

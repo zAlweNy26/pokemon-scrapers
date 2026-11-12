@@ -30,8 +30,9 @@ export const forms = new Elysia({ name: 'module.forms', prefix: '/forms' })
         },
         {
             query: formsQuery,
-            response: { 200: 'FormList', 422: 'Problem', 429: 'Problem' },
+            response: { 200: 'FormList', 304: 'NotModified', 422: 'Problem', 429: 'Problem' },
             detail: {
+                operationId: 'listForms',
                 summary: 'List forms',
                 description:
                     'Every form of every species, where HOME depositability actually lives: `depositable` here is the ' +
@@ -50,8 +51,9 @@ export const forms = new Elysia({ name: 'module.forms', prefix: '/forms' })
         },
         {
             params: formParams,
-            response: { 200: 'Form', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
+            response: { 200: 'Form', 304: 'NotModified', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
             detail: {
+                operationId: 'getForm',
                 summary: 'Get a form',
                 description: 'The form as /v1/pokemon/:idOrName lists it in `forms`, plus its species.',
                 tags: ['Pokémon']

@@ -29,16 +29,18 @@ export const reference = new Elysia({ name: 'module.reference' })
     .use(sharedModels)
     .model(referenceModels)
     .get('/generations', () => service.generations(db()), {
-        response: { 200: 'Generations', 429: 'Problem' },
+        response: { 200: 'Generations', 304: 'NotModified', 429: 'Problem' },
         detail: {
+            operationId: 'listGenerations',
             summary: 'List generations',
             description: 'Every generation with its games.',
             tags: ['Games']
         }
     })
     .get('/games', () => service.games(db()), {
-        response: { 200: 'Games', 429: 'Problem' },
+        response: { 200: 'Games', 304: 'NotModified', 429: 'Problem' },
         detail: {
+            operationId: 'listGames',
             summary: 'List games',
             description: 'Every game other endpoints return, DLCs included, with their names, in release order.',
             tags: ['Games']
@@ -54,8 +56,9 @@ export const reference = new Elysia({ name: 'module.reference' })
         },
         {
             params: gameParams,
-            response: { 200: 'Game', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
+            response: { 200: 'Game', 304: 'NotModified', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
             detail: {
+                operationId: 'getGame',
                 summary: 'Get a game',
                 description: 'The game with its names, generation and DLCs.',
                 tags: ['Games']
@@ -63,8 +66,9 @@ export const reference = new Elysia({ name: 'module.reference' })
         }
     )
     .get('/types', () => service.types(db()), {
-        response: { 200: 'Types', 429: 'Problem' },
+        response: { 200: 'Types', 304: 'NotModified', 429: 'Problem' },
         detail: {
+            operationId: 'listTypes',
             summary: 'List types',
             description: 'Every type with its names and species count.',
             tags: ['Traits']
@@ -76,8 +80,9 @@ export const reference = new Elysia({ name: 'module.reference' })
         {
             params: typeParams,
             query: pageQuery,
-            response: { 200: 'Type', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
+            response: { 200: 'Type', 304: 'NotModified', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
             detail: {
+                operationId: 'getType',
                 summary: 'Get a type',
                 description: 'The type with references to the species /v1/pokemon?type= returns, so `meta.total` is the count /v1/types reports.',
                 tags: ['Traits']
@@ -85,8 +90,9 @@ export const reference = new Elysia({ name: 'module.reference' })
         }
     )
     .get('/abilities', () => service.abilities(db()), {
-        response: { 200: 'Abilities', 429: 'Problem' },
+        response: { 200: 'Abilities', 304: 'NotModified', 429: 'Problem' },
         detail: {
+            operationId: 'listAbilities',
             summary: 'List abilities',
             description: 'Every ability with its names.',
             tags: ['Traits']
@@ -98,8 +104,9 @@ export const reference = new Elysia({ name: 'module.reference' })
         {
             params: abilityParams,
             query: pageQuery,
-            response: { 200: 'Ability', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
+            response: { 200: 'Ability', 304: 'NotModified', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
             detail: {
+                operationId: 'getAbility',
                 summary: 'Get an ability',
                 description: 'The ability with references to the species /v1/pokemon?ability= returns: any form, hidden or not.',
                 tags: ['Traits']
@@ -107,8 +114,9 @@ export const reference = new Elysia({ name: 'module.reference' })
         }
     )
     .get('/moves', () => service.moves(db()), {
-        response: { 200: 'Moves', 429: 'Problem' },
+        response: { 200: 'Moves', 304: 'NotModified', 429: 'Problem' },
         detail: {
+            operationId: 'listMoves',
             summary: 'List moves',
             description: 'Every move with its names.',
             tags: ['Traits']
@@ -124,8 +132,9 @@ export const reference = new Elysia({ name: 'module.reference' })
         },
         {
             params: moveParams,
-            response: { 200: 'Move', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
+            response: { 200: 'Move', 304: 'NotModified', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
             detail: {
+                operationId: 'getMove',
                 summary: 'Get a move',
                 description: 'The move with its names, description and effect.',
                 tags: ['Traits']
@@ -133,24 +142,27 @@ export const reference = new Elysia({ name: 'module.reference' })
         }
     )
     .get('/egg-groups', () => service.eggGroups(db()), {
-        response: { 200: 'EggGroups', 429: 'Problem' },
+        response: { 200: 'EggGroups', 304: 'NotModified', 429: 'Problem' },
         detail: {
+            operationId: 'listEggGroups',
             summary: 'List egg groups',
             description: 'Every egg group with its species count.',
             tags: ['Traits']
         }
     })
     .get('/home-games', () => service.homeGames(db()), {
-        response: { 200: 'HomeGames', 429: 'Problem' },
+        response: { 200: 'HomeGames', 304: 'NotModified', 429: 'Problem' },
         detail: {
+            operationId: 'listHomeGames',
             summary: 'List HOME games',
             description: 'The games HOME moves species into, with species counts. PokéAPI version-group identifiers, as the `homeGame` filter on /v1/pokemon takes them.',
             tags: ['Games']
         }
     })
     .get('/pokedexes', () => service.pokedexes(db()), {
-        response: { 200: 'Pokedexes', 429: 'Problem' },
+        response: { 200: 'Pokedexes', 304: 'NotModified', 429: 'Problem' },
         detail: {
+            operationId: 'listPokedexes',
             summary: 'List Pokédexes',
             description: 'Every regional Pokédex with its region, the games that use it and its species count.',
             tags: ['Games']
@@ -175,8 +187,9 @@ export const reference = new Elysia({ name: 'module.reference' })
         {
             params: pokedexParams,
             query: pageQuery,
-            response: { 200: 'Pokedex', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
+            response: { 200: 'Pokedex', 304: 'NotModified', 404: 'Problem', 422: 'Problem', 429: 'Problem' },
             detail: {
+                operationId: 'getPokedex',
                 summary: 'Get a Pokédex',
                 description:
                     'A regional Pokédex with its region and games, and references to its species in regional order, ' +

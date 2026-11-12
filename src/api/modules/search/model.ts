@@ -29,7 +29,7 @@ export const searchQuery = z.object({
                 'Name fragment in any of the nine supported languages. Three or more characters use the full-text index; two-character queries (common in Japanese, Korean and Chinese) match by prefix.'
             )
             .meta({ examples: ['pika', 'Quaj', 'ゲンガ'] }),
-        limit: z.coerce.number().int().min(1).max(50).default(20)
+        limit: z.coerce.number().int().min(1).max(50).default(20).describe('Results to return, at most 50')
 })
 
 export const searchModels = {

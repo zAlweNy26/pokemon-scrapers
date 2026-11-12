@@ -80,5 +80,9 @@ export const MAX_QUERY_LENGTH = 64
  * name, so using this everywhere costs nothing.
  */
 export const sharedModels = new Elysia({ name: 'models.shared' }).model({
-    Problem: problemSchema
+    Problem: problemSchema,
+    // Never sent by a handler: src/api/handler.ts answers the matching If-None-Match itself.
+    NotModified: z
+        .never()
+        .describe('Not Modified: the `If-None-Match` ETag still matches, so the copy you hold is current. No body.')
 })
