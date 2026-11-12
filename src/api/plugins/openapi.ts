@@ -70,6 +70,55 @@ body::before {
 ::selection { background: var(--scalar-sidebar-item-active-background); color: var(--scalar-color-1); }
 `
 
+const TITLE = 'homedex · API reference'
+const DESCRIPTION =
+    'A free JSON API for Pokémon data general-purpose APIs cover poorly: HOME depositability per form, ' +
+    'names in all nine game languages, real forms, per-game locations and name etymology.'
+
+/** Scalar's settings; the spec it loads is the plugin's /openapi.json. */
+const scalar = {
+    url: '/openapi.json',
+    theme: 'none',
+    withDefaultFonts: false,
+    darkMode: true,
+    // Scalar shows its toolbar on any local host by default; off, `bun run dev` looks like production.
+    showDeveloperTools: 'never'
+}
+
+/**
+ * Our page rather than the plugin's: its <head> carries no link-preview tags and
+ * describes the page with the whole introduction, markdown included, and crawlers
+ * do not run Scalar to fix that. og.png is public/og.png, served by Void as a static asset.
+ * Scalar is pinned: the theme above styles its own classes and variables, which a release may rename.
+ */
+const page = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${TITLE}</title>
+<meta name="description" content="${DESCRIPTION}">
+<link rel="icon" href="${favicon}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="homedex">
+<meta property="og:title" content="${TITLE}">
+<meta property="og:description" content="${DESCRIPTION}">
+<meta property="og:url" content="${API_URL}/docs">
+<meta property="og:image" content="${API_URL}/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="homedex: Pokémon data, form by form, beside a sample API response">
+<meta name="twitter:card" content="summary_large_image">
+<style>${customCss}body { margin: 0; }</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.78.0/dist/browser/standalone.min.js"></script>
+<script>Scalar.createApiReference('#app', ${JSON.stringify(scalar).replace(/</g, '\\u003c')})</script>
+</body>
+</html>
+`
+
 /**
  * Scalar UI at /docs, machine-readable spec at /openapi.json.
  *
@@ -79,7 +128,8 @@ body::before {
  */
 export const documentation = new Elysia({ name: 'documentation' }).use(
     openapi({
-        path: '/docs',
+        // The plugin serves only the spec; /docs is `page` above.
+        provider: null,
         // The plugin knows TypeBox natively and needs an explicit converter for
         // any Standard Schema validator.
         //
@@ -94,20 +144,6 @@ export const documentation = new Elysia({ name: 'documentation' }).use(
                 z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' })
         },
         specPath: '/openapi.json',
-        // The <title> comes from info.title ("homedex"), which also names the spec;
-        // metaData overrides only the browser tab once Scalar loads.
-        scalar: {
-            // Pinned: the theme above styles Scalar's own classes and variables, which a release may rename.
-            version: '1.78.0',
-            favicon,
-            customCss,
-            theme: 'none',
-            withDefaultFonts: false,
-            darkMode: true,
-            // Scalar shows its toolbar on any local host by default; off, `bun run dev` looks like production.
-            showDeveloperTools: 'never',
-            metaData: { title: 'homedex · API reference' }
-        },
         exclude: { paths: ['/health'] },
         documentation: {
             info: {
@@ -198,4 +234,9 @@ export const documentation = new Elysia({ name: 'documentation' }).use(
             ]
         }
     })
+).get(
+    '/docs',
+    // A new Response each time: one built once has a body that can be read only once.
+    () => new Response(page, { headers: { 'content-type': 'text/html; charset=utf-8' } }),
+    { detail: { hide: true } }
 )

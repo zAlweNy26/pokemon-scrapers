@@ -342,6 +342,20 @@ describe('read replicas', () => {
     })
 })
 
+describe('GET /docs', () => {
+    test('carries link-preview tags, and serves more than once', async () => {
+        await call('/docs')
+        const response = await call('/docs')
+        const html = await response.text()
+
+        expect(response.headers.get('content-type')).toBe('text/html; charset=utf-8')
+        expect(html).toContain('<meta property="og:image" content="https://homedex.danyalwe.me/og.png">')
+        expect(html).toContain('<meta name="twitter:card" content="summary_large_image">')
+        // The plugin's own page described itself with the whole markdown introduction.
+        expect(html).not.toContain('## Getting started')
+    })
+})
+
 describe('response hardening', () => {
     test('every response forbids content-type sniffing', async () => {
         // Set at the entry point rather than in an onAfterHandle hook, which
