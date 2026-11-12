@@ -209,6 +209,7 @@ Code is MIT. **Data is [CC BY-NC-SA 2.5](https://creativecommons.org/licenses/by
 inherited from Bulbapedia — non-commercial use only, share-alike. See
 [`NOTICE.md`](./NOTICE.md) for sources and [`DATA-LICENSE.md`](./DATA-LICENSE.md)
 for what that means for you.
+[`TAKEDOWN.md`](./TAKEDOWN.md) is how it all comes down if a rights holder asks.
 
 Not affiliated with Nintendo, Game Freak, Creatures Inc. or The Pokémon Company.
 Pokémon and all related names are their trademarks.
