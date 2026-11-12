@@ -16,12 +16,15 @@ export default defineConfig({
             // ETag, so it changes exactly when the data does. Load the data before
             // deploying, or the new version would vouch for the old rows.
             DATA_VERSION: dataset.version,
-            // Public base URL of the R2 image bucket. Point at its custom domain when you create it.
-            IMAGE_BASE_URL: 'https://images.homedex.danyalwe.me'
+            // Public base URL of the R2 image bucket: its custom domain.
+            IMAGE_BASE_URL: 'https://images.homedex.danyn.dev'
         }
     },
     cloudflare: {
         name: 'homedex',
+        // Set here, it overrides the route the first deploy recorded in void.lock.json.
+        // The zone must be in this Cloudflare account.
+        routes: [{ pattern: 'homedex.danyn.dev', custom_domain: true }],
         // Workers Cache: checked BEFORE the Worker runs, tiered, and request-collapsing.
         cache: {
             enabled: true,

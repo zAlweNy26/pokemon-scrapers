@@ -13,7 +13,7 @@ const favicon = `data:image/svg+xml,${encodeURIComponent(
 )}`
 
 /** The public API, for the copy-paste examples in the introduction. */
-const API_URL = 'https://homedex.danyalwe.me'
+const API_URL = 'https://homedex.danyn.dev'
 
 // Replaces Elysia's Scalar theme whole: graphite with one red accent, DM Sans and DM Mono.
 const customCss = `

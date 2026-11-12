@@ -2,6 +2,12 @@
   "version": 1,
   "source": {
     "name": "homedex",
+    "routes": [
+      {
+        "pattern": "homedex.danyn.dev",
+        "custom_domain": true
+      }
+    ],
     "cache": {
       "enabled": true,
       "cross_version_cache": false
@@ -76,10 +82,10 @@
     "account_id": "28f9d81693d9f738ed980133d3e09488",
     "routes": [
       {
-        "pattern": "homedex.danyalwe.me",
+        "pattern": "homedex.danyn.dev",
         "custom_domain": true
       }
     ]
   },
-  "text": "// void:published-traffic:v1:eyJ3b3JrZXJzX2RldiI6ZmFsc2UsInByZXZpZXdfdXJscyI6ZmFsc2UsInJvdXRlcyI6W3sicGF0dGVybiI6ImhvbWVkZXguZGFueWFsd2UubWUiLCJjdXN0b21fZG9tYWluIjp0cnVlfV19\n{\n  \"name\": \"homedex\",\n  \"cache\": {\n    \"enabled\": true,\n    \"cross_version_cache\": false\n  },\n  \"observability\": {\n    \"enabled\": true,\n    \"head_sampling_rate\": 1\n  },\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"homedex\",\n      \"database_id\": \"30a87976-0a8e-4494-8c4b-eec46aaee36b\",\n      \"migrations_dir\": \"src/db/migrations\"\n    }\n  ],\n  \"ratelimits\": [\n    {\n      \"name\": \"RL_GLOBAL\",\n      \"namespace_id\": \"1001\",\n      \"simple\": {\n        \"limit\": 120,\n        \"period\": 60\n      }\n    },\n    {\n      \"name\": \"RL_SEARCH\",\n      \"namespace_id\": \"1002\",\n      \"simple\": {\n        \"limit\": 20,\n        \"period\": 60\n      }\n    }\n  ],\n  \"account_id\": \"28f9d81693d9f738ed980133d3e09488\",\n  \"routes\": [\n    {\n      \"pattern\": \"homedex.danyalwe.me\",\n      \"custom_domain\": true\n    }\n  ]\n}\n"
+  "text": "// void:published-traffic:v1:eyJ3b3JrZXJzX2RldiI6ZmFsc2UsInByZXZpZXdfdXJscyI6ZmFsc2UsInJvdXRlcyI6W3sicGF0dGVybiI6ImhvbWVkZXguZGFueWFsd2UubWUiLCJjdXN0b21fZG9tYWluIjp0cnVlfV19\n{\n  \"name\": \"homedex\",\n  \"cache\": {\n    \"enabled\": true,\n    \"cross_version_cache\": false\n  },\n  \"observability\": {\n    \"enabled\": true,\n    \"head_sampling_rate\": 1\n  },\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"homedex\",\n      \"database_id\": \"30a87976-0a8e-4494-8c4b-eec46aaee36b\",\n      \"migrations_dir\": \"src/db/migrations\"\n    }\n  ],\n  \"ratelimits\": [\n    {\n      \"name\": \"RL_GLOBAL\",\n      \"namespace_id\": \"1001\",\n      \"simple\": {\n        \"limit\": 120,\n        \"period\": 60\n      }\n    },\n    {\n      \"name\": \"RL_SEARCH\",\n      \"namespace_id\": \"1002\",\n      \"simple\": {\n        \"limit\": 20,\n        \"period\": 60\n      }\n    }\n  ],\n  \"account_id\": \"28f9d81693d9f738ed980133d3e09488\",\n  \"routes\": [\n    {\n      \"pattern\": \"homedex.danyn.dev\",\n      \"custom_domain\": true\n    }\n  ]\n}\n"
 }

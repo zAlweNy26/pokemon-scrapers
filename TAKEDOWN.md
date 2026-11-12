@@ -8,10 +8,10 @@ Step 1 takes about ten minutes and can be undone; step 2 cannot.
 
 | Piece | Where |
 |---|---|
-| API Worker `homedex` | `https://homedex.danyalwe.me` (custom domain, `void.lock.json`) |
+| API Worker `homedex` | `https://homedex.danyn.dev` (custom domain, `void.config.ts`) |
 | D1 database `homedex` | id in `void.lock.json` |
-| Sprites | R2 bucket `S3_BUCKET` in `.env`, served at `https://images.homedex.danyalwe.me` |
-| Edge cache | zone `danyalwe.me` |
+| Sprites | R2 bucket `S3_BUCKET` in `.env`, served at `https://images.homedex.danyn.dev` |
+| Edge cache | zone `danyn.dev` |
 | Code | `github.com/zAlweNy26/pokemon-scrapers` (public); `data/seed.sql` holds a few species' game text |
 | Local copies | `data/dataset.sql`, `.cache/` (scraped pages, Poké Corpus, PokéAPI, sprites) |
 
@@ -27,15 +27,15 @@ bunx wrangler delete --name homedex     # API and its domain gone; D1 untouched
 Then in the Cloudflare dashboard:
 
 1. **R2** → the sprite bucket → Settings → Custom Domains → remove
-   `images.homedex.danyalwe.me`. Leave public `r2.dev` access off.
-2. **danyalwe.me** → Caching → Configuration → **Purge Everything**, so no edge
+   `images.homedex.danyn.dev`. Leave public `r2.dev` access off.
+2. **danyn.dev** → Caching → Configuration → **Purge Everything**, so no edge
    copy of a response or image outlives the step above.
 
 Check both are gone (neither may answer 200):
 
 ```bash
-curl -I https://homedex.danyalwe.me/v1/meta
-curl -I https://images.homedex.danyalwe.me/home/25/96.webp
+curl -I https://homedex.danyn.dev/v1/meta
+curl -I https://images.homedex.danyn.dev/home/25/96.webp
 ```
 
 To undo: add the custom domain back, `gh workflow enable deploy.yml`, `bun run deploy`.
